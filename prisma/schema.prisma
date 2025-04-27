@@ -1,0 +1,20 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Product {
+  ean          String   @id
+  descricao    String
+  marca        String
+  cor          String
+  tamanho      String
+  originalUrl  String?   // URL da foto original (campo opcional)
+  imageUrl     String    // URL da foto ajustada
+  createdAt    DateTime  @default(now())
+}

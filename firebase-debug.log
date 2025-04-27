@@ -1,0 +1,13 @@
+[debug] [2025-04-26T18:09:18.914Z] ----------------------------------------------------------------------
+[debug] [2025-04-26T18:09:18.918Z] Command:       /home/ubuntu/.nvm/versions/node/v22.13.0/bin/node /home/ubuntu/.nvm/versions/node/v22.13.0/bin/firebase login --no-localhost
+[debug] [2025-04-26T18:09:18.918Z] CLI Version:   14.2.1
+[debug] [2025-04-26T18:09:18.918Z] Platform:      linux
+[debug] [2025-04-26T18:09:18.918Z] Node Version:  v22.13.0
+[debug] [2025-04-26T18:09:18.919Z] Time:          Sat Apr 26 2025 18:09:18 GMT+0000 (Coordinated Universal Time)
+[debug] [2025-04-26T18:09:18.919Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-04-26T18:09:18.922Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[info] i  Firebase optionally collects CLI and Emulator Suite usage and error reporting information to help improve our products. Data is collected in accordance with Google's privacy policy (https://policies.google.com/privacy) and is not used to identify you.
+ 
+[debug] [2025-04-26T18:09:19.082Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2025-04-26T18:09:19.082Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
