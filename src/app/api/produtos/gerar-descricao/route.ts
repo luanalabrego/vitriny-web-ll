@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import { Buffer } from 'buffer';
-import Jimp from 'jimp';
+import * as Jimp from 'jimp';
 
 export const runtime = 'nodejs';
 
