@@ -1,0 +1,3 @@
+packages:
+  - '.'        # o diretório raiz
+  - 'package'  # sua subpasta "package", se existir
