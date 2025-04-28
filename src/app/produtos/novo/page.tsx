@@ -34,7 +34,6 @@ The final image should look professional and suitable for an e-commerce catalog,
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Adiciona múltiplas imagens
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -52,12 +51,10 @@ The final image should look professional and suitable for an e-commerce catalog,
     e.target.value = '';
   };
 
-  // Limpa seleção de imagens
   const clearSelection = () => {
     setRows([]);
   };
 
-  // Atualiza campos de texto
   const handleFieldChange = (
     id: number,
     field: keyof Omit<Row, 'id' | 'file' | 'preview' | 'result' | 'loading'>,
@@ -66,11 +63,9 @@ The final image should look professional and suitable for an e-commerce catalog,
     setRows(rows.map(r => r.id === id ? { ...r, [field]: value } : r));
   };
 
-  // Submissão: valida, gera imagem e salva produto
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Validação de campos obrigatórios
     const invalid = rows.filter(r => !r.ean || !r.descricao || !r.marca || !r.cor || !r.tamanho);
     if (invalid.length > 0) {
       alert('Preencha todos os campos em cada linha antes de enviar.');
@@ -83,7 +78,6 @@ The final image should look professional and suitable for an e-commerce catalog,
       row.loading = true;
       setRows([...updated]);
 
-      // Chama a API de gerar-imagem
       const formImg = new FormData();
       formImg.append('ean', row.ean);
       formImg.append('descricao', row.descricao);
@@ -111,24 +105,28 @@ The final image should look professional and suitable for an e-commerce catalog,
       row.result = { url, originalUrl, meta };
       setRows([...updated]);
 
-      // Salva no banco
-      await fetch('/api/produtos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ean: row.ean,
-          descricao: row.descricao,
-          marca: row.marca,
-          cor: row.cor,
-          tamanho: row.tamanho,
-          imageUrl: url,
-          originalUrl
-        })
-      });
+      if (url) {
+        await fetch('/api/produtos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ean: row.ean,
+            descricao: row.descricao,
+            marca: row.marca,
+            cor: row.cor,
+            tamanho: row.tamanho,
+            imageUrl: url,
+            originalUrl
+          })
+        });
+      } else {
+        console.error('Erro: imagem não gerada para o produto', row.ean);
+        row.result = { error: 'Erro ao gerar imagem. Produto não foi salvo.' };
+        setRows([...updated]);
+      }
     }
   };
 
-  // Habilita botão se tudo preenchido e sem loading
   const canSubmit = rows.length > 0 && rows.every(r => r.ean && r.descricao && r.marca && r.cor && r.tamanho) && !rows.some(r => r.loading);
 
   return (
@@ -234,7 +232,15 @@ The final image should look professional and suitable for an e-commerce catalog,
                         required
                       />
                     </td>
-                    <td className="border border-purple-300 p-2 text-center">{row.loading ? 'Gerando...' : (row.result?.url ? 'OK' : '-')}</td>
+                    <td className="border border-purple-300 p-2 text-center">
+                      {row.loading
+                        ? 'Gerando...'
+                        : row.result?.error
+                        ? 'Erro'
+                        : row.result?.url
+                        ? 'OK'
+                        : '-'}
+                    </td>
                     <td className="border border-purple-300 p-2">{row.result?.originalUrl && <img src={row.result.originalUrl} alt="original" className="h-24 object-cover rounded cursor-pointer" onClick={() => setModalImage(row.result!.originalUrl!)} />}</td>
                     <td className="border border-purple-300 p-2">{row.result?.url && <img src={row.result.url} alt="ajustada" className="h-24 object-cover rounded cursor-pointer" onClick={() => setModalImage(row.result!.url!)} />}</td>
                   </tr>
