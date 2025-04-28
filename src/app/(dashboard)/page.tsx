@@ -1,5 +1,7 @@
-'use client';
+'use client'
+import { useState } from 'react'
 
 export default function DashboardPage() {
-  return null;
+  const [_, setDummy] = useState(false)
+  return null
 }
