@@ -1,11 +1,14 @@
 // prisma/schema.prisma
+
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 generator client {
   provider = "prisma-client-js"
+  // opcional: especificar output para evitar warning em Prisma 7
+  // output   = "../node_modules/.prisma/client"
 }
 
 model Product {
@@ -14,7 +17,7 @@ model Product {
   marca        String
   cor          String
   tamanho      String
-  originalUrl  String?   // URL da foto original (campo opcional)
-  imageUrl     String    // URL da foto ajustada
-  createdAt    DateTime  @default(now())
+  originalUrl  String?  
+  imageUrl     String   
+  createdAt    DateTime @default(now())
 }
