@@ -3,12 +3,12 @@
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  // se no futuro você quiser rodar migrations via CLI usando conexão direta,
+  // adicione aqui directUrl = env("DIRECT_DATABASE_URL")
 }
 
 generator client {
   provider = "prisma-client-js"
-  // opcional: especificar output para evitar warning em Prisma 7
-  // output   = "../node_modules/.prisma/client"
 }
 
 model Product {
@@ -17,7 +17,7 @@ model Product {
   marca        String
   cor          String
   tamanho      String
-  originalUrl  String?  
-  imageUrl     String   
+  originalUrl  String?
+  imageUrl     String
   createdAt    DateTime @default(now())
 }
