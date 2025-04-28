@@ -59,29 +59,28 @@ export async function POST(request: NextRequest) {
     console.log('✅ OpenAI respondeu com sucesso')
 
     // 7) Decode e salve a imagem ajustada em /tmp
-    const b64     = openaiJson.data[0].b64_json as string
-    const buffer  = Buffer.from(b64, 'base64')
+    const b64      = openaiJson.data[0].b64_json as string
+    const editBuf  = Buffer.from(b64, 'base64')
     const editName = `${ean}.png`
     const editPath = path.join(uploadDir, editName)
-    await fs.writeFile(editPath, buffer)
+    await fs.writeFile(editPath, editBuf)
     console.log('💾 Ajustada salva em (tmp):', editPath)
 
-    // 8) Opcional: cleanup dos temporários
-    // await fs.unlink(origPath)
-    // await fs.unlink(editPath)
-
-    // 9) Retorne tudo como Data URLs (cliente exibe direto)
+    // 8) Retorne tudo como Data URLs (cliente exibe direto)
     const originalDataURL = `data:image/png;base64,${origBuffer.toString('base64')}`
-    const editedDataURL   = `data:image/png;base64,${buffer.toString('base64')}`
+    const editedDataURL   = `data:image/png;base64,${editBuf.toString('base64')}`
 
     return NextResponse.json({
-      meta: { ean, descricao, marca, cor, tamanho },
+      meta:     { ean, descricao, marca, cor, tamanho },
       original: originalDataURL,
       edited:   editedDataURL
     }, { status: 200 })
 
   } catch (err: any) {
     console.error('🔥 Exceção em gerar-imagem:', err)
-    return NextResponse.json({ error: err.message || String(err) }, { status: 500 })
+    return NextResponse.json(
+      { error: err.message || String(err) },
+      { status: 500 }
+    )
   }
 }
