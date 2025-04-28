@@ -66,14 +66,14 @@ export async function POST(request: NextRequest) {
     await fs.writeFile(editPath, editBuf)
     console.log('💾 Ajustada salva em (tmp):', editPath)
 
-    // 8) Retorne tudo como Data URLs (cliente exibe direto)
+    // 8) Retorne tudo como campos esperados pelo front-end
     const originalDataURL = `data:image/png;base64,${origBuffer.toString('base64')}`
     const editedDataURL   = `data:image/png;base64,${editBuf.toString('base64')}`
 
     return NextResponse.json({
-      meta:     { ean, descricao, marca, cor, tamanho },
-      original: originalDataURL,
-      edited:   editedDataURL
+      meta: { ean, descricao, marca, cor, tamanho },
+      originalUrl: originalDataURL,
+      url: editedDataURL
     }, { status: 200 })
 
   } catch (err: any) {
