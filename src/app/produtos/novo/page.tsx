@@ -89,7 +89,7 @@ The final image should look professional and suitable for an e-commerce catalog,
       formImg.append('model', 'gpt-image-1');
       formImg.append('n', '1');
       formImg.append('size', '1024x1536');
-      formImg.append('quality', 'low');
+      formImg.append('quality', 'high');
 
       const resImg = await fetch('/api/produtos/gerar-imagem', { method: 'POST', body: formImg });
       const jsonImg = await resImg.json();
