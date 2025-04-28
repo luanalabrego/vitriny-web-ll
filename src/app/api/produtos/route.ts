@@ -1,6 +1,6 @@
 // src/app/api/produtos/route.ts
 import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'  // ajuste o caminho se seu client estiver em outro lugar
+import prisma from '@/lib/prisma'  // ajuste o caminho se necessário
 
 export async function GET() {
   try {
