@@ -1,4 +1,3 @@
-// src/app/(dashboard)/produtos/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -11,9 +10,7 @@ interface Product {
   marca: string;
   cor: string;
   tamanho: string;
-  originalUrl?: string;
-  imageUrl: string;
-  createdAt: string;
+  imageUrl?: string;
 }
 
 export default function ProdutosPage() {
@@ -52,9 +49,7 @@ export default function ProdutosPage() {
 
   // Export to Excel
   const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(
-      filtered.map(({ createdAt, ...rest }) => rest)
-    );
+    const ws = XLSX.utils.json_to_sheet(filtered);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Produtos');
     XLSX.writeFile(wb, 'produtos.xlsx');
@@ -95,9 +90,7 @@ export default function ProdutosPage() {
               <th className="border border-purple-300 px-4 py-2">Tamanho</th>
               <th className="border border-purple-300 px-4 py-2">Cor</th>
               <th className="border border-purple-300 px-4 py-2">Descrição</th>
-              <th className="border border-purple-300 px-4 py-2">Original</th>
               <th className="border border-purple-300 px-4 py-2">Ajustada</th>
-              <th className="border border-purple-300 px-4 py-2">Criado em</th>
             </tr>
           </thead>
           <tbody>
@@ -108,18 +101,6 @@ export default function ProdutosPage() {
                 <td className="border border-purple-300 px-4 py-2">{prod.tamanho}</td>
                 <td className="border border-purple-300 px-4 py-2">{prod.cor}</td>
                 <td className="border border-purple-300 px-4 py-2">{prod.descricao}</td>
-                <td className="border border-purple-300 px-4 py-2">
-                  {prod.originalUrl && (
-                    <Image
-                      src={prod.originalUrl}
-                      alt="Original"
-                      width={64}
-                      height={64}
-                      className="object-cover rounded cursor-pointer"
-                      onClick={() => setModalSrc(prod.originalUrl!)}
-                    />
-                  )}
-                </td>
                 <td className="border border-purple-300 px-4 py-2">
                   {prod.imageUrl && (
                     <Image
@@ -132,7 +113,6 @@ export default function ProdutosPage() {
                     />
                   )}
                 </td>
-                <td className="border border-purple-300 px-4 py-2">{new Date(prod.createdAt).toLocaleString()}</td>
               </tr>
             ))}
           </tbody>

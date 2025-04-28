@@ -1,11 +1,21 @@
 // src/app/api/produtos/route.ts
-import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'  // ajuste se seu cliente Prisma estiver em outro caminho
 
-// GET: lista produtos
+import { NextResponse } from 'next/server'
+import prisma from '@/lib/prisma'
+
+// GET: lista produtos (SEM trazer imageUrl agora)
 export async function GET(request: Request) {
   try {
-    const produtos = await prisma.product.findMany()
+    const produtos = await prisma.product.findMany({
+      select: {
+        ean: true,
+        descricao: true,
+        marca: true,
+        cor: true,
+        tamanho: true
+        // NÃO trazemos imageUrl, nem originalUrl
+      }
+    })
     return NextResponse.json(produtos, { status: 200 })
   } catch (err: any) {
     console.error('[API /api/produtos] GET error:', err)
