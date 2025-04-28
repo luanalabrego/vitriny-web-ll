@@ -1,0 +1,7 @@
+.next/
+.vercel/output/
+node_modules/
+worker/
+*.log
+.env*
+.vscode/
