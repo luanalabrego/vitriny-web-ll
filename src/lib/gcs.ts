@@ -3,14 +3,16 @@
 import { Storage } from '@google-cloud/storage';
 import path from 'path';
 
-const serviceAccountPath = path.join(process.cwd(), 'firebase-service-account.json');
-
+const serviceAccount = JSON.parse(
+  // garante que o JSON foi carregado da env var FIREBASE_SERVICE_ACCOUNT
+  process.env.FIREBASE_SERVICE_ACCOUNT as string
+);
 const storage = new Storage({
   keyFilename: serviceAccountPath,
-  projectId: 'vitrinyweb11' // seu Project ID real
+  projectId: 'vitriny-web' // seu Project ID real
 });
 
 // MUITO IMPORTANTE: Corrigido o nome do bucket
-const bucket = storage.bucket('vitrinyweb11.firebasestorage.app');
+const bucket = storage.bucket('vitriny-web.firebasestorage.app');
 
 export { bucket };
