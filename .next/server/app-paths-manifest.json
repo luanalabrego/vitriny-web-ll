@@ -1,6 +1,0 @@
-{
-  "/api/produtos/route": "app/api/produtos/route.js",
-  "/api/produtos/gerar-imagem/route": "app/api/produtos/gerar-imagem/route.js",
-  "/produtos/novo/page": "app/produtos/novo/page.js",
-  "/produtos/page": "app/produtos/page.js"
-}
