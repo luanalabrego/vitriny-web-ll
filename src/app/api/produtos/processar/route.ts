@@ -4,8 +4,8 @@ import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 // Diretórios para armazenamento de imagens
-const UPLOAD_DIR = '/home/ubuntu/vitriny-web/public/uploads';
-const PROCESSED_DIR = '/home/ubuntu/vitriny-web/public/processed';
+const UPLOAD_DIR = '/tmp/uploads';
+const PROCESSED_DIR = '/tmp/processed';
 
 // Função para garantir que os diretórios existam
 async function ensureDirExists(dir: string) {
