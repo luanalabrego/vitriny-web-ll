@@ -6,48 +6,59 @@ import * as XLSX from 'xlsx';
 
 interface Product {
   ean: string;
-  descricao: string;
-  marca: string;
-  cor: string;
-  tamanho: string;
+  descricao?: string;
+  marca?: string;
+  cor?: string;
+  tamanho?: string;
   imageUrl?: string;
 }
 
 export default function ProdutosPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filters, setFilters] = useState({
-    ean: '', marca: '', tamanho: '', cor: '', descricao: ''
+    ean: '',
+    marca: '',
+    tamanho: '',
+    cor: '',
+    descricao: ''
   });
   const [modalSrc, setModalSrc] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Fetch data
   useEffect(() => {
     fetch('/api/produtos')
       .then(res => res.json())
-      .then((data: Product[]) => setProducts(data));
+      .then((data: Product[]) => {
+        // garante sempre string (mesmo que backend não envie)
+        const normalized = data.map(p => ({
+          ean: p.ean,
+          descricao: p.descricao ?? '',
+          marca: p.marca ?? '',
+          cor: p.cor ?? '',
+          tamanho: p.tamanho ?? '',
+          imageUrl: p.imageUrl
+        }));
+        setProducts(normalized);
+      });
   }, []);
 
-  // Filter handler
   const handleFilterChange = (field: keyof typeof filters, value: string) => {
     setFilters(prev => ({ ...prev, [field]: value }));
     setCurrentPage(1);
   };
 
-  // Apply filters
   const filtered = products.filter(p =>
     (!filters.ean || p.ean.includes(filters.ean)) &&
-    (!filters.marca || p.marca.toLowerCase().includes(filters.marca.toLowerCase())) &&
-    (!filters.tamanho || p.tamanho.toLowerCase().includes(filters.tamanho.toLowerCase())) &&
-    (!filters.cor || p.cor.toLowerCase().includes(filters.cor.toLowerCase())) &&
-    (!filters.descricao || p.descricao.toLowerCase().includes(filters.descricao.toLowerCase()))
+    (!filters.marca || p.marca!.toLowerCase().includes(filters.marca.toLowerCase())) &&
+    (!filters.tamanho || p.tamanho!.toLowerCase().includes(filters.tamanho.toLowerCase())) &&
+    (!filters.cor || p.cor!.toLowerCase().includes(filters.cor.toLowerCase())) &&
+    (!filters.descricao || p.descricao!.toLowerCase().includes(filters.descricao.toLowerCase()))
   );
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
   const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // Export to Excel
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(filtered);
     const wb = XLSX.utils.book_new();
@@ -97,20 +108,22 @@ export default function ProdutosPage() {
             {paginated.map(prod => (
               <tr key={prod.ean} className="hover:bg-gray-50">
                 <td className="border border-purple-300 px-4 py-2">{prod.ean}</td>
-                <td className="border border-purple-300 px-4 py-2">{prod.marca}</td>
-                <td className="border border-purple-300 px-4 py-2">{prod.tamanho}</td>
-                <td className="border border-purple-300 px-4 py-2">{prod.cor}</td>
-                <td className="border border-purple-300 px-4 py-2">{prod.descricao}</td>
+                <td className="border border-purple-300 px-4 py-2">{prod.marca || '-'}</td>
+                <td className="border border-purple-300 px-4 py-2">{prod.tamanho || '-'}</td>
+                <td className="border border-purple-300 px-4 py-2">{prod.cor || '-'}</td>
+                <td className="border border-purple-300 px-4 py-2">{prod.descricao || '-'}</td>
                 <td className="border border-purple-300 px-4 py-2">
-                  {prod.imageUrl && (
+                  {prod.imageUrl ? (
                     <Image
                       src={prod.imageUrl}
                       alt="Ajustada"
                       width={64}
                       height={96}
                       className="object-cover rounded cursor-pointer"
-                      onClick={() => setModalSrc(prod.imageUrl)}
+                      onClick={() => setModalSrc(prod.imageUrl!)}
                     />
+                  ) : (
+                    <span className="text-gray-500">—</span>
                   )}
                 </td>
               </tr>
@@ -119,19 +132,23 @@ export default function ProdutosPage() {
         </table>
       </div>
 
-      {/* Pagination controls */}
+      {/* Pagination */}
       <div className="flex justify-center items-center mt-4 space-x-2">
         <button
           onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
           disabled={currentPage === 1}
           className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-        >Anterior</button>
+        >
+          Anterior
+        </button>
         <span>Página {currentPage} de {totalPages}</span>
         <button
           onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
           disabled={currentPage === totalPages}
           className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-        >Próximo</button>
+        >
+          Próximo
+        </button>
       </div>
 
       {/* Modal */}
