@@ -66,9 +66,10 @@ The final image should look professional and suitable for an e-commerce catalog,
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    const invalid = rows.filter(r => !r.ean || !r.descricao || !r.marca || !r.cor || !r.tamanho);
+    // agora só valida EAN (e opcionalmente a imagem, que já está garantida)
+    const invalid = rows.filter(r => !r.ean.trim());
     if (invalid.length > 0) {
-      alert('Preencha todos os campos em cada linha antes de enviar.');
+      alert('Preencha o EAN em cada linha antes de enviar.');
       return;
     }
 
@@ -79,11 +80,7 @@ The final image should look professional and suitable for an e-commerce catalog,
       setRows([...updated]);
 
       const formImg = new FormData();
-      formImg.append('ean', row.ean);
-      formImg.append('descricao', row.descricao);
-      formImg.append('marca', row.marca);
-      formImg.append('cor', row.cor);
-      formImg.append('tamanho', row.tamanho);
+      formImg.append('ean', row.ean.trim());
       if (row.file) formImg.append('image', row.file);
       formImg.append('prompt', promptImage);
       formImg.append('model', 'gpt-image-1');
@@ -110,8 +107,8 @@ The final image should look professional and suitable for an e-commerce catalog,
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            ean: row.ean,
-            descricao: row.descricao,
+            ean: row.ean.trim(),
+            descricao: row.descricao,   // você pode enviar vazios sem problema
             marca: row.marca,
             cor: row.cor,
             tamanho: row.tamanho,
@@ -127,7 +124,11 @@ The final image should look professional and suitable for an e-commerce catalog,
     }
   };
 
-  const canSubmit = rows.length > 0 && rows.every(r => r.ean && r.descricao && r.marca && r.cor && r.tamanho) && !rows.some(r => r.loading);
+  // canSubmit agora verifica apenas se todos têm EAN preenchido e nenhum está carregando
+  const canSubmit =
+    rows.length > 0 &&
+    rows.every(r => r.ean.trim()) &&
+    !rows.some(r => r.loading);
 
   return (
     <>
@@ -191,7 +192,15 @@ The final image should look professional and suitable for an e-commerce catalog,
               <tbody>
                 {rows.map(row => (
                   <tr key={row.id} className="hover:bg-gray-50">
-                    <td className="border border-purple-300 p-2">{row.preview && <img src={row.preview} alt="preview" className="h-24 object-cover rounded" />}</td>
+                    <td className="border border-purple-300 p-2">
+                      {row.preview && (
+                        <img
+                          src={row.preview}
+                          alt="preview"
+                          className="h-24 object-cover rounded"
+                        />
+                      )}
+                    </td>
                     <td className="border border-purple-300 p-2">
                       <input
                         value={row.ean}
@@ -205,7 +214,6 @@ The final image should look professional and suitable for an e-commerce catalog,
                         value={row.descricao}
                         onChange={e => handleFieldChange(row.id, 'descricao', e.target.value)}
                         className="border rounded p-1 w-full"
-                        required
                       />
                     </td>
                     <td className="border border-purple-300 p-2">
@@ -213,7 +221,6 @@ The final image should look professional and suitable for an e-commerce catalog,
                         value={row.marca}
                         onChange={e => handleFieldChange(row.id, 'marca', e.target.value)}
                         className="border rounded p-1 w-full"
-                        required
                       />
                     </td>
                     <td className="border border-purple-300 p-2">
@@ -221,7 +228,6 @@ The final image should look professional and suitable for an e-commerce catalog,
                         value={row.cor}
                         onChange={e => handleFieldChange(row.id, 'cor', e.target.value)}
                         className="border rounded p-1 w-full"
-                        required
                       />
                     </td>
                     <td className="border border-purple-300 p-2">
@@ -229,7 +235,6 @@ The final image should look professional and suitable for an e-commerce catalog,
                         value={row.tamanho}
                         onChange={e => handleFieldChange(row.id, 'tamanho', e.target.value)}
                         className="border rounded p-1 w-full"
-                        required
                       />
                     </td>
                     <td className="border border-purple-300 p-2 text-center">
@@ -241,8 +246,26 @@ The final image should look professional and suitable for an e-commerce catalog,
                         ? 'OK'
                         : '-'}
                     </td>
-                    <td className="border border-purple-300 p-2">{row.result?.originalUrl && <img src={row.result.originalUrl} alt="original" className="h-24 object-cover rounded cursor-pointer" onClick={() => setModalImage(row.result!.originalUrl!)} />}</td>
-                    <td className="border border-purple-300 p-2">{row.result?.url && <img src={row.result.url} alt="ajustada" className="h-24 object-cover rounded cursor-pointer" onClick={() => setModalImage(row.result!.url!)} />}</td>
+                    <td className="border border-purple-300 p-2">
+                      {row.result?.originalUrl && (
+                        <img
+                          src={row.result.originalUrl}
+                          alt="original"
+                          className="h-24 object-cover rounded cursor-pointer"
+                          onClick={() => setModalImage(row.result!.originalUrl!)}
+                        />
+                      )}
+                    </td>
+                    <td className="border border-purple-300 p-2">
+                      {row.result?.url && (
+                        <img
+                          src={row.result.url}
+                          alt="ajustada"
+                          className="h-24 object-cover rounded cursor-pointer"
+                          onClick={() => setModalImage(row.result!.url!)}
+                        />
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -260,8 +283,15 @@ The final image should look professional and suitable for an e-commerce catalog,
       </form>
 
       {modalImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" onClick={() => setModalImage(null)}>
-          <img src={modalImage} alt="Ampliado" className="max-h-[90%] max-w-[90%] rounded shadow-lg" />
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          onClick={() => setModalImage(null)}
+        >
+          <img
+            src={modalImage}
+            alt="Ampliado"
+            className="max-h-[90%] max-w-[90%] rounded shadow-lg"
+          />
         </div>
       )}
     </>
