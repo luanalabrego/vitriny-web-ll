@@ -55,14 +55,15 @@ export default function UploadMassa() {
     e.preventDefault();
     
     if (imagens.length === 0) {
-      setErro('É necessário fazer upload de pelo menos uma imagem');
+      setErro('Faça upload de pelo menos uma imagem');
       return;
     }
-
-    if (!ean || !marca || !cor || !tamanho) {
-      setErro('Todos os campos são obrigatórios');
+    
+    if (!ean.trim()) {
+      setErro('O campo EAN é obrigatório');
       return;
     }
+    
 
     setCarregando(true);
     setErro('');
