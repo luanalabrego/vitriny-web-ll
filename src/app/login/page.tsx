@@ -1,10 +1,11 @@
-// src/app/login/page.tsx
 'use client'
 
 import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { auth } from '@/firebase/firebase'  // ajuste o path se necessário
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -19,21 +20,21 @@ export default function LoginPage() {
     setCarregando(true)
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, senha }),
-      })
-
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.message || 'Erro ao fazer login')
-      }
-
+      // Autentica no Firebase
+      await signInWithEmailAndPassword(auth, email.trim(), senha)
+      // Se der certo, redireciona pra página inicial
       router.replace('/')
-    } catch (err: any) {
-      setErro(err.message || 'Ocorreu um erro ao fazer login')
+    } catch (firebaseError: any) {
+      // Captura erro do Firebase e mostra mensagem amigável
+      let mensagem = 'Ocorreu um erro ao fazer login.'
+      if (firebaseError.code === 'auth/user-not-found') {
+        mensagem = 'Usuário não encontrado.'
+      } else if (firebaseError.code === 'auth/wrong-password') {
+        mensagem = 'Senha incorreta.'
+      } else if (firebaseError.code === 'auth/invalid-email') {
+        mensagem = 'Formato de email inválido.'
+      }
+      setErro(mensagem)
     } finally {
       setCarregando(false)
     }
@@ -41,7 +42,6 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-gray-50">
-      {/* Watermark de fundo (mesma da página principal) */}
       <div className="absolute inset-0 pointer-events-none">
         <Image
           src="/watermark.png"
@@ -52,9 +52,7 @@ export default function LoginPage() {
         />
       </div>
 
-      {/* Card de login */}
       <div className="relative z-10 bg-white rounded-lg shadow p-8 w-full max-w-md border-2 border-purple-600">
-        {/* Logo */}
         <div className="flex justify-center mb-6">
           <Image
             src="/Vitriny.png"
@@ -119,5 +117,5 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
-  )
+)
 }
