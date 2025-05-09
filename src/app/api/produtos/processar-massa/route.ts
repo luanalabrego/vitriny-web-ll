@@ -98,12 +98,14 @@ export async function POST(request: NextRequest) {
     // Obter todas as imagens do FormData
     const imagensFormData = formData.getAll('imagens') as File[];
     
-    if (imagensFormData.length === 0 || !ean || !marca || !cor || !tamanho || !tipoGeracao) {
-      return NextResponse.json(
-        { message: 'Todos os campos são obrigatórios' },
-        { status: 400 }
-      );
-    }
+    // só exige EAN e pelo menos uma imagem
+if (imagensFormData.length === 0 || !ean.trim()) {
+  return NextResponse.json(
+    { message: 'Campos `ean` e `imagens` são obrigatórios.' },
+    { status: 400 }
+  );
+}
+
     
     // Salvar imagens originais
     const imagePaths = await saveImages(imagensFormData, UPLOAD_DIR);
