@@ -28,30 +28,31 @@ export async function POST(request: Request) {
   try {
     const {
       ean,
-      descricao,
-      marca,
-      cor,
-      tamanho,
       imageUrl,
-      originalUrl
+      originalUrl = null,
+      descricao   = '',
+      marca       = '',
+      cor         = '',
+      tamanho     = ''
     } = await request.json()
 
-    if (!ean || !descricao || !marca || !cor || !tamanho || !imageUrl) {
+    // valida apenas ean e imageUrl
+    if (!ean?.trim() || !imageUrl) {
       return NextResponse.json(
-        { error: 'Campos obrigatórios faltando.' },
+        { error: 'Campos `ean` e `imageUrl` são obrigatórios.' },
         { status: 400 }
       )
     }
 
     const novoProduto = await prisma.product.create({
       data: {
-        ean,
+        ean: ean.trim(),
         descricao,
         marca,
         cor,
         tamanho,
         imageUrl,
-        originalUrl: originalUrl || null
+        originalUrl
       }
     })
 
