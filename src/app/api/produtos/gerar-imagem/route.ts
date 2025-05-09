@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const tamanho   = formData.get('tamanho')?.toString()   ?? '';
 
     // 4) imagem também continua obrigatória
-    const imageBlob = formData.get('image');
+    const imageBlob = formData.get('imagens');
     if (!(imageBlob instanceof Blob)) {
       return NextResponse.json(
         { error: 'Campo `image` obrigatório.' },
