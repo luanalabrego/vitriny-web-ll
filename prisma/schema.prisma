@@ -11,12 +11,22 @@ generator client {
 }
 
 model Product {
-  ean          String   @id
+  // Novo campo de chave primária numérica
+  id           Int      @id @default(autoincrement())
+
+  // Mantém EAN como campo não único
+  ean          String
+
   descricao    String
   marca        String
   cor          String
   tamanho      String
+
   originalUrl  String?
   imageUrl     String
+
   createdAt    DateTime @default(now())
+
+  // Índice opcional para acelerar buscas por EAN
+  @@index([ean])
 }
