@@ -94,13 +94,14 @@ export async function POST(request: NextRequest) {
     const tipoGeracao = formData.get('tipoGeracao') as string;
     const imagem = formData.get('imagem') as File;
     
-    if (!imagem || !ean || !descricao || !marca || !cor || !tamanho || !tipoGeracao) {
-      return NextResponse.json(
-        { message: 'Todos os campos são obrigatórios' },
-        { status: 400 }
-      );
-    }
-    
+        // só exige EAN e pelo menos uma imagem
+if (imagensFormData.length === 0 || !ean.trim()) {
+  return NextResponse.json(
+    { message: 'Campos `ean` e `imagens` são obrigatórios.' },
+    { status: 400 }
+  );
+}
+
     // Salvar imagem original
     const imagePath = await saveImage(imagem, UPLOAD_DIR);
     
