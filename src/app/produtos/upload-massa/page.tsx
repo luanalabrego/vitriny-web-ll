@@ -71,21 +71,55 @@ export default function UploadMassa() {
     setProgresso(0);
 
     try {
-      // Simulando o processamento em lote das imagens
-      const totalImagens = imagens.length;
-      
-      for (let i = 0; i < totalImagens; i++) {
-        // Simulando o tempo de processamento de cada imagem
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Atualizar o progresso
-        const novoProgresso = Math.round(((i + 1) / totalImagens) * 100);
-        setProgresso(novoProgresso);
-      }
+      // ————————————————————————————————
+const total = imagens.length;
 
-      setSucesso(`${totalImagens} imagens processadas com sucesso!`);
-      setCarregando(false);
-      setProgresso(100);
+for (let i = 0; i < total; i++) {
+  const file = imagens[i];
+
+  // 1) Gera a imagem no OpenAI
+  const formImg = new FormData();
+  formImg.append('ean', ean.trim());
+  formImg.append('tipoGeracao', tipoGeracao);
+  formImg.append('image', file);
+
+  const resGen = await fetch('/api/produtos/gerar-imagem', {
+    method: 'POST',
+    body: formImg
+  });
+  if (!resGen.ok) {
+    const txt = await resGen.text();
+    throw new Error(`Erro geração imagem ${i+1}: ${txt}`);
+  }
+  const { url: imageUrl, originalUrl } = await resGen.json();
+
+  // 2) Salva o produto no banco
+  const resProd = await fetch('/api/produtos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ean: ean.trim(),
+      imageUrl,
+      originalUrl,
+      descricao: '',
+      marca: '',
+      cor: '',
+      tamanho: ''
+    })
+  });
+  if (!resProd.ok) {
+    const txt = await resProd.text();
+    throw new Error(`Erro salvando produto ${i+1}: ${txt}`);
+  }
+
+  // 3) Atualiza o progresso
+  setProgresso(Math.round(((i + 1) / total) * 100));
+}
+
+setSucesso(`${total} imagens processadas e salvas!`);
+setCarregando(false);
+// ————————————————————————————————
+
       
       // Limpar o formulário após o sucesso
       setTimeout(() => {
@@ -333,7 +367,7 @@ export default function UploadMassa() {
           </button>
           <button
             type="submit"
-            disabled={carregando || imagens.length === 0}
+            disabled={carregando || imagens.length === 0 || !ean.trim()}
             className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400"
           >
             {carregando ? 'Processando...' : 'Processar Imagens'}
