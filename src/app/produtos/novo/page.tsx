@@ -63,25 +63,20 @@ The final image should look professional and suitable for an e-commerce catalog,
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Validação de EAN
     if (rows.some(r => !r.ean.trim())) {
       alert('Preencha o EAN em cada linha antes de enviar.');
       return;
     }
 
-    // 1) Marca todas as linhas como carregando
     setRows(rows.map(r => ({ ...r, loading: true, result: undefined })));
 
-    // 2) Cria uma promise para cada linha
     const tasks = rows.map(row => (async () => {
       try {
-        // 2.1) Busca signed URL e fileName
         const { uploadUrl, fileName } = await fetch(
           `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean.trim())}`
         ).then(res => res.json());
         if (!uploadUrl || !fileName) throw new Error('Falha ao obter URL de upload');
 
-        // 2.2) Envia o arquivo para o GCS
         const putRes = await fetch(uploadUrl, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/octet-stream' },
@@ -89,7 +84,6 @@ The final image should look professional and suitable for an e-commerce catalog,
         });
         if (!putRes.ok) throw new Error(`Upload falhou: ${putRes.status}`);
 
-        // 2.3) Chama endpoint de gerar imagem
         const resImg = await fetch('/api/produtos/gerar-imagem', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -108,7 +102,6 @@ The final image should look professional and suitable for an e-commerce catalog,
 
         const { url, meta } = jsonImg;
 
-        // 2.4) Atualiza estado da linha com sucesso
         setRows(prev =>
           prev.map(r =>
             r.id === row.id
@@ -117,7 +110,6 @@ The final image should look professional and suitable for an e-commerce catalog,
           )
         );
 
-        // 2.5) Salva no backend
         if (url) {
           await fetch('/api/produtos', {
             method: 'POST',
@@ -133,7 +125,6 @@ The final image should look professional and suitable for an e-commerce catalog,
           });
         }
       } catch (err: any) {
-        // 2.6) Atualiza estado da linha com erro
         setRows(prev =>
           prev.map(r =>
             r.id === row.id
@@ -144,7 +135,6 @@ The final image should look professional and suitable for an e-commerce catalog,
       }
     })());
 
-    // 3) Aguarda todas as promessas
     await Promise.all(tasks);
   };
 
@@ -201,21 +191,28 @@ The final image should look professional and suitable for an e-commerce catalog,
             <table className="min-w-full table-auto border-collapse border border-purple-300 text-black">
               <thead>
                 <tr className="bg-purple-600 text-white">
-                  <th className="border border-white px-2 py-1">Preview</th>
-                  <th className="border border-purple-300 px-2 py-1">EAN*</th>
+                  <th className="border border-white px-2 py-1">Foto</th>
+                  <th className="border border-purple-300 px-2 py-1">EAN</th>
                   <th className="border border-purple-300 px-2 py-1">Descrição</th>
                   <th className="border border-purple-300 px-2 py-1">Marca</th>
                   <th className="border border-purple-300 px-2 py-1">Cor</th>
                   <th className="border border-purple-300 px-2 py-1">Tamanho</th>
                   <th className="border border-purple-300 px-2 py-1">Status</th>
-                  <th className="border border-purple-300 px-2 py-1">Ampliar</th>
+                  <th className="border border-purple-300 px-2 py-1">Foto ajustada</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map(row => (
                   <tr key={row.id} className="hover:bg-gray-50">
                     <td className="border border-purple-300 p-2">
-                      {row.preview && <img src={row.preview} alt="preview" className="h-24 object-cover rounded" />}
+                      {row.preview && (
+                        <img
+                          src={row.preview}
+                          alt="preview"
+                          className="h-24 object-cover rounded cursor-pointer"
+                          onClick={() => setModalImage(row.preview!)}
+                        />
+                      )}
                     </td>
                     <td className="border border-purple-300 p-2">
                       <input
@@ -253,8 +250,18 @@ The final image should look professional and suitable for an e-commerce catalog,
                         className="border rounded p-1 w-full"
                       />
                     </td>
-                    <td className="border border-purple-300 p-2 text-center">
-                      {row.loading ? 'Gerando...' : row.result?.error ? 'Erro' : row.result?.url ? 'OK' : '-'}
+                    <td
+                      className={`border border-purple-300 p-2 text-center ${
+                        row.result?.url ? 'bg-green-500 text-white font-bold' : ''
+                      }`}
+                    >
+                      {row.loading
+                        ? 'Gerando...'
+                        : row.result?.error
+                        ? 'Erro'
+                        : row.result?.url
+                        ? 'OK'
+                        : '-'}
                     </td>
                     <td className="border border-purple-300 p-2">
                       {row.result?.url && (
@@ -283,8 +290,15 @@ The final image should look professional and suitable for an e-commerce catalog,
       </form>
 
       {modalImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" onClick={() => setModalImage(null)}>
-          <img src={modalImage} alt="Ampliado" className="max-h-[90%] max-w-[90%] rounded shadow-lg" />
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          onClick={() => setModalImage(null)}
+        >
+          <img
+            src={modalImage}
+            alt="Ampliado"
+            className="max-h-[90%] max-w-[90%] rounded shadow-lg"
+          />
         </div>
       )}
     </>
