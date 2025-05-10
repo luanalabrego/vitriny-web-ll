@@ -83,4 +83,5 @@ export default function HomePage() {
         Powered by Labrego IA Soluções Digitais
       </footer>
     </div>
-)
+  )
+}
