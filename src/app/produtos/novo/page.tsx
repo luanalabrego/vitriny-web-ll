@@ -102,7 +102,6 @@ The final image should look professional and suitable for an e-commerce catalog,
         if (!resImg.ok) throw new Error(jsonImg.error || 'Erro interno');
 
         const { url, meta } = jsonImg;
-
         setRows(prev =>
           prev.map(r =>
             r.id === row.id
@@ -201,7 +200,7 @@ The final image should look professional and suitable for an e-commerce catalog,
                 <thead>
                   <tr className="bg-purple-600 text-white">
                     <th className="border border-white px-2 py-1">Foto</th>
-                    <th className="border border-purple-300 px-2 py-1 w-20">EAN</th>
+                    <th className="border border-purple-300 px-2 py-1 w-[17ch]">EAN</th>
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Descrição</th>}
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Marca</th>}
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Cor</th>}
@@ -223,7 +222,7 @@ The final image should look professional and suitable for an e-commerce catalog,
                           />
                         )}
                       </td>
-                      <td className="border border-purple-300 p-2 w-20">
+                      <td className="border border-purple-300 p-2 w-[17ch]">
                         <input
                           value={row.ean}
                           onChange={e => handleFieldChange(row.id, 'ean', e.target.value)}
