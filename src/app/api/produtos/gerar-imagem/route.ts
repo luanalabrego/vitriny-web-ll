@@ -1,3 +1,4 @@
+// src/app/api/produtos/gerar-imagem/route.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { FormData } from 'undici';
@@ -28,6 +29,8 @@ export async function POST(request: NextRequest) {
     // 2) prepara FormData com undici, convertendo Buffer em Blob
     const imageBlob = new Blob([origBuf], { type: 'image/png' });
     const formData = new FormData();
+    // Especifica o modelo gpt-image-1 para suportar tamanhos não-quadrados
+    formData.append('model', 'gpt-image-1');
     formData.append('image', imageBlob, `${ean}-orig.png`);
     formData.append('prompt', prompt);
     formData.append('n', '1');
