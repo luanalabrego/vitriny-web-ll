@@ -29,12 +29,12 @@ export async function POST(request: NextRequest) {
     // 2) prepara FormData com undici, convertendo Buffer em Blob
     const imageBlob = new Blob([origBuf], { type: 'image/png' });
     const formData = new FormData();
-    // Especifica o modelo gpt-image-1 para suportar tamanhos não-quadrados
     formData.append('model', 'gpt-image-1');
     formData.append('image', imageBlob, `${ean}-orig.png`);
     formData.append('prompt', prompt);
     formData.append('n', '1');
     formData.append('size', '1024x1536');
+    formData.append('quality', 'high');  // <— define qualidade alta
 
     // 3) chama a API de edição de imagem
     const openaiRes = await fetch('https://api.openai.com/v1/images/edits', {
@@ -54,10 +54,8 @@ export async function POST(request: NextRequest) {
     const b64 = openaiJson.data[0].b64_json as string;
     const editBuf = Buffer.from(b64, 'base64');
     const outFile = bucket.file(`produtos/${ean}.png`);
-
     await outFile.save(editBuf, { contentType: 'image/png', resumable: false });
     await outFile.makePublic();
-
     const publicUrl = `https://storage.googleapis.com/${bucket.name}/produtos/${ean}.png`;
 
     // 5) retorna meta + url
