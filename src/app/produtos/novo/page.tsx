@@ -87,8 +87,15 @@ The final image should look professional and suitable for an e-commerce catalog,
         });
         if (!putRes.ok) throw new Error(`Upload original falhou: ${putRes.status}`);
 
-        // extrai a URL limpa (sem token) para salvar no banco
-        const originalUrl = uploadUrl.split('?')[0];
+        // 2.1) torna o original público e obtém a URL simples
+        const publishRes = await fetch('/api/produtos/publish-original', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName })
+        });
+        const publishJson = await publishRes.json();
+        const originalUrl = publishJson.publicUrl;
+        if (!originalUrl) throw new Error(publishJson.error || 'Falha ao tornar original público');
 
         // 3) gera imagem ajustada
         const resImg = await fetch('/api/produtos/gerar-imagem', {
@@ -269,7 +276,7 @@ The final image should look professional and suitable for an e-commerce catalog,
                         </td>
                       )}
                       {showDetails && (
-                        <td className="border borderline-purple-300 p-2">
+                        <td className="border border-purple-300 p-2">
                           <input
                             value={row.tamanho}
                             onChange={e => handleFieldChange(row.id, 'tamanho', e.target.value)}
