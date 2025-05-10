@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 
 export default function LoginPage() {
@@ -14,18 +14,25 @@ export default function LoginPage() {
   const [carregando, setCarregando] = useState(false)
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Se o usuário já estiver logado, manda pra dashboard
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        router.replace('/dashboard')
+      }
+    })
+    return unsubscribe
+  }, [router])
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setErro('')
     setCarregando(true)
 
     try {
-      // Autentica no Firebase
       await signInWithEmailAndPassword(auth, email.trim(), senha)
-      // Se der certo, redireciona pra página inicial
-      router.replace('/')
+      router.replace('/dashboard')  // ou '/': mas aponte pra rota da dashboard
     } catch (firebaseError: any) {
-      // Captura erro do Firebase e mostra mensagem amigável
       let mensagem = 'Ocorreu um erro ao fazer login.'
       if (firebaseError.code === 'auth/user-not-found') {
         mensagem = 'Usuário não encontrado.'
@@ -117,5 +124,5 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
-)
+  )
 }
