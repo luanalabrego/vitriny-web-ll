@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 
-// GET: lista produtos (SEM trazer imageUrl agora)
+// GET: lista produtos (agora trazendo imageUrl e originalUrl)
 export async function GET(request: Request) {
   try {
     const produtos = await prisma.product.findMany({
@@ -12,8 +12,9 @@ export async function GET(request: Request) {
         descricao: true,
         marca: true,
         cor: true,
-        tamanho: true
-        // NÃO trazemos imageUrl, nem originalUrl
+        tamanho: true,
+        imageUrl: true,     // inclui a URL da imagem ajustada
+        originalUrl: true   // inclui a URL da imagem original (opcional)
       }
     })
     return NextResponse.json(produtos, { status: 200 })
