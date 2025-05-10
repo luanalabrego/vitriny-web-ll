@@ -223,7 +223,6 @@ The final image should look professional and suitable for an e-commerce catalog,
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Cor</th>}
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Tamanho</th>}
                     <th className="border border-purple-300 px-2 py-1">Status</th>
-                    <th className="border border-purple-300 px-2 py-1">Foto Original</th>
                     <th className="border border-purple-300 px-2 py-1">Foto ajustada</th>
                   </tr>
                 </thead>
@@ -296,18 +295,6 @@ The final image should look professional and suitable for an e-commerce catalog,
                           : row.result?.url
                           ? 'OK'
                           : '-'}
-                      </td>
-                      <td className="border border-purple-300 p-2 text-center">
-                        {row.result?.originalUrl ? (
-                          <img
-                            src={row.result.originalUrl}
-                            alt="original"
-                            className="h-24 object-cover rounded cursor-pointer"
-                            onClick={() => setModalImage(row.result!.originalUrl!)}
-                          />
-                        ) : (
-                          <span className="text-gray-500">—</span>
-                        )}
                       </td>
                       <td className="border border-purple-300 p-2 text-center">
                         {row.result?.url && (
