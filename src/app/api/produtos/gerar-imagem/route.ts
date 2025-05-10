@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { FormData } from 'undici';
+import { Blob } from 'buffer';
 import { bucket } from '@/lib/gcs';
 
 export const runtime = 'nodejs';
@@ -12,9 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'OPENAI_API_KEY não definida' }, { status: 500 });
     }
 
-    const { ean, fileName, prompt, descricao, marca, cor, tamanho } =
-      await request.json();
-
+    const { ean, fileName, prompt, descricao, marca, cor, tamanho } = await request.json();
     if (!ean || !fileName) {
       return NextResponse.json(
         { error: '`ean` e `fileName` são obrigatórios.' },
@@ -26,9 +25,10 @@ export async function POST(request: NextRequest) {
     const origFile = bucket.file(fileName);
     const [origBuf] = await origFile.download();
 
-    // 2) prepara FormData com undici
+    // 2) prepara FormData com undici, convertendo Buffer em Blob
+    const imageBlob = new Blob([origBuf], { type: 'image/png' });
     const formData = new FormData();
-    formData.append('image', origBuf, `${ean}-orig.png`);
+    formData.append('image', imageBlob, `${ean}-orig.png`);
     formData.append('prompt', prompt);
     formData.append('n', '1');
     formData.append('size', '1024x1536');
@@ -59,13 +59,11 @@ export async function POST(request: NextRequest) {
 
     // 5) retorna meta + url
     return NextResponse.json(
-      {
-        meta: { ean, prompt, descricao, marca, cor, tamanho },
-        url: publicUrl
-      },
+      { meta: { ean, prompt, descricao, marca, cor, tamanho }, url: publicUrl },
       { status: 200 }
     );
   } catch (err: any) {
+    console.error('Erro em gerar-imagem:', err);
     return NextResponse.json(
       { error: err.message || String(err) },
       { status: 500 }
