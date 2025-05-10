@@ -3,14 +3,27 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import admin from 'firebase-admin'
 
-// Inicializa o admin SDK apenas uma vez
+// Garantindo que as variáveis de ambiente existam
+const {
+  FIREBASE_PROJECT_ID,
+  FIREBASE_CLIENT_EMAIL,
+  FIREBASE_PRIVATE_KEY
+} = process.env
+
+if (!FIREBASE_PROJECT_ID || !FIREBASE_CLIENT_EMAIL || !FIREBASE_PRIVATE_KEY) {
+  throw new Error(
+    'Variáveis de ambiente do Firebase Admin (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY) não estão definidas.'
+  )
+}
+
+// Só inicializa uma vez
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      // a chave privada costuma ter que substituir as quebras de linha:
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      projectId: FIREBASE_PROJECT_ID,
+      clientEmail: FIREBASE_CLIENT_EMAIL,
+      // no .env, privateKey deve ter as quebras de linha como \\n
+      privateKey: FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
     }),
   })
 }
@@ -18,6 +31,7 @@ if (!admin.apps.length) {
 export async function POST(request: NextRequest) {
   try {
     const { token } = (await request.json()) as { token?: string }
+
     if (!token) {
       return NextResponse.json(
         { message: 'Token de autenticação é obrigatório' },
@@ -25,13 +39,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verifica o ID token no Firebase e retorna o payload
+    // Verifica ID token e obtém payload (uid, email, claims...)
     const decoded = await admin.auth().verifyIdToken(token)
 
-    // Cria o cookie de sessão com os dados retornados
+    // Cria cookie de sessão com o payload serializado
     cookies().set({
       name: 'vitriny_auth',
-      value: JSON.stringify(decoded),  // ou use seu setAuthCookie(decoded)
+      value: JSON.stringify(decoded),
       httpOnly: true,
       path: '/',
       secure: process.env.NODE_ENV === 'production',
@@ -41,15 +55,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (err: any) {
     console.error('Erro no auth/login:', err)
-    const status =
+
+    const isAuthError =
       err.code === 'auth/id-token-expired' ||
-      err.code === 'auth/argument-error'
-        ? 401
-        : 500
+      err.code === 'auth/argument-error' ||
+      /expired/i.test(err.message)
 
     return NextResponse.json(
-      { message: err.message || 'Erro interno do servidor' },
-      { status }
+      { message: isAuthError
+          ? 'Sessão expirada ou inválida. Faça login novamente.'
+          : err.message || 'Erro interno do servidor'
+      },
+      { status: isAuthError ? 401 : 500 }
     )
   }
 }
