@@ -115,9 +115,7 @@ export default function ProdutosPage() {
                     <img
                       src={prod.imageUrl}
                       alt="Ajustada"
-                      width={64}
-                      height={96}
-                      className="object-cover rounded cursor-pointer inline-block"
+                      className="h-24 object-cover rounded cursor-pointer inline-block"
                       onClick={() => setModalSrc(prod.imageUrl!)}
                     />
                   ) : (
