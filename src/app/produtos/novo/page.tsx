@@ -11,22 +11,51 @@ interface Row {
   marca: string;
   cor: string;
   tamanho: string;
+  productType: string;
   result?: { url?: string; originalUrl?: string; error?: string; meta?: any };
   loading?: boolean;
 }
 
 export default function NovoProduto() {
-  const promptImage = `
-Create a high-quality studio photo of a model wearing the exact same outfit as shown in the reference image.
-
-The model should be standing naturally, facing the camera, with a casual and spontaneous pose (such as one hand on the hip, slight smile, or relaxed arms).
-
-The background must be a clean, plain studio background (white or light gray), with soft, even lighting — no shadows or distractions.
-
-Focus on accurately replicating the outfit’s color, texture, and fit.
-
-The final image should look professional and suitable for an e-commerce catalog, highlighting the clothing clearly and elegantly.
-  `.trim();
+  // Prompts específicos para cada tipo de produto
+  const promptByType: Record<string, string> = {
+    'Feminino': `
+Create a high-quality studio photo of a female model wearing the exact same feminine outfit as shown in the reference image.
+The model should be standing naturally, facing the camera, with a casual pose and a slight smile.
+The background must be clean and plain (white or light gray), with soft, even lighting.
+Focus on accurately showing the color, texture, and fit of the women's clothing.
+  `.trim(),
+    'Masculino': `
+Create a high-quality studio photo of a male model wearing the exact same masculine outfit as shown in the reference image.
+The model should be standing confidently, facing the camera, with relaxed arms.
+Use a plain studio background (white or light gray) and soft, even lighting.
+Emphasize the color, fabric texture, and tailored fit of the men's clothing.
+  `.trim(),
+    'Infantil feminino': `
+Create a high-quality studio photo of a young girl model wearing the exact same children's outfit as shown in the reference image.
+The child should be standing naturally, facing the camera, with a playful posture.
+Use a plain background (white or light gray) and gentle, even lighting.
+Highlight the color and comfort of the girls' clothing.
+  `.trim(),
+    'Infantil Masculino': `
+Create a high-quality studio photo of a young boy model wearing the exact same children's outfit as shown in the reference image.
+The child should be standing facing the camera, with a relaxed stance.
+Use a neutral background (white or light gray) and soft lighting.
+Focus on the durability and design details of the boys' clothing.
+  `.trim(),
+    'Calçado': `
+Create a high-quality studio photo focusing on the exact footwear as shown in the reference image.
+Place the shoes on a clean, flat surface against a plain white or light gray background.
+Use soft, even lighting to eliminate shadows and highlight textures.
+Emphasize the shape, material, and details of the shoes.
+  `.trim(),
+    'Bolsa': `
+Create a high-quality studio photo of the handbag as shown in the reference image.
+Show both a full shot and a close-up detail of the bag’s texture and hardware.
+Use a plain white or light gray background with soft, even lighting.
+Highlight the color, material, and fine details of the handbag.
+  `.trim(),
+  };
 
   const [rows, setRows] = useState<Row[]>([]);
   const [modalImage, setModalImage] = useState<string | null>(null);
@@ -45,7 +74,8 @@ The final image should look professional and suitable for an e-commerce catalog,
       descricao: '',
       marca: '',
       cor: '',
-      tamanho: ''
+      tamanho: '',
+      productType: 'Feminino', // valor padrão
     }));
     setRows(prev => [...prev, ...newRows]);
     e.target.value = '';
@@ -63,12 +93,10 @@ The final image should look professional and suitable for an e-commerce catalog,
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
     if (rows.some(r => !r.ean.trim())) {
       alert('Preencha o EAN em cada linha antes de enviar.');
       return;
     }
-
     setRows(rows.map(r => ({ ...r, loading: true, result: undefined })));
 
     const tasks = rows.map(row => (async () => {
@@ -97,14 +125,17 @@ The final image should look professional and suitable for an e-commerce catalog,
         const originalUrl = publishJson.publicUrl;
         if (!originalUrl) throw new Error(publishJson.error || 'Falha ao tornar original público');
 
-        // 3) gera imagem ajustada
+        // 3) escolhe prompt com base no tipo de produto
+        const prompt = promptByType[row.productType] || promptByType['Feminino'];
+
+        // 4) gera imagem ajustada
         const resImg = await fetch('/api/produtos/gerar-imagem', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ean: row.ean.trim(),
             fileName,
-            prompt: promptImage,
+            prompt,
             descricao: row.descricao,
             marca: row.marca,
             cor: row.cor,
@@ -116,7 +147,7 @@ The final image should look professional and suitable for an e-commerce catalog,
 
         const { url, meta } = jsonImg;
 
-        // 4) atualiza estado visual
+        // 5) atualiza estado visual
         setRows(prev =>
           prev.map(r =>
             r.id === row.id
@@ -125,7 +156,7 @@ The final image should look professional and suitable for an e-commerce catalog,
           )
         );
 
-        // 5) persiste no banco
+        // 6) persiste no banco
         if (url) {
           await fetch('/api/produtos', {
             method: 'POST',
@@ -217,6 +248,7 @@ The final image should look professional and suitable for an e-commerce catalog,
                 <thead>
                   <tr className="bg-purple-600 text-white">
                     <th className="border border-white px-2 py-1">Foto</th>
+                    <th className="border border-purple-300 px-2 py-1">Tipo</th>
                     <th className="border border-purple-300 px-2 py-1">EAN</th>
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Descrição</th>}
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Marca</th>}
@@ -238,6 +270,20 @@ The final image should look professional and suitable for an e-commerce catalog,
                             onClick={() => setModalImage(row.preview!)}
                           />
                         )}
+                      </td>
+                      <td className="border border-purple-300 p-2">
+                        <select
+                          value={row.productType}
+                          onChange={e => handleFieldChange(row.id, 'productType', e.target.value)}
+                          className="border rounded p-1 w-full bg-white"
+                        >
+                          <option>Feminino</option>
+                          <option>Masculino</option>
+                          <option>Infantil feminino</option>
+                          <option>Infantil Masculino</option>
+                          <option>Calçado</option>
+                          <option>Bolsa</option>
+                        </select>
                       </td>
                       <td className="border border-purple-300 p-2">
                         <input
