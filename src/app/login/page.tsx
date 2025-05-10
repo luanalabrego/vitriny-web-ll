@@ -15,14 +15,15 @@ export default function LoginPage() {
   const [carregando, setCarregando] = useState(false)
   const router = useRouter()
 
-  // Se já tiver cookie de sessão ativo, redireciona
+  // Ao montar, verifica se já existe sessão ativa
   useEffect(() => {
-    onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, user => {
       if (user) {
-        // opcional: você pode validar /api/auth/me aqui em vez do onAuth
-        router.replace('/')
+        console.log('User already logged in, redirecting to /')
+        router.push('/')
       }
     })
+    return unsubscribe
   }, [router])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -31,50 +32,55 @@ export default function LoginPage() {
     setCarregando(true)
 
     try {
-      // 1) Faz login no Firebase
+      // Login no Firebase Auth
       const cred = await signInWithEmailAndPassword(auth, email.trim(), senha)
+      console.log('Firebase signInWithEmailAndPassword successful:', cred.user.uid)
 
-      // 2) Pega o ID token
+      // Pega ID token JWT
       const idToken = await cred.user.getIdToken()
+      console.log('Obtained ID token')
 
-      // 3) Envia ao seu API para criar o cookie de sessão
+      // Envia ao API para criar cookie de sessão
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ token: idToken }),
       })
+      console.log('API /auth/login response:', res.status)
+
       if (!res.ok) {
+        const errorBody = await res.text()
+        console.error('Error response body:', errorBody)
         throw new Error('Não foi possível criar sessão no servidor.')
       }
 
-      // 4) Redireciona à raiz, onde /api/auth/me vai retornar OK
-      router.replace('/')
-    } catch (firebaseError: any) {
-      console.error('Auth error:', firebaseError.code, firebaseError.message)
-
-      let mensagem = 'Ocorreu um erro ao fazer login.'
-      switch (firebaseError.code) {
+      // Redireciona para o dashboard (raiz)
+      console.log('Redirecting to /')
+      router.push('/')
+    } catch (fError: any) {
+      console.error('Auth error:', fError.code, fError.message)
+      let msg = 'Ocorreu um erro ao fazer login.'
+      switch (fError.code) {
         case 'auth/user-not-found':
-          mensagem = 'Usuário não encontrado.'
+          msg = 'Usuário não encontrado.'
           break
         case 'auth/invalid-email':
-          mensagem = 'Formato de e-mail inválido.'
+          msg = 'Formato de e-mail inválido.'
           break
         case 'auth/wrong-password':
         case 'INVALID_LOGIN_CREDENTIALS':
         case 'auth/invalid-login-credentials':
-          mensagem = 'E-mail ou senha incorretos.'
+          msg = 'E-mail ou senha incorretos.'
           break
         case 'auth/user-disabled':
-          mensagem = 'Esta conta foi desativada.'
+          msg = 'Esta conta foi desativada.'
           break
         case 'auth/operation-not-allowed':
-          mensagem =
-            'Login por e-mail/senha não está habilitado. Ative em Firebase Console → Authentication → Sign-in Method.'
+          msg = 'Login por e-mail/senha não está habilitado. Ative em Firebase Console → Authentication → Sign-in Method.'
           break
       }
-      setErro(mensagem)
+      setErro(msg)
     } finally {
       setCarregando(false)
     }
@@ -91,28 +97,16 @@ export default function LoginPage() {
           priority
         />
       </div>
-
       <div className="relative z-10 bg-white rounded-lg shadow p-8 w-full max-w-md border-2 border-purple-600">
         <div className="flex justify-center mb-6">
-          <Image
-            src="/Vitriny.png"
-            alt="Vitriny Web"
-            width={160}
-            height={50}
-            priority
-          />
+          <Image src="/Vitriny.png" alt="Vitriny Web" width={160} height={50} priority />
         </div>
-
-        <p className="text-gray-600 mb-6 text-center">
-          Faça login na sua conta
-        </p>
-
+        <p className="text-gray-600 mb-6 text-center">Faça login na sua conta</p>
         {erro && (
           <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
             <p className="text-red-700">{erro}</p>
           </div>
         )}
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="sr-only">Email</label>
@@ -126,7 +120,6 @@ export default function LoginPage() {
               className="w-full px-3 py-2 border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
-
           <div>
             <label htmlFor="senha" className="sr-only">Senha</label>
             <input
@@ -139,7 +132,6 @@ export default function LoginPage() {
               className="w-full px-3 py-2 border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
-
           <button
             type="submit"
             disabled={carregando}
@@ -148,7 +140,6 @@ export default function LoginPage() {
             {carregando ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
-
         <p className="mt-4 text-center text-sm text-gray-600">
           Não tem conta?{' '}
           <Link href="/registro" className="text-purple-600 hover:underline">

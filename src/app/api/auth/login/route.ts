@@ -1,59 +1,55 @@
 // src/app/api/auth/login/route.ts
-import { NextResponse } from 'next/server'
-import { initializeApp, getApps, cert } from 'firebase-admin/app'
-import { getAuth } from 'firebase-admin/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import admin from 'firebase-admin'
 
-/**
- * Inicializa o Firebase Admin usando o JSON completo de service account
- * armazenado em FIREBASE_SERVICE_ACCOUNT (Vercel env var).
- */
-if (!getApps().length) {
-  const serviceAccount = JSON.parse(
-    process.env.FIREBASE_SERVICE_ACCOUNT!
-  )
-
-  initializeApp({
-    credential: cert(serviceAccount),
+// Inicializa o admin SDK apenas uma vez
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      // a chave privada costuma ter que substituir as quebras de linha:
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
   })
 }
 
-const adminAuth = getAuth()
-
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    // 1) Extrai o token do corpo
-    const { token } = await req.json()
+    const { token } = (await request.json()) as { token?: string }
     if (!token) {
       return NextResponse.json(
-        { message: 'O campo "token" é obrigatório.' },
+        { message: 'Token de autenticação é obrigatório' },
         { status: 400 }
       )
     }
 
-    // 2) Verifica o ID token (opcional, mas recomendado)
-    await adminAuth.verifyIdToken(token)
+    // Verifica o ID token no Firebase e retorna o payload
+    const decoded = await admin.auth().verifyIdToken(token)
 
-    // 3) Cria o session cookie (valendo 5 dias)
-    const expiresIn = 60 * 60 * 24 * 5 * 1000 // ms
-    const sessionCookie = await adminAuth.createSessionCookie(token, {
-      expiresIn,
-    })
-
-    // 4) Retorna a resposta setando o cookie
-    const res = NextResponse.json({ status: 'sucesso' })
-    res.cookies.set('session', sessionCookie, {
+    // Cria o cookie de sessão com os dados retornados
+    cookies().set({
+      name: 'vitriny_auth',
+      value: JSON.stringify(decoded),  // ou use seu setAuthCookie(decoded)
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: expiresIn / 1000, // em segundos
       path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7, // 7 dias
     })
 
-    return res
-  } catch (error: any) {
-    console.error('Erro no login:', error)
+    return NextResponse.json({ success: true })
+  } catch (err: any) {
+    console.error('Erro no auth/login:', err)
+    const status =
+      err.code === 'auth/id-token-expired' ||
+      err.code === 'auth/argument-error'
+        ? 401
+        : 500
+
     return NextResponse.json(
-      { message: 'Falha ao criar sessão de login.' },
-      { status: 500 }
+      { message: err.message || 'Erro interno do servidor' },
+      { status }
     )
   }
 }
