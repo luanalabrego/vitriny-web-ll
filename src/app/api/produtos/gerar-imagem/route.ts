@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import FormData from 'form-data';
+import { FormData } from 'undici';
 import { bucket } from '@/lib/gcs';
 
 export const runtime = 'nodejs';
@@ -22,25 +22,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1) baixa original
+    // 1) baixa o original do GCS
     const origFile = bucket.file(fileName);
     const [origBuf] = await origFile.download();
 
-    // 2) prepara FormData para Node
+    // 2) prepara FormData com undici
     const formData = new FormData();
-    formData.append('image', origBuf, {
-      filename: `${ean}-orig.png`,
-      contentType: 'image/png'
-    });
+    formData.append('image', origBuf, `${ean}-orig.png`);
     formData.append('prompt', prompt);
     formData.append('n', '1');
     formData.append('size', '1024x1536');
 
-    // 3) chama OpenAI
+    // 3) chama a API de edição de imagem
     const openaiRes = await fetch('https://api.openai.com/v1/images/edits', {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}` },
-      body: formData as any
+      body: formData
     });
     const openaiJson = await openaiRes.json();
     if (!openaiRes.ok) {
@@ -50,7 +47,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4) salva edit no GCS
+    // 4) processa e salva no GCS
     const b64 = openaiJson.data[0].b64_json as string;
     const editBuf = Buffer.from(b64, 'base64');
     const outFile = bucket.file(`produtos/${ean}.png`);
