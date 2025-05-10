@@ -73,18 +73,24 @@ The final image should look professional and suitable for an e-commerce catalog,
 
     const tasks = rows.map(row => (async () => {
       try {
+        // 1) pede URL de upload
         const { uploadUrl, fileName } = await fetch(
           `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean.trim())}`
         ).then(res => res.json());
         if (!uploadUrl || !fileName) throw new Error('Falha ao obter URL de upload');
 
+        // 2) faz PUT do arquivo original
         const putRes = await fetch(uploadUrl, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/octet-stream' },
           body: row.file
         });
-        if (!putRes.ok) throw new Error(`Upload falhou: ${putRes.status}`);
+        if (!putRes.ok) throw new Error(`Upload original falhou: ${putRes.status}`);
 
+        // extrai a URL limpa (sem token) para salvar no banco
+        const originalUrl = uploadUrl.split('?')[0];
+
+        // 3) gera imagem ajustada
         const resImg = await fetch('/api/produtos/gerar-imagem', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -99,18 +105,20 @@ The final image should look professional and suitable for an e-commerce catalog,
           })
         });
         const jsonImg = await resImg.json();
-        if (!resImg.ok) throw new Error(jsonImg.error || 'Erro interno');
+        if (!resImg.ok) throw new Error(jsonImg.error || 'Erro interno ao gerar imagem');
 
         const { url, meta } = jsonImg;
 
+        // 4) atualiza estado visual
         setRows(prev =>
           prev.map(r =>
             r.id === row.id
-              ? { ...r, loading: false, result: { url, meta } }
+              ? { ...r, loading: false, result: { url, originalUrl, meta } }
               : r
           )
         );
 
+        // 5) persiste no banco
         if (url) {
           await fetch('/api/produtos', {
             method: 'POST',
@@ -121,6 +129,7 @@ The final image should look professional and suitable for an e-commerce catalog,
               marca: row.marca,
               cor: row.cor,
               tamanho: row.tamanho,
+              originalUrl,
               imageUrl: url
             })
           });
@@ -207,6 +216,7 @@ The final image should look professional and suitable for an e-commerce catalog,
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Cor</th>}
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Tamanho</th>}
                     <th className="border border-purple-300 px-2 py-1">Status</th>
+                    <th className="border border-purple-300 px-2 py-1">Foto Original</th>
                     <th className="border border-purple-300 px-2 py-1">Foto ajustada</th>
                   </tr>
                 </thead>
@@ -259,7 +269,7 @@ The final image should look professional and suitable for an e-commerce catalog,
                         </td>
                       )}
                       {showDetails && (
-                        <td className="border border-purple-300 p-2">
+                        <td className="border borderline-purple-300 p-2">
                           <input
                             value={row.tamanho}
                             onChange={e => handleFieldChange(row.id, 'tamanho', e.target.value)}
@@ -280,7 +290,19 @@ The final image should look professional and suitable for an e-commerce catalog,
                           ? 'OK'
                           : '-'}
                       </td>
-                      <td className="border border-purple-300 p-2">
+                      <td className="border border-purple-300 p-2 text-center">
+                        {row.result?.originalUrl ? (
+                          <img
+                            src={row.result.originalUrl}
+                            alt="original"
+                            className="h-24 object-cover rounded cursor-pointer"
+                            onClick={() => setModalImage(row.result!.originalUrl!)}
+                          />
+                        ) : (
+                          <span className="text-gray-500">—</span>
+                        )}
+                      </td>
+                      <td className="border border-purple-300 p-2 text-center">
                         {row.result?.url && (
                           <img
                             src={row.result.url}
