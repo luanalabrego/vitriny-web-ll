@@ -9,6 +9,7 @@ interface Product {
   marca?: string;
   cor?: string;
   tamanho?: string;
+  originalUrl?: string;
   imageUrl?: string;
 }
 
@@ -35,6 +36,7 @@ export default function ProdutosPage() {
           marca: p.marca ?? '',
           cor: p.cor ?? '',
           tamanho: p.tamanho ?? '',
+          originalUrl: p.originalUrl,
           imageUrl: p.imageUrl
         }));
         setProducts(normalized);
@@ -99,6 +101,7 @@ export default function ProdutosPage() {
               <th className="border border-purple-300 px-4 py-2">Tamanho</th>
               <th className="border border-purple-300 px-4 py-2">Cor</th>
               <th className="border border-purple-300 px-4 py-2">Descrição</th>
+              <th className="border border-purple-300 px-4 py-2">Foto Original</th>
               <th className="border border-purple-300 px-4 py-2">Ajustada</th>
             </tr>
           </thead>
@@ -110,6 +113,18 @@ export default function ProdutosPage() {
                 <td className="border border-purple-300 px-4 py-2">{prod.tamanho || '-'}</td>
                 <td className="border border-purple-300 px-4 py-2">{prod.cor || '-'}</td>
                 <td className="border border-purple-300 px-4 py-2">{prod.descricao || '-'}</td>
+                <td className="border border-purple-300 px-4 py-2 text-center">
+                  {prod.originalUrl ? (
+                    <img
+                      src={prod.originalUrl}
+                      alt="Original"
+                      className="h-24 object-cover rounded cursor-pointer inline-block"
+                      onClick={() => setModalSrc(prod.originalUrl!)}
+                    />
+                  ) : (
+                    <span className="text-gray-500">—</span>
+                  )}
+                </td>
                 <td className="border border-purple-300 px-4 py-2 text-center">
                   {prod.imageUrl ? (
                     <img
