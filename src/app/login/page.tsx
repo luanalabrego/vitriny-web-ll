@@ -1,3 +1,4 @@
+// src/app/login/page.tsx
 'use client'
 
 import React, { useState, useEffect } from 'react'
@@ -14,11 +15,11 @@ export default function LoginPage() {
   const [carregando, setCarregando] = useState(false)
   const router = useRouter()
 
-  // Se o usuário já estiver logado, manda pra dashboard
+  // Se o usuário já estiver logado, manda pra raiz '/'
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        router.replace('/dashboard')
+        router.replace('/')
       }
     })
     return unsubscribe
@@ -31,15 +32,32 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email.trim(), senha)
-      router.replace('/dashboard')  // ou '/': mas aponte pra rota da dashboard
+      router.replace('/')  // redireciona para a raiz
     } catch (firebaseError: any) {
+      console.error('FirebaseAuth error:', firebaseError.code, firebaseError.message)
+
       let mensagem = 'Ocorreu um erro ao fazer login.'
-      if (firebaseError.code === 'auth/user-not-found') {
-        mensagem = 'Usuário não encontrado.'
-      } else if (firebaseError.code === 'auth/wrong-password') {
-        mensagem = 'Senha incorreta.'
-      } else if (firebaseError.code === 'auth/invalid-email') {
-        mensagem = 'Formato de email inválido.'
+      switch (firebaseError.code) {
+        case 'auth/user-not-found':
+          mensagem = 'Usuário não encontrado.'
+          break
+        case 'auth/invalid-email':
+          mensagem = 'Formato de e-mail inválido.'
+          break
+        case 'auth/wrong-password':
+        case 'INVALID_LOGIN_CREDENTIALS':
+        case 'auth/invalid-login-credentials':
+          mensagem = 'E-mail ou senha incorretos.'
+          break
+        case 'auth/user-disabled':
+          mensagem = 'Esta conta foi desativada.'
+          break
+        case 'auth/operation-not-allowed':
+          mensagem =
+            'Login por e-mail/senha não está habilitado. Ative em Firebase Console → Authentication → Sign-in Method.'
+          break
+        default:
+          mensagem = firebaseError.message || mensagem
       }
       setErro(mensagem)
     } finally {
