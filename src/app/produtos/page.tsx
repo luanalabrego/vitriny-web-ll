@@ -3,14 +3,16 @@
 import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 
+const STORAGE_BASE = 'https://storage.googleapis.com/vitriny-web.firebasestorage.app/';
+
 interface Product {
   ean: string;
   descricao?: string;
   marca?: string;
   cor?: string;
   tamanho?: string;
-  originalUrl?: string;
   imageUrl?: string;
+  originalUrl?: string | null;
 }
 
 export default function ProdutosPage() {
@@ -30,16 +32,7 @@ export default function ProdutosPage() {
     fetch('/api/produtos')
       .then(res => res.json())
       .then((data: Product[]) => {
-        const normalized = data.map(p => ({
-          ean: p.ean,
-          descricao: p.descricao ?? '',
-          marca: p.marca ?? '',
-          cor: p.cor ?? '',
-          tamanho: p.tamanho ?? '',
-          originalUrl: p.originalUrl,
-          imageUrl: p.imageUrl
-        }));
-        setProducts(normalized);
+        setProducts(data);
       });
   }, []);
 
@@ -49,10 +42,10 @@ export default function ProdutosPage() {
   };
 
   const filtered = products.filter(p =>
-    (!filters.ean || p.ean.includes(filters.ean)) &&
-    (!filters.marca || p.marca!.toLowerCase().includes(filters.marca.toLowerCase())) &&
-    (!filters.tamanho || p.tamanho!.toLowerCase().includes(filters.tamanho.toLowerCase())) &&
-    (!filters.cor || p.cor!.toLowerCase().includes(filters.cor.toLowerCase())) &&
+    (!filters.ean    || p.ean.includes(filters.ean)) &&
+    (!filters.marca  || p.marca!.toLowerCase().includes(filters.marca.toLowerCase())) &&
+    (!filters.tamanho|| p.tamanho!.toLowerCase().includes(filters.tamanho.toLowerCase())) &&
+    (!filters.cor    || p.cor!.toLowerCase().includes(filters.cor.toLowerCase())) &&
     (!filters.descricao || p.descricao!.toLowerCase().includes(filters.descricao.toLowerCase()))
   );
 
@@ -65,6 +58,13 @@ export default function ProdutosPage() {
     XLSX.utils.book_append_sheet(wb, ws, 'Produtos');
     XLSX.writeFile(wb, 'produtos.xlsx');
   };
+
+  const resolveUrl = (url?: string | null) =>
+    url
+      ? url.startsWith('http')
+        ? url
+        : `${STORAGE_BASE}${url}`
+      : '';
 
   return (
     <div className="p-6 text-black">
@@ -113,25 +113,29 @@ export default function ProdutosPage() {
                 <td className="border border-purple-300 px-4 py-2">{prod.tamanho || '-'}</td>
                 <td className="border border-purple-300 px-4 py-2">{prod.cor || '-'}</td>
                 <td className="border border-purple-300 px-4 py-2">{prod.descricao || '-'}</td>
+
+                {/* Foto Original */}
                 <td className="border border-purple-300 px-4 py-2 text-center">
                   {prod.originalUrl ? (
                     <img
-                      src={prod.originalUrl}
+                      src={resolveUrl(prod.originalUrl)}
                       alt="Original"
                       className="h-24 object-cover rounded cursor-pointer inline-block"
-                      onClick={() => setModalSrc(prod.originalUrl!)}
+                      onClick={() => setModalSrc(resolveUrl(prod.originalUrl))}
                     />
                   ) : (
                     <span className="text-gray-500">—</span>
                   )}
                 </td>
+
+                {/* Foto Ajustada */}
                 <td className="border border-purple-300 px-4 py-2 text-center">
                   {prod.imageUrl ? (
                     <img
-                      src={prod.imageUrl}
+                      src={resolveUrl(prod.imageUrl)}
                       alt="Ajustada"
                       className="h-24 object-cover rounded cursor-pointer inline-block"
-                      onClick={() => setModalSrc(prod.imageUrl!)}
+                      onClick={() => setModalSrc(resolveUrl(prod.imageUrl))}
                     />
                   ) : (
                     <span className="text-gray-500">—</span>
