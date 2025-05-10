@@ -51,24 +51,21 @@ The final image should look professional and suitable for an e-commerce catalog,
     e.target.value = '';
   };
 
-  const clearSelection = () => {
-    setRows([]);
-  };
+  const clearSelection = () => setRows([]);
 
   const handleFieldChange = (
     id: number,
     field: keyof Omit<Row, 'id' | 'file' | 'preview' | 'result' | 'loading'>,
     value: string
   ) => {
-    setRows(rows.map(r => r.id === id ? { ...r, [field]: value } : r));
+    setRows(rows.map(r => (r.id === id ? { ...r, [field]: value } : r)));
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // agora só valida EAN (e opcionalmente a imagem, que já está garantida)
-    const invalid = rows.filter(r => !r.ean.trim());
-    if (invalid.length > 0) {
+    // Validação de EAN
+    if (rows.some(r => !r.ean.trim())) {
       alert('Preencha o EAN em cada linha antes de enviar.');
       return;
     }
@@ -79,55 +76,71 @@ The final image should look professional and suitable for an e-commerce catalog,
       row.loading = true;
       setRows([...updated]);
 
-      const formImg = new FormData();
-      formImg.append('ean', row.ean.trim());
-      if (row.file) {
-        // <<< CORREÇÃO: trocar 'imagens' por 'image' >>>
-        formImg.append('image', row.file);
-      }
-      formImg.append('prompt', promptImage);
-      formImg.append('model', 'gpt-image-1');
-      formImg.append('n', '1');
-      formImg.append('size', '1024x1536');
-      formImg.append('quality', 'high');
+      try {
+        // 1) Busca signed URL e fileName
+        const { uploadUrl, fileName } = await fetch(
+          `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean.trim())}`
+        ).then(res => res.json());
+        if (!uploadUrl || !fileName) throw new Error('Falha ao obter URL de upload');
 
-      const resImg = await fetch('/api/produtos/gerar-imagem', { method: 'POST', body: formImg });
-      const jsonImg = await resImg.json();
-      row.loading = false;
+        // 2) Envia o arquivo direto para o GCS
+        await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': row.file!.type },
+          body: row.file
+        });
 
-      if (!resImg.ok) {
-        row.result = { error: jsonImg.error || 'Erro interno' };
-        setRows([...updated]);
-        continue;
-      }
-
-      const { url, originalUrl, meta } = jsonImg;
-      row.result = { url, originalUrl, meta };
-      setRows([...updated]);
-
-      if (url) {
-        await fetch('/api/produtos', {
+        // 3) Chama endpoint de gerar imagem com JSON leve
+        const resImg = await fetch('/api/produtos/gerar-imagem', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ean: row.ean.trim(),
+            fileName,
+            prompt: promptImage,
             descricao: row.descricao,
             marca: row.marca,
             cor: row.cor,
-            tamanho: row.tamanho,
-            imageUrl: url,
-            originalUrl
+            tamanho: row.tamanho
           })
         });
-      } else {
-        console.error('Erro: imagem não gerada para o produto', row.ean);
-        row.result = { error: 'Erro ao gerar imagem. Produto não foi salvo.' };
+        const jsonImg = await resImg.json();
+        row.loading = false;
+
+        if (!resImg.ok) {
+          row.result = { error: jsonImg.error || 'Erro interno' };
+          setRows([...updated]);
+          continue;
+        }
+
+        // 4) Atualiza resultado
+        const { url, meta } = jsonImg;
+        row.result = { url, meta };
+        setRows([...updated]);
+
+        // 5) Salva no seu backend
+        if (url) {
+          await fetch('/api/produtos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ean: row.ean.trim(),
+              descricao: row.descricao,
+              marca: row.marca,
+              cor: row.cor,
+              tamanho: row.tamanho,
+              imageUrl: url
+            })
+          });
+        }
+      } catch (err: any) {
+        row.loading = false;
+        row.result = { error: err.message || 'Erro inesperado' };
         setRows([...updated]);
       }
     }
   };
 
-  // canSubmit agora verifica apenas se todos têm EAN preenchido e nenhum está carregando
   const canSubmit =
     rows.length > 0 &&
     rows.every(r => r.ean.trim()) &&
@@ -188,21 +201,14 @@ The final image should look professional and suitable for an e-commerce catalog,
                   <th className="border border-purple-300 px-2 py-1">Cor</th>
                   <th className="border border-purple-300 px-2 py-1">Tamanho</th>
                   <th className="border border-purple-300 px-2 py-1">Status</th>
-                  <th className="border border-purple-300 px-2 py-1">Foto Original</th>
-                  <th className="border border-purple-300 px-2 py-1">Foto Ajustada</th>
+                  <th className="border border-purple-300 px-2 py-1">Ampliar</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map(row => (
                   <tr key={row.id} className="hover:bg-gray-50">
                     <td className="border border-purple-300 p-2">
-                      {row.preview && (
-                        <img
-                          src={row.preview}
-                          alt="preview"
-                          className="h-24 object-cover rounded"
-                        />
-                      )}
+                      {row.preview && <img src={row.preview} alt="preview" className="h-24 object-cover rounded" />}
                     </td>
                     <td className="border border-purple-300 p-2">
                       <input
@@ -241,23 +247,7 @@ The final image should look professional and suitable for an e-commerce catalog,
                       />
                     </td>
                     <td className="border border-purple-300 p-2 text-center">
-                      {row.loading
-                        ? 'Gerando...'
-                        : row.result?.error
-                        ? 'Erro'
-                        : row.result?.url
-                        ? 'OK'
-                        : '-'}
-                    </td>
-                    <td className="border border-purple-300 p-2">
-                      {row.result?.originalUrl && (
-                        <img
-                          src={row.result.originalUrl}
-                          alt="original"
-                          className="h-24 object-cover rounded cursor-pointer"
-                          onClick={() => setModalImage(row.result!.originalUrl!)}
-                        />
-                      )}
+                      {row.loading ? 'Gerando...' : row.result?.error ? 'Erro' : row.result?.url ? 'OK' : '-'}
                     </td>
                     <td className="border border-purple-300 p-2">
                       {row.result?.url && (
@@ -286,15 +276,8 @@ The final image should look professional and suitable for an e-commerce catalog,
       </form>
 
       {modalImage && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-          onClick={() => setModalImage(null)}
-        >
-          <img
-            src={modalImage}
-            alt="Ampliado"
-            className="max-h-[90%] max-w-[90%] rounded shadow-lg"
-          />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" onClick={() => setModalImage(null)}>
+          <img src={modalImage} alt="Ampliado" className="max-h-[90%] max-w-[90%] rounded shadow-lg" />
         </div>
       )}
     </>
