@@ -81,7 +81,9 @@ The final image should look professional and suitable for an e-commerce catalog,
 
       const formImg = new FormData();
       formImg.append('ean', row.ean.trim());
-      if (row.file) formImg.append('imagens row.file);
+      if (row.file) {
+        formImg.append('imagens', row.file);
+      }
       formImg.append('prompt', promptImage);
       formImg.append('model', 'gpt-image-1');
       formImg.append('n', '1');
@@ -108,7 +110,7 @@ The final image should look professional and suitable for an e-commerce catalog,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ean: row.ean.trim(),
-            descricao: row.descricao,   // você pode enviar vazios sem problema
+            descricao: row.descricao,
             marca: row.marca,
             cor: row.cor,
             tamanho: row.tamanho,
