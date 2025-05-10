@@ -1,15 +1,13 @@
 // src/app/api/auth/me/route.ts
 
-import { NextRequest, NextResponse } from 'next/server'
-import { getAuthUser } from '@/lib/auth'
+import { NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 
 export async function GET(request: NextRequest) {
-  const usuario = getAuthUser()
-  if (!usuario) {
-    return NextResponse.json(
-      { error: 'Não autenticado' },
-      { status: 401 }
-    )
+  const cookie = request.cookies.get('vitriny_auth')
+  if (!cookie) {
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
   }
-  return NextResponse.json(usuario)
+  const user = JSON.parse(cookie.value)
+  return NextResponse.json(user)
 }
