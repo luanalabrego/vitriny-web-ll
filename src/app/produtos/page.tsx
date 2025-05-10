@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import * as XLSX from 'xlsx';
 
 interface Product {
@@ -30,7 +29,6 @@ export default function ProdutosPage() {
     fetch('/api/produtos')
       .then(res => res.json())
       .then((data: Product[]) => {
-        // garante sempre string (mesmo que backend não envie)
         const normalized = data.map(p => ({
           ean: p.ean,
           descricao: p.descricao ?? '',
@@ -112,14 +110,14 @@ export default function ProdutosPage() {
                 <td className="border border-purple-300 px-4 py-2">{prod.tamanho || '-'}</td>
                 <td className="border border-purple-300 px-4 py-2">{prod.cor || '-'}</td>
                 <td className="border border-purple-300 px-4 py-2">{prod.descricao || '-'}</td>
-                <td className="border border-purple-300 px-4 py-2">
+                <td className="border border-purple-300 px-4 py-2 text-center">
                   {prod.imageUrl ? (
-                    <Image
+                    <img
                       src={prod.imageUrl}
                       alt="Ajustada"
                       width={64}
                       height={96}
-                      className="object-cover rounded cursor-pointer"
+                      className="object-cover rounded cursor-pointer inline-block"
                       onClick={() => setModalSrc(prod.imageUrl!)}
                     />
                   ) : (
