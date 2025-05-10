@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
     const ean = eanRaw;
 
-    // 2) prompt opcional (não vamos deletar este campo)
+    // 2) prompt opcional
     const prompt = formData.get('prompt')?.toString() ?? '';
 
     // 3) outros campos opcionais
@@ -36,8 +36,8 @@ export async function POST(request: NextRequest) {
     const cor       = formData.get('cor')?.toString()       ?? '';
     const tamanho   = formData.get('tamanho')?.toString()   ?? '';
 
-    // 4) imagem também continua obrigatória
-    const imageBlob = formData.get('imagens');
+    // 4) imagem obrigatória no campo `image`
+    const imageBlob = formData.get('image');
     if (!(imageBlob instanceof Blob)) {
       return NextResponse.json(
         { error: 'Campo `image` obrigatório.' },
@@ -54,15 +54,13 @@ export async function POST(request: NextRequest) {
     await fs.writeFile(origPath, origBuf);
     console.log('💾 Original salva em (tmp):', origPath);
 
-    // 6) antes de mandar pro OpenAI, remova só os metadados — NÃO removemos o `prompt`
-    ['ean','descricao','marca','cor','tamanho'].forEach(key => formData.delete(key));
+    // 6) remove apenas os metadados, mantém `prompt` e `image`
+    ['ean', 'descricao', 'marca', 'cor', 'tamanho'].forEach(key => formData.delete(key));
 
-    // agora formData contém:
-    // - image (Blob)
-    // - prompt (string)
-    // - qualquer outro campo que o OpenAI aceite (mask, n, size, etc.)
+    // 7) garante que o blob em `image` venha com nome de arquivo
+    formData.set('image', imageBlob, origName);
 
-    // 7) chama a API de edição de imagem
+    // 8) chama a API de edição de imagem
     const openaiRes = await fetch('https://api.openai.com/v1/images/edits', {
       method: 'POST',
       headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY!}` },
@@ -78,7 +76,7 @@ export async function POST(request: NextRequest) {
     }
     console.log('✅ OpenAI respondeu com sucesso');
 
-    // 8) processa a resposta e faz upload
+    // 9) processa a resposta e faz upload
     const b64     = openaiJson.data[0].b64_json as string;
     const editBuf = Buffer.from(b64, 'base64');
     const file    = bucket.file(`produtos/${ean}.png`);
@@ -90,7 +88,7 @@ export async function POST(request: NextRequest) {
     console.log('📤 Upload feito para Firebase Storage');
     console.log('🔗 URL pública:', publicUrl);
 
-    // 9) retorna a meta incluindo o prompt
+    // 10) retorna a meta incluindo o prompt
     return NextResponse.json(
       {
         meta: { ean, prompt, descricao, marca, cor, tamanho },

@@ -82,7 +82,8 @@ The final image should look professional and suitable for an e-commerce catalog,
       const formImg = new FormData();
       formImg.append('ean', row.ean.trim());
       if (row.file) {
-        formImg.append('imagens', row.file);
+        // <<< CORREÇÃO: trocar 'imagens' por 'image' >>>
+        formImg.append('image', row.file);
       }
       formImg.append('prompt', promptImage);
       formImg.append('model', 'gpt-image-1');
