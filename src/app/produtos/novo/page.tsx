@@ -30,6 +30,7 @@ The final image should look professional and suitable for an e-commerce catalog,
 
   const [rows, setRows] = useState<Row[]>([]);
   const [modalImage, setModalImage] = useState<string | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -187,97 +188,114 @@ The final image should look professional and suitable for an e-commerce catalog,
         </div>
 
         {rows.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full table-auto border-collapse border border-purple-300 text-black">
-              <thead>
-                <tr className="bg-purple-600 text-white">
-                  <th className="border border-white px-2 py-1">Foto</th>
-                  <th className="border border-purple-300 px-2 py-1">EAN</th>
-                  <th className="border border-purple-300 px-2 py-1">Descrição</th>
-                  <th className="border border-purple-300 px-2 py-1">Marca</th>
-                  <th className="border border-purple-300 px-2 py-1">Cor</th>
-                  <th className="border border-purple-300 px-2 py-1">Tamanho</th>
-                  <th className="border border-purple-300 px-2 py-1">Status</th>
-                  <th className="border border-purple-300 px-2 py-1">Foto ajustada</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map(row => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    <td className="border border-purple-300 p-2">
-                      {row.preview && (
-                        <img
-                          src={row.preview}
-                          alt="preview"
-                          className="h-24 object-cover rounded cursor-pointer"
-                          onClick={() => setModalImage(row.preview!)}
-                        />
-                      )}
-                    </td>
-                    <td className="border border-purple-300 p-2">
-                      <input
-                        value={row.ean}
-                        onChange={e => handleFieldChange(row.id, 'ean', e.target.value)}
-                        className="border rounded p-1 w-full"
-                        required
-                      />
-                    </td>
-                    <td className="border border-purple-300 p-2">
-                      <input
-                        value={row.descricao}
-                        onChange={e => handleFieldChange(row.id, 'descricao', e.target.value)}
-                        className="border rounded p-1 w-full"
-                      />
-                    </td>
-                    <td className="border border-purple-300 p-2">
-                      <input
-                        value={row.marca}
-                        onChange={e => handleFieldChange(row.id, 'marca', e.target.value)}
-                        className="border rounded p-1 w-full"
-                      />
-                    </td>
-                    <td className="border border-purple-300 p-2">
-                      <input
-                        value={row.cor}
-                        onChange={e => handleFieldChange(row.id, 'cor', e.target.value)}
-                        className="border rounded p-1 w-full"
-                      />
-                    </td>
-                    <td className="border border-purple-300 p-2">
-                      <input
-                        value={row.tamanho}
-                        onChange={e => handleFieldChange(row.id, 'tamanho', e.target.value)}
-                        className="border rounded p-1 w-full"
-                      />
-                    </td>
-                    <td
-                      className={`border border-purple-300 p-2 text-center ${
-                        row.result?.url ? 'bg-green-500 text-white font-bold' : ''
-                      }`}
-                    >
-                      {row.loading
-                        ? 'Gerando...'
-                        : row.result?.error
-                        ? 'Erro'
-                        : row.result?.url
-                        ? 'OK'
-                        : '-'}
-                    </td>
-                    <td className="border border-purple-300 p-2">
-                      {row.result?.url && (
-                        <img
-                          src={row.result.url}
-                          alt="ajustada"
-                          className="h-24 object-cover rounded cursor-pointer"
-                          onClick={() => setModalImage(row.result!.url!)}
-                        />
-                      )}
-                    </td>
+          <>
+            <button
+              type="button"
+              onClick={() => setShowDetails(!showDetails)}
+              className="mb-2 text-blue-600 underline"
+            >
+              {showDetails ? 'Ver menos' : 'Ver mais'}
+            </button>
+            <div className="overflow-x-auto">
+              <table className="min-w-full table-auto border-collapse border border-purple-300 text-black">
+                <thead>
+                  <tr className="bg-purple-600 text-white">
+                    <th className="border border-white px-2 py-1">Foto</th>
+                    <th className="border border-purple-300 px-2 py-1 w-20">EAN</th>
+                    {showDetails && <th className="border border-purple-300 px-2 py-1">Descrição</th>}
+                    {showDetails && <th className="border border-purple-300 px-2 py-1">Marca</th>}
+                    {showDetails && <th className="border border-purple-300 px-2 py-1">Cor</th>}
+                    {showDetails && <th className="border border-purple-300 px-2 py-1">Tamanho</th>}
+                    <th className="border border-purple-300 px-2 py-1">Status</th>
+                    <th className="border border-purple-300 px-2 py-1">Foto ajustada</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {rows.map(row => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      <td className="border border-purple-300 p-2">
+                        {row.preview && (
+                          <img
+                            src={row.preview}
+                            alt="preview"
+                            className="h-24 object-cover rounded cursor-pointer"
+                            onClick={() => setModalImage(row.preview!)}
+                          />
+                        )}
+                      </td>
+                      <td className="border border-purple-300 p-2 w-20">
+                        <input
+                          value={row.ean}
+                          onChange={e => handleFieldChange(row.id, 'ean', e.target.value)}
+                          className="border rounded p-1 w-full"
+                          required
+                        />
+                      </td>
+                      {showDetails && (
+                        <td className="border border-purple-300 p-2">
+                          <input
+                            value={row.descricao}
+                            onChange={e => handleFieldChange(row.id, 'descricao', e.target.value)}
+                            className="border rounded p-1 w-full"
+                          />
+                        </td>
+                      )}
+                      {showDetails && (
+                        <td className="border border-purple-300 p-2">
+                          <input
+                            value={row.marca}
+                            onChange={e => handleFieldChange(row.id, 'marca', e.target.value)}
+                            className="border rounded p-1 w-full"
+                          />
+                        </td>
+                      )}
+                      {showDetails && (
+                        <td className="border border-purple-300 p-2">
+                          <input
+                            value={row.cor}
+                            onChange={e => handleFieldChange(row.id, 'cor', e.target.value)}
+                            className="border rounded p-1 w-full"
+                          />
+                        </td>
+                      )}
+                      {showDetails && (
+                        <td className="border border-purple-300 p-2">
+                          <input
+                            value={row.tamanho}
+                            onChange={e => handleFieldChange(row.id, 'tamanho', e.target.value)}
+                            className="border rounded p-1 w-full"
+                          />
+                        </td>
+                      )}
+                      <td
+                        className={`border border-purple-300 p-2 text-center ${
+                          row.result?.url ? 'bg-green-500 text-white font-bold' : ''
+                        }`}
+                      >
+                        {row.loading
+                          ? 'Gerando...'
+                          : row.result?.error
+                          ? 'Erro'
+                          : row.result?.url
+                          ? 'OK'
+                          : '-'}
+                      </td>
+                      <td className="border border-purple-300 p-2">
+                        {row.result?.url && (
+                          <img
+                            src={row.result.url}
+                            alt="ajustada"
+                            className="h-24 object-cover rounded cursor-pointer"
+                            onClick={() => setModalImage(row.result!.url!)}
+                          />
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
 
         <button
