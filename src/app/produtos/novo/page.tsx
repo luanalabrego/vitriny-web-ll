@@ -1,4 +1,3 @@
-// src/app/(dashboard)/produtos/novo/page.tsx
 'use client';
 
 import { useState, useRef, FormEvent } from 'react';
@@ -74,6 +73,7 @@ The final image should look professional and suitable for an e-commerce catalog,
     for (let i = 0; i < updated.length; i++) {
       const row = updated[i];
       row.loading = true;
+      row.result = undefined;
       setRows([...updated]);
 
       try {
@@ -84,11 +84,12 @@ The final image should look professional and suitable for an e-commerce catalog,
         if (!uploadUrl || !fileName) throw new Error('Falha ao obter URL de upload');
 
         // 2) Envia o arquivo direto para o GCS
-        await fetch(uploadUrl, {
+        const putRes = await fetch(uploadUrl, {
           method: 'PUT',
-          headers: { 'Content-Type': row.file!.type },
+          headers: { 'Content-Type': 'application/octet-stream' },
           body: row.file
         });
+        if (!putRes.ok) throw new Error(`Upload falhou: ${putRes.status}`);
 
         // 3) Chama endpoint de gerar imagem com JSON leve
         const resImg = await fetch('/api/produtos/gerar-imagem', {
