@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://vitriny-web-ll-git-main-labrego-solucoes.vercel.app"],
+    "method": ["GET", "PUT", "POST", "OPTIONS"],
+    "responseHeader": ["Content-Type", "Access-Control-Allow-Origin"],
+    "maxAgeSeconds": 3600
+  }
+]

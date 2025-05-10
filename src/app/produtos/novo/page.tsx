@@ -69,21 +69,19 @@ The final image should look professional and suitable for an e-commerce catalog,
       return;
     }
 
-    const updated = [...rows];
-    for (let i = 0; i < updated.length; i++) {
-      const row = updated[i];
-      row.loading = true;
-      row.result = undefined;
-      setRows([...updated]);
+    // 1) Marca todas as linhas como carregando
+    setRows(rows.map(r => ({ ...r, loading: true, result: undefined })));
 
+    // 2) Cria uma promise para cada linha
+    const tasks = rows.map(row => (async () => {
       try {
-        // 1) Busca signed URL e fileName
+        // 2.1) Busca signed URL e fileName
         const { uploadUrl, fileName } = await fetch(
           `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean.trim())}`
         ).then(res => res.json());
         if (!uploadUrl || !fileName) throw new Error('Falha ao obter URL de upload');
 
-        // 2) Envia o arquivo direto para o GCS
+        // 2.2) Envia o arquivo para o GCS
         const putRes = await fetch(uploadUrl, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/octet-stream' },
@@ -91,7 +89,7 @@ The final image should look professional and suitable for an e-commerce catalog,
         });
         if (!putRes.ok) throw new Error(`Upload falhou: ${putRes.status}`);
 
-        // 3) Chama endpoint de gerar imagem com JSON leve
+        // 2.3) Chama endpoint de gerar imagem
         const resImg = await fetch('/api/produtos/gerar-imagem', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -106,20 +104,20 @@ The final image should look professional and suitable for an e-commerce catalog,
           })
         });
         const jsonImg = await resImg.json();
-        row.loading = false;
+        if (!resImg.ok) throw new Error(jsonImg.error || 'Erro interno');
 
-        if (!resImg.ok) {
-          row.result = { error: jsonImg.error || 'Erro interno' };
-          setRows([...updated]);
-          continue;
-        }
-
-        // 4) Atualiza resultado
         const { url, meta } = jsonImg;
-        row.result = { url, meta };
-        setRows([...updated]);
 
-        // 5) Salva no seu backend
+        // 2.4) Atualiza estado da linha com sucesso
+        setRows(prev =>
+          prev.map(r =>
+            r.id === row.id
+              ? { ...r, loading: false, result: { url, meta } }
+              : r
+          )
+        );
+
+        // 2.5) Salva no backend
         if (url) {
           await fetch('/api/produtos', {
             method: 'POST',
@@ -135,11 +133,19 @@ The final image should look professional and suitable for an e-commerce catalog,
           });
         }
       } catch (err: any) {
-        row.loading = false;
-        row.result = { error: err.message || 'Erro inesperado' };
-        setRows([...updated]);
+        // 2.6) Atualiza estado da linha com erro
+        setRows(prev =>
+          prev.map(r =>
+            r.id === row.id
+              ? { ...r, loading: false, result: { error: err.message || 'Erro inesperado' } }
+              : r
+          )
+        );
       }
-    }
+    })());
+
+    // 3) Aguarda todas as promessas
+    await Promise.all(tasks);
   };
 
   const canSubmit =
