@@ -15,14 +15,14 @@ export default function LoginPage() {
   const [carregando, setCarregando] = useState(false)
   const router = useRouter()
 
-  // Se o usuário já estiver logado, manda pra raiz '/'
+  // Se já tiver cookie de sessão ativo, redireciona
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
+        // opcional: você pode validar /api/auth/me aqui em vez do onAuth
         router.replace('/')
       }
     })
-    return unsubscribe
   }, [router])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -31,10 +31,27 @@ export default function LoginPage() {
     setCarregando(true)
 
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), senha)
-      router.replace('/')  // redireciona para a raiz
+      // 1) Faz login no Firebase
+      const cred = await signInWithEmailAndPassword(auth, email.trim(), senha)
+
+      // 2) Pega o ID token
+      const idToken = await cred.user.getIdToken()
+
+      // 3) Envia ao seu API para criar o cookie de sessão
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ token: idToken }),
+      })
+      if (!res.ok) {
+        throw new Error('Não foi possível criar sessão no servidor.')
+      }
+
+      // 4) Redireciona à raiz, onde /api/auth/me vai retornar OK
+      router.replace('/')
     } catch (firebaseError: any) {
-      console.error('FirebaseAuth error:', firebaseError.code, firebaseError.message)
+      console.error('Auth error:', firebaseError.code, firebaseError.message)
 
       let mensagem = 'Ocorreu um erro ao fazer login.'
       switch (firebaseError.code) {
@@ -56,8 +73,6 @@ export default function LoginPage() {
           mensagem =
             'Login por e-mail/senha não está habilitado. Ative em Firebase Console → Authentication → Sign-in Method.'
           break
-        default:
-          mensagem = firebaseError.message || mensagem
       }
       setErro(mensagem)
     } finally {
