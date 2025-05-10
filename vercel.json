@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "api/produtos/gerar-imagem/route.ts": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  }
+}
