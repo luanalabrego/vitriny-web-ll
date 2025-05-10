@@ -11,7 +11,7 @@ interface Row {
   marca: string;
   cor: string;
   tamanho: string;
-  result?: { url?: string; error?: string; meta?: any };
+  result?: { url?: string; originalUrl?: string; error?: string; meta?: any };
   loading?: boolean;
 }
 
@@ -63,10 +63,12 @@ The final image should look professional and suitable for an e-commerce catalog,
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
     if (rows.some(r => !r.ean.trim())) {
       alert('Preencha o EAN em cada linha antes de enviar.');
       return;
     }
+
     setRows(rows.map(r => ({ ...r, loading: true, result: undefined })));
 
     const tasks = rows.map(row => (async () => {
@@ -99,15 +101,17 @@ The final image should look professional and suitable for an e-commerce catalog,
         const jsonImg = await resImg.json();
         if (!resImg.ok) throw new Error(jsonImg.error || 'Erro interno');
 
+        const { url, meta } = jsonImg;
+
         setRows(prev =>
           prev.map(r =>
             r.id === row.id
-              ? { ...r, loading: false, result: { url: jsonImg.url, meta: jsonImg.meta } }
+              ? { ...r, loading: false, result: { url, meta } }
               : r
           )
         );
 
-        if (jsonImg.url) {
+        if (url) {
           await fetch('/api/produtos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -117,7 +121,7 @@ The final image should look professional and suitable for an e-commerce catalog,
               marca: row.marca,
               cor: row.cor,
               tamanho: row.tamanho,
-              imageUrl: jsonImg.url
+              imageUrl: url
             })
           });
         }
@@ -125,7 +129,7 @@ The final image should look professional and suitable for an e-commerce catalog,
         setRows(prev =>
           prev.map(r =>
             r.id === row.id
-              ? { ...r, loading: false, result: { error: err.message } }
+              ? { ...r, loading: false, result: { error: err.message || 'Erro inesperado' } }
               : r
           )
         );
@@ -192,29 +196,24 @@ The final image should look professional and suitable for an e-commerce catalog,
             >
               {showDetails ? 'Ver menos' : 'Ver mais'}
             </button>
-
             <div className="overflow-x-auto">
               <table className="min-w-full table-auto border-collapse border border-purple-300 text-black">
                 <thead>
                   <tr className="bg-purple-600 text-white">
-                    {/* Foto: 50% width */}
-                    <th className="border border-white px-2 py-1 w-1/2">Foto</th>
-                    {/* EAN: fixed 17ch */}
-                    <th className="border border-purple-300 px-2 py-1 w-[17ch]">EAN</th>
+                    <th className="border border-white px-2 py-1">Foto</th>
+                    <th className="border border-purple-300 px-2 py-1">EAN</th>
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Descrição</th>}
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Marca</th>}
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Cor</th>}
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Tamanho</th>}
-                    {/* Status: 30% width */}
-                    <th className="border border-purple-300 px-2 py-1 w-[30%]">Status</th>
-                    {/* Foto ajustada: 60% width */}
-                    <th className="border border-purple-300 px-2 py-1 w-[60%]">Foto ajustada</th>
+                    <th className="border border-purple-300 px-2 py-1">Status</th>
+                    <th className="border border-purple-300 px-2 py-1">Foto ajustada</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map(row => (
                     <tr key={row.id} className="hover:bg-gray-50">
-                      <td className="border border-purple-300 p-2 w-1/2">
+                      <td className="border border-purple-300 p-2">
                         {row.preview && (
                           <img
                             src={row.preview}
@@ -224,7 +223,7 @@ The final image should look professional and suitable for an e-commerce catalog,
                           />
                         )}
                       </td>
-                      <td className="border border-purple-300 p-2 w-[17ch]">
+                      <td className="border border-purple-300 p-2">
                         <input
                           value={row.ean}
                           onChange={e => handleFieldChange(row.id, 'ean', e.target.value)}
@@ -269,7 +268,7 @@ The final image should look professional and suitable for an e-commerce catalog,
                         </td>
                       )}
                       <td
-                        className={`border border-purple-300 p-2 text-center w-[30%] ${
+                        className={`border border-purple-300 p-2 text-center ${
                           row.result?.url ? 'bg-green-500 text-white font-bold' : ''
                         }`}
                       >
@@ -281,7 +280,7 @@ The final image should look professional and suitable for an e-commerce catalog,
                           ? 'OK'
                           : '-'}
                       </td>
-                      <td className="border border-purple-300 p-2 w-[60%]">
+                      <td className="border border-purple-300 p-2">
                         {row.result?.url && (
                           <img
                             src={row.result.url}
