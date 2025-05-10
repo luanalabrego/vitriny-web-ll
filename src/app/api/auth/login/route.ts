@@ -1,51 +1,53 @@
 // src/app/api/auth/login/route.ts
+import { NextResponse } from 'next/server'
+import { initializeApp, getApps, cert } from 'firebase-admin/app'
+import { getAuth } from 'firebase-admin/auth'
 
-import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { autenticarUsuario, setAuthCookie } from '@/lib/auth'
+// Inicializa o Firebase Admin (usa as credenciais do service account)
+if (!getApps().length) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID!,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
+      // private key precisa manter as quebras de linha corretas
+      privateKey: process.env.FIREBASE_PRIVATE_KEY!.replace(/\\n/g, '\n'),
+    }),
+  })
+}
 
-export async function POST(request: NextRequest) {
+const adminAuth = getAuth()
+
+export async function POST(req: Request) {
   try {
-    const { token } = (await request.json()) as { token?: string }
-
+    const { token } = await req.json()
     if (!token) {
       return NextResponse.json(
-        { message: 'Token de autenticação é obrigatório' },
+        { message: 'O campo "token" é obrigatório.' },
         { status: 400 }
       )
     }
 
-    // 1) Verifica o ID token no Firebase Admin e obtém dados do usuário
-    const usuario = await autenticarUsuario(token)
+    // 1) Verifica e decodifica o ID token do Firebase
+    const decoded = await adminAuth.verifyIdToken(token)
 
-    // 2) Cria o cookie de sessão (JSON serializado ou JWT, conforme setAuthCookie)
-    cookies().set({
-      name: 'vitriny_auth',
-      value: setAuthCookie(usuario),
+    // 2) Cria um session cookie com validade de 5 dias
+    const expiresIn = 60 * 60 * 24 * 5 * 1000 // 5 dias em ms
+    const sessionCookie = await adminAuth.createSessionCookie(token, { expiresIn })
+
+    // 3) Retorna a resposta setando o cookie de sessão
+    const res = NextResponse.json({ status: 'sucesso' })
+    res.cookies.set('session', sessionCookie, {
       httpOnly: true,
-      path: '/',
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 7, // 7 dias
+      maxAge: expiresIn / 1000,
+      path: '/',
     })
 
-    return NextResponse.json({ success: true })
+    return res
   } catch (error: any) {
-    console.error('Erro no auth/login:', error)
-
-    // Se o token expirou ou for inválido, devolve 401
-    if (
-      error.code === 'auth/id-token-expired' ||
-      error.code === 'auth/argument-error' ||
-      /expired/i.test(error.message)
-    ) {
-      return NextResponse.json(
-        { message: 'Sessão expirada ou inválida. Faça login novamente.' },
-        { status: 401 }
-      )
-    }
-
+    console.error('Erro no login:', error)
     return NextResponse.json(
-      { message: error.message || 'Erro interno do servidor' },
+      { message: 'Falha ao criar sessão de login.' },
       { status: 500 }
     )
   }
