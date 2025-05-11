@@ -2,25 +2,27 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// Note que colocamos os nomes em lowercase para fazer a comparação case-insensitive
 const PUBLIC_PATHS = [
   '/login',
   '/api/auth',
   '/favicon.ico',
-  '/vitriny.png',
-  '/watermark.png',
 ]
 
 export function middleware(req: NextRequest) {
-  // sempre converte pra lowercase antes de comparar
   const path = req.nextUrl.pathname.toLowerCase()
 
-  // libera tudo que seja /_next/* ou que esteja listado em PUBLIC_PATHS
-  if (path.startsWith('/_next/') || PUBLIC_PATHS.includes(path)) {
+  // 1) Tudo que esteja na pasta _next  
+  // 2) Rotas públicas definidas em PUBLIC_PATHS  
+  // 3) Qualquer rota que contenha um ponto (extensão de arquivo)
+  if (
+    path.startsWith('/_next/') ||
+    PUBLIC_PATHS.includes(path) ||
+    path.includes('.')       // << ignora png, svg, css, js, etc.
+  ) {
     return NextResponse.next()
   }
 
-  // só redireciona quem não tiver sessão
+  // Se não tiver cookie de sessão, manda pro /login
   if (!req.cookies.get('session')?.value) {
     const url = req.nextUrl.clone()
     url.pathname = '/login'
@@ -30,7 +32,9 @@ export function middleware(req: NextRequest) {
   return NextResponse.next()
 }
 
-// aplica middleware em TODAS as rotas (exceto APIs e estáticos do próprio Next que começam com /_next/)
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    // aplica em todas as rotas, exceto api, estáticos do Next e favicon
+    '/((?!api|_next/static|_next/image|favicon.ico).*)'
+  ]
 }
