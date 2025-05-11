@@ -95,11 +95,19 @@ export default function LoginPage() {
           fill
           className="object-cover opacity-25"
           priority
+          unoptimized
         />
       </div>
       <div className="relative z-10 bg-white rounded-lg shadow p-8 w-full max-w-md border-2 border-purple-600">
         <div className="flex justify-center mb-6">
-          <Image src="/Vitriny.png" alt="Vitriny Web" width={160} height={50} priority />
+          <Image
+            src="/Vitriny.png"
+            alt="Vitriny Web"
+            width={160}
+            height={50}
+            priority
+            unoptimized
+          />
         </div>
         <p className="text-gray-600 mb-6 text-center">Faça login na sua conta</p>
         {erro && (
