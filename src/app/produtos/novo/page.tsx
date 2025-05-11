@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 
 interface Row {
   id: number;
@@ -17,6 +17,17 @@ interface Row {
 }
 
 export default function NovoProduto() {
+  // Estado de créditos do usuário
+  const [credits, setCredits] = useState<number>(0);
+
+  // Busca créditos ao montar o componente
+  useEffect(() => {
+    fetch('/api/user/credits')
+      .then(res => res.json())
+      .then(json => setCredits(json.credits ?? 0))
+      .catch(() => console.error('Não foi possível ler créditos'));
+  }, []);
+
   // Prompts específicos para cada tipo de produto
   const promptByType: Record<string, string> = {
     'Feminino': `
@@ -43,7 +54,7 @@ Styling & Post-processing:
 – Subtle color grading to ensure absolute fidelity to the real item.
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, shape, and branding.
-  `.trim(),
+    `.trim(),
     'Masculino': `
 Create an ultra–high-resolution studio photo of a male fashion model wearing the exact same outfit as shown in the reference image.
 
@@ -69,7 +80,7 @@ Styling & Post-processing:
 – Subtle color grading to ensure faithful reproduction of the real item’s appearance.
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, tailoring, and branding.
-  `.trim(),
+    `.trim(),
     'Infantil feminino': `
 Create an ultra–high-resolution studio photo of a young girl model wearing the exact same outfit as shown in the reference image.
 
@@ -95,7 +106,7 @@ Styling & Post-processing:
 – Subtle, accurate color grading to maintain absolute fidelity to the real item’s colors and details.
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while capturing the youthful, playful spirit of the model.
-  `.trim(),
+    `.trim(),
     'Infantil Masculino': `
 Create an ultra–high-resolution studio photo of a young boy model wearing the exact same outfit as shown in the reference image.
 
@@ -121,18 +132,27 @@ Styling & Post-processing:
 – Subtle, accurate color grading to maintain absolute fidelity to the real item’s appearance.
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while keeping the model comfortable and expressive.
-  `.trim(),
+    `.trim(),
     'Calçado': `
-Generate an ultra–high-resolution studio photograph of the reference footwear only. Frame a tight, close-up three-quarter view—rotate the shoe 10–15° so both side profile and front details fill the frame. Place it flat on a pristine white (or light-gray) background. Illuminate with multi-angle, soft diffused lighting to eliminate all shadows, using a subtle reflector under the sole to add gentle fill light. 
+Generate an ultra–high-resolution studio photograph of the reference footwear only. Frame a tight, 
+close-up three-quarter view—rotate the shoe 10–15° so both side profile and front details fill the frame. 
+Place it flat on a pristine white (or light-gray) background. Illuminate with multi-angle, soft diffused 
+lighting to eliminate all shadows, using a subtle reflector under the sole to add gentle fill light.  
 
-Ensure pixel-perfect fidelity to every element—leather grain, stitching, hardware, ornamentation and sole tread—without any blurring, distortion or over-retouching. Apply an editorial-grade finish: razor-sharp focus edge-to-edge, no compression artifacts or digital noise, and only very subtle, true-to-life color and contrast adjustments to preserve the exact hue and texture of the shoe.
-  `.trim(),
+Ensure pixel-perfect fidelity to every element—leather grain, stitching, hardware, ornamentation and sole 
+tread—without any blurring, distortion or over-retouching. Apply an editorial-grade finish: razor-sharp 
+focus edge-to-edge, no compression artifacts or digital noise, and only very subtle, true-to-life color 
+and contrast adjustments to preserve the exact hue and texture of the shoe.
+    `.trim(),
     'Bolsa': `
-Create an ultra–high-resolution product photo (at least 3000×3000 px) focusing exclusively on the handbag shown in the reference image.
+Create an ultra–high-resolution product photo (at least 3000×3000 px) focusing exclusively on the 
+handbag shown in the reference image.
 
 Composition & Framing:
-– Full-frame shot capturing the entire bag, slightly rotated (10–15°) to showcase front and side profiles.  
-– Bag placed on a flat surface or elegantly suspended by its strap to reveal silhouette and hardware details.
+– Full-frame shot capturing the entire bag, slightly rotated (10–15°) to showcase front and side 
+  profiles.  
+– Bag placed on a flat surface or elegantly suspended by its strap to reveal silhouette and hardware 
+  details.
 
 Background & Lighting:
 – Plain, uniform background (white or light gray) with no distractions.  
@@ -140,17 +160,20 @@ Background & Lighting:
 – Use subtle reflectors to bring out interior lining and metal hardware.
 
 Extreme Detail Emphasis:
-– Pixel-perfect replication of every element: grain and texture of leather (or fabric), lining pattern, zipper teeth, hardware finish (buckles, clasps, studs), embossed logos, stitching density.  
-– Logos, metal engravings, and tag placements must align exactly with the reference—no blurring or distortion.
+– Pixel-perfect replication of every element: grain and texture of leather (or fabric), lining pattern, 
+  zipper teeth, hardware finish (buckles, clasps, studs), embossed logos, stitching density.  
+– Logos, metal engravings, and tag placements must align exactly with the reference—no blurring or 
+  distortion.
 
 Styling & Post-processing:
 – Editorial-grade clarity: razor-sharp focus on every seam, texture, and hardware element.  
 – No compression artifacts or digital noise.  
-– Subtle, true-to-life color grading and contrast adjustments to maintain absolute fidelity to the real item’s appearance.
+– Subtle, true-to-life color grading and contrast adjustments to maintain absolute fidelity to the real 
+  item’s appearance.
 
-Reference image will be provided alongside. Ensure absolute, pixel-level fidelity to the handbag’s shape, materials, and branding.
-
-  `.trim(),
+Reference image will be provided alongside. Ensure absolute, pixel-level fidelity to the handbag’s 
+shape, materials, and branding.
+    `.trim(),
   };
 
   const [rows, setRows] = useState<Row[]>([]);
@@ -189,10 +212,18 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    // Bloqueia envio se não houver créditos suficientes
+    if (rows.length > credits) {
+      alert(`Você precisa de ${rows.length} créditos, mas tem apenas ${credits}.`);
+      return;
+    }
+
     if (rows.some(r => !r.ean.trim())) {
       alert('Preencha o EAN em cada linha antes de enviar.');
       return;
     }
+
     setRows(rows.map(r => ({ ...r, loading: true, result: undefined })));
 
     const tasks = rows.map(row => (async () => {
@@ -211,13 +242,12 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
         });
         if (!putRes.ok) throw new Error(`Upload original falhou: ${putRes.status}`);
 
-        // 2.1) torna o original público e obtém a URL simples
-        const publishRes = await fetch('/api/produtos/publish-original', {
+        // 2.1) torna o original público
+        const publishJson = await fetch('/api/produtos/publish-original', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fileName })
-        });
-        const publishJson = await publishRes.json();
+        }).then(res => res.json());
         const originalUrl = publishJson.publicUrl;
         if (!originalUrl) throw new Error(publishJson.error || 'Falha ao tornar original público');
 
@@ -225,7 +255,7 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
         const prompt = promptByType[row.productType] || promptByType['Feminino'];
 
         // 4) gera imagem ajustada
-        const resImg = await fetch('/api/produtos/gerar-imagem', {
+        const jsonImg = await fetch('/api/produtos/gerar-imagem', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -237,9 +267,8 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
             cor: row.cor,
             tamanho: row.tamanho
           })
-        });
-        const jsonImg = await resImg.json();
-        if (!resImg.ok) throw new Error(jsonImg.error || 'Erro interno ao gerar imagem');
+        }).then(res => res.json());
+        if (!jsonImg.url) throw new Error(jsonImg.error || 'Erro interno ao gerar imagem');
 
         const { url, meta } = jsonImg;
 
@@ -252,22 +281,27 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
           )
         );
 
-        // 6) persiste no banco
-        if (url) {
-          await fetch('/api/produtos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ean: row.ean.trim(),
-              descricao: row.descricao,
-              marca: row.marca,
-              cor: row.cor,
-              tamanho: row.tamanho,
-              originalUrl,
-              imageUrl: url
-            })
-          });
+        // 5.1) decrementa 1 crédito no servidor
+        const decJson = await fetch('/api/user/decrement-credits', { method: 'POST' })
+          .then(res => res.json());
+        if (decJson.credits !== undefined) {
+          setCredits(decJson.credits);
         }
+
+        // 6) persiste no banco
+        await fetch('/api/produtos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ean: row.ean.trim(),
+            descricao: row.descricao,
+            marca: row.marca,
+            cor: row.cor,
+            tamanho: row.tamanho,
+            originalUrl,
+            imageUrl: url
+          })
+        });
       } catch (err: any) {
         setRows(prev =>
           prev.map(r =>
@@ -285,7 +319,8 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
   const canSubmit =
     rows.length > 0 &&
     rows.every(r => r.ean.trim()) &&
-    !rows.some(r => r.loading);
+    !rows.some(r => r.loading) &&
+    credits >= rows.length;
 
   return (
     <>
@@ -328,6 +363,11 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
             onChange={handleFiles}
             className="hidden"
           />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="font-medium">Créditos disponíveis:</span>
+          <span className="text-lg font-bold">{credits}</span>
         </div>
 
         {rows.length > 0 && (

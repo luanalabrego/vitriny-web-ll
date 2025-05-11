@@ -1,67 +1,60 @@
+// src/app/api/auth/registro/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { hashSenha } from '@/lib/auth';
+import admin from '@/lib/firebaseAdmin';
 
-// Simulação do banco de dados para desenvolvimento
-const usuariosDemo = [
-  {
-    id: 1,
-    nome: 'Admin',
-    email: 'admin@vitriny.com',
-    senha: '$2a$10$JGLPVTAFUMQHHQUQm0QXpOvhvGiD.jS3hQRrIaQMaRLhFzS/X0oMu', // admin123
-    empresa_id: 1
-  }
-];
-
-const empresasDemo = [
-  {
-    id: 1,
-    nome: 'Empresa Demonstração'
-  }
-];
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
     const { nome, email, senha, empresa_id } = await request.json();
-    
+
+    // Validação básica
     if (!nome || !email || !senha || !empresa_id) {
       return NextResponse.json(
-        { message: 'Todos os campos são obrigatórios' },
+        { message: 'Todos os campos são obrigatórios.' },
         { status: 400 }
       );
     }
 
-    // Verificar se o email já está em uso
-    const usuarioExistente = usuariosDemo.find(u => u.email === email);
-
-    if (usuarioExistente) {
-      return NextResponse.json(
-        { message: 'Este email já está em uso' },
-        { status: 400 }
-      );
-    }
-
-    // Verificar se a empresa existe
-    const empresaExistente = empresasDemo.find(e => e.id === empresa_id);
-
-    if (!empresaExistente) {
-      return NextResponse.json(
-        { message: 'Empresa não encontrada' },
-        { status: 400 }
-      );
-    }
-
-    // Em produção, faria hash da senha e salvaria no banco de dados
-    // Por enquanto, apenas simulamos o sucesso
-
-    return NextResponse.json({ 
-      success: true,
-      message: 'Usuário criado com sucesso' 
+    // 1) Cria usuário no Firebase Auth
+    const userRecord = await admin.auth().createUser({
+      email: email.trim(),
+      password: senha,
+      displayName: nome.trim(),
     });
-  } catch (error) {
-    console.error('Erro ao registrar usuário:', error);
+
+    // 2) Cria documento no Firestore com saldo inicial de créditos
+    await admin
+      .firestore()
+      .collection('users')
+      .doc(userRecord.uid)
+      .set({
+        nome: nome.trim(),
+        email: email.trim(),
+        empresa_id,
+        credits: 10, // saldo inicial
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+    // 3) Retorna sucesso
+    return NextResponse.json({
+      success: true,
+      message: 'Usuário criado com sucesso!',
+    });
+  } catch (err: any) {
+    console.error('Erro ao registrar usuário:', err);
+
+    // Email já em uso
+    if (err.code === 'auth/email-already-exists') {
+      return NextResponse.json(
+        { message: 'Este email já está em uso.' },
+        { status: 400 }
+      );
+    }
+
+    // Outros erros
     return NextResponse.json(
-      { message: 'Erro interno do servidor' },
+      { message: 'Erro interno ao registrar usuário.' },
       { status: 500 }
     );
   }
