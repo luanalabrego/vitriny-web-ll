@@ -49,7 +49,8 @@ export default function LoginPage() {
         throw new Error('Não foi possível criar sessão no servidor.')
       }
 
-      router.push('/')
+      // Navegação completa para recarregar SSR com cookie de sessão
+      window.location.assign('/')
     } catch (fError: any) {
       console.error('Auth error:', fError)
       let msg = 'Ocorreu um erro ao fazer login.'
