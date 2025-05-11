@@ -20,40 +20,136 @@ export default function NovoProduto() {
   // Prompts específicos para cada tipo de produto
   const promptByType: Record<string, string> = {
     'Feminino': `
-Create a high-quality studio photo of a female model wearing the exact same feminine outfit as shown in the reference image.
-The model should be standing naturally, facing the camera, with a casual pose and a slight smile.
-The background must be clean and plain (white or light gray), with soft, even lighting.
-Focus on accurately showing the color, texture, and fit of the women's clothing.
+Create an ultra–high-resolution studio photo  of a female fashion model wearing the exact same outfit as shown in the reference image.
+
+Composition & Pose:
+– Full-body shot, model centered and facing slightly off-axis (10–15°) for a dynamic look.  
+– One hand resting naturally on the hip, with a subtle weight shift to emphasize the silhouette.  
+– Soft expression: gentle smile and confident gaze, without looking forced.
+
+Background & Lighting:
+– Plain, uniform background (white or light gray) with no harsh shadows.  
+– Soft, diffused lighting using a key light and fill light to highlight fabric texture.  
+– No distractions or props in the scene.
+
+Clothing Details:
+– Accurate replication of colors, patterns, and fabric textures.  
+– Logos, labels, and stitching positioned exactly as in the reference, with no blurring or cropping.  
+– Natural folds and drapes of the fabric visible to showcase fit and movement.
+
+Styling & Post-processing:
+– Editorial style: clean look, crisp focus on the garment.  
+– No compression artifacts or digital noise.  
+– Subtle color grading to ensure absolute fidelity to the real item.
+
+Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, shape, and branding.
   `.trim(),
     'Masculino': `
-Create a high-quality studio photo of a male model wearing the exact same masculine outfit as shown in the reference image.
-The model should be standing confidently, facing the camera, with relaxed arms.
-Use a plain studio background (white or light gray) and soft, even lighting.
-Emphasize the color, fabric texture, and tailored fit of the men's clothing.
+Create an ultra–high-resolution studio photo of a male fashion model wearing the exact same outfit as shown in the reference image.
+
+Composition & Pose:
+– Full-body or three-quarter shot, model centered and turned slightly off-axis (10–15°) for a dynamic yet natural stance.  
+– Arms relaxed—one hand casually in a pocket or both arms naturally at the sides.  
+– Subtle weight shift on one leg to convey confidence and ease.  
+– Eyes focused directly on the camera, with a calm, assured expression.
+
+Background & Lighting:
+– Plain, uniform background (white or light gray) with zero distractions.  
+– Soft, diffused lighting using a key light and fill light to highlight fabric drape and texture.  
+– No harsh shadows or reflective hotspots.
+
+Clothing Details:
+– Exact match of color, pattern, and weave of the fabric.  
+– Logos, labels, and stitching rendered crisply and placed precisely as in the reference.  
+– Visible tailoring details (lapels, seams, hems) and natural folds to showcase fit and movement.
+
+Styling & Post-processing:
+– Editorial quality: clean look, razor-sharp focus on the garment.  
+– Absolutely no compression artifacts or digital noise.  
+– Subtle color grading to ensure faithful reproduction of the real item’s appearance.
+
+Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, tailoring, and branding.
   `.trim(),
     'Infantil feminino': `
-Create a high-quality studio photo of a young girl model wearing the exact same children's outfit as shown in the reference image.
-The child should be standing naturally, facing the camera, with a playful posture.
-Use a plain background (white or light gray) and gentle, even lighting.
-Highlight the color and comfort of the girls' clothing.
+Create an ultra–high-resolution studio photo of a young girl model wearing the exact same outfit as shown in the reference image.
+
+Composition & Pose:
+– Full-body shot, model centered and facing the camera head-on.  
+– Natural, relaxed stance with a slight shift of weight (one foot slightly forward).  
+– Arms at the sides or one hand gently holding a small prop (e.g., a ribbon) for a playful touch.  
+– Eyes focused directly on the camera with a warm, cheerful smile.
+
+Background & Lighting:
+– Plain, uniform background (white or light gray) without distractions.  
+– Soft, diffused lighting using a key light and fill light to highlight fabric texture and the child’s features.  
+– No harsh shadows or hotspots; ensure even illumination across the model and garment.
+
+Clothing Details:
+– Precise replication of color, pattern, and fabric texture.  
+– Logos, labels, and any decorative trims rendered crisply and placed exactly as in the reference.  
+– Natural folds and drape of the fabric to showcase fit and movement suitable for a child.
+
+Styling & Post-processing:
+– Clean, editorial look with crisp focus on the outfit and model.  
+– No compression artifacts, digital noise, or over-retouching that alters the garment’s appearance.  
+– Subtle, accurate color grading to maintain absolute fidelity to the real item’s colors and details.
+
+Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while capturing the youthful, playful spirit of the model.
   `.trim(),
     'Infantil Masculino': `
-Create a high-quality studio photo of a young boy model wearing the exact same children's outfit as shown in the reference image.
-The child should be standing facing the camera, with a relaxed stance.
-Use a neutral background (white or light gray) and soft lighting.
-Focus on the durability and design details of the boys' clothing.
+Create an ultra–high-resolution studio photo of a young boy model wearing the exact same outfit as shown in the reference image.
+
+Composition & Pose:
+– Full-body shot, model centered and facing the camera head-on.  
+– Natural, relaxed stance with a slight bend in one knee for comfort.  
+– Arms at the sides or one hand playfully in a pocket.  
+– Eyes looking directly at the camera with a friendly, confident smile.
+
+Background & Lighting:
+– Plain, uniform background (white or light gray) with no distractions.  
+– Soft, diffused lighting using a key light and fill light to highlight fabric texture without harsh shadows.  
+– Ensure even illumination across the child’s face and clothing.
+
+Clothing Details:
+– Faithful replication of color, pattern, and fabric texture.  
+– Logos, labels, and stitching crisp and precisely positioned as in the reference.  
+– Natural folds and drape of the garment to showcase fit and movement appropriate for a child.
+
+Styling & Post-processing:
+– Clean, editorial look with razor-sharp focus on the outfit.  
+– No compression artifacts, digital noise, or over-retouching.  
+– Subtle, accurate color grading to maintain absolute fidelity to the real item’s appearance.
+
+Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while keeping the model comfortable and expressive.
   `.trim(),
     'Calçado': `
-Create a high-quality studio photo focusing on the exact footwear as shown in the reference image.
-Place the shoes on a clean, flat surface against a plain white or light gray background.
-Use soft, even lighting to eliminate shadows and highlight textures.
-Emphasize the shape, material, and details of the shoes.
+Generate an ultra–high-resolution studio photograph of the reference footwear only. Frame a tight, close-up three-quarter view—rotate the shoe 10–15° so both side profile and front details fill the frame. Place it flat on a pristine white (or light-gray) background. Illuminate with multi-angle, soft diffused lighting to eliminate all shadows, using a subtle reflector under the sole to add gentle fill light. 
+
+Ensure pixel-perfect fidelity to every element—leather grain, stitching, hardware, ornamentation and sole tread—without any blurring, distortion or over-retouching. Apply an editorial-grade finish: razor-sharp focus edge-to-edge, no compression artifacts or digital noise, and only very subtle, true-to-life color and contrast adjustments to preserve the exact hue and texture of the shoe.
   `.trim(),
     'Bolsa': `
-Create a high-quality studio photo of the handbag as shown in the reference image.
-Show both a full shot and a close-up detail of the bag’s texture and hardware.
-Use a plain white or light gray background with soft, even lighting.
-Highlight the color, material, and fine details of the handbag.
+Create an ultra–high-resolution product photo (at least 3000×3000 px) focusing exclusively on the handbag shown in the reference image.
+
+Composition & Framing:
+– Full-frame shot capturing the entire bag, slightly rotated (10–15°) to showcase front and side profiles.  
+– Bag placed on a flat surface or elegantly suspended by its strap to reveal silhouette and hardware details.
+
+Background & Lighting:
+– Plain, uniform background (white or light gray) with no distractions.  
+– Soft, diffused multi-angle lighting to eliminate harsh shadows and evenly illuminate all surfaces.  
+– Use subtle reflectors to bring out interior lining and metal hardware.
+
+Extreme Detail Emphasis:
+– Pixel-perfect replication of every element: grain and texture of leather (or fabric), lining pattern, zipper teeth, hardware finish (buckles, clasps, studs), embossed logos, stitching density.  
+– Logos, metal engravings, and tag placements must align exactly with the reference—no blurring or distortion.
+
+Styling & Post-processing:
+– Editorial-grade clarity: razor-sharp focus on every seam, texture, and hardware element.  
+– No compression artifacts or digital noise.  
+– Subtle, true-to-life color grading and contrast adjustments to maintain absolute fidelity to the real item’s appearance.
+
+Reference image will be provided alongside. Ensure absolute, pixel-level fidelity to the handbag’s shape, materials, and branding.
+
   `.trim(),
   };
 
