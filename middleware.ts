@@ -6,26 +6,33 @@ const PUBLIC_PATHS = [
   '/login',
   '/api/auth',
   '/favicon.ico',
-  '/Vitriny.png',
-  '/watermark.png',
-  '/_next/',     // tudo que comece com /_next/ (incluindo /_next/image)
 ]
 
 export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl
+  const pathname = req.nextUrl.pathname.toLowerCase()
 
-  // se for rota pública, deixa passar
-  if (PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
+  // libera tudo em /_next/ e rotas públicas
+  if (
+    pathname.startsWith('/_next/') ||
+    PUBLIC_PATHS.includes(pathname)
+  ) {
     return NextResponse.next()
   }
 
-  // caso contrário, verifica cookie de sessão
-  const token = req.cookies.get('session')?.value
-  if (!token) {
+  // se não tiver sessão, redireciona
+  if (!req.cookies.get('session')?.value) {
     const url = req.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
   return NextResponse.next()
+}
+
+export const config = {
+  // só aplica o middleware a rotas sem extensão de arquivo
+  matcher: [
+    // negativa: api, _next/static, _next/image, favicon.ico e QUALQUER caminho que contenha "." (extensão)
+    '/((?!api|_next/static|_next/image|favicon.ico|\\..*).*)'
+  ]
 }
