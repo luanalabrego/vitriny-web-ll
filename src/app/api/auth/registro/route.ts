@@ -1,6 +1,7 @@
 // src/app/api/auth/registro/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import admin from '@/lib/firebaseAdmin';
+// Ajuste para caminho relativo correto até o helper do Admin SDK
+import admin from '../../../../lib/firebaseAdmin';
 
 export const runtime = 'nodejs';
 
