@@ -19,7 +19,6 @@ export default function LoginPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, user => {
       if (user) {
-        console.log('User already logged in, redirecting to /')
         router.push('/')
       }
     })
@@ -34,32 +33,25 @@ export default function LoginPage() {
     try {
       // Login no Firebase Auth
       const cred = await signInWithEmailAndPassword(auth, email.trim(), senha)
-      console.log('Firebase signInWithEmailAndPassword successful:', cred.user.uid)
-
-      // Pega ID token JWT
       const idToken = await cred.user.getIdToken()
-      console.log('Obtained ID token')
 
-      // Envia ao API para criar cookie de sessão
+      // Cria sessão no servidor
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ token: idToken }),
       })
-      console.log('API /auth/login response:', res.status)
 
       if (!res.ok) {
         const errorBody = await res.text()
-        console.error('Error response body:', errorBody)
+        console.error('Error login API:', errorBody)
         throw new Error('Não foi possível criar sessão no servidor.')
       }
 
-      // Redireciona para o dashboard (raiz)
-      console.log('Redirecting to /')
       router.push('/')
     } catch (fError: any) {
-      console.error('Auth error:', fError.code, fError.message)
+      console.error('Auth error:', fError)
       let msg = 'Ocorreu um erro ao fazer login.'
       switch (fError.code) {
         case 'auth/user-not-found':
@@ -77,7 +69,7 @@ export default function LoginPage() {
           msg = 'Esta conta foi desativada.'
           break
         case 'auth/operation-not-allowed':
-          msg = 'Login por e-mail/senha não está habilitado. Ative em Firebase Console → Authentication → Sign-in Method.'
+          msg = 'Login por e-mail/senha não está habilitado. Ative em Firebase Console.'
           break
       }
       setErro(msg)
@@ -98,26 +90,25 @@ export default function LoginPage() {
           unoptimized
         />
       </div>
+
       <div className="relative z-10 bg-white rounded-lg shadow p-8 w-full max-w-md border-2 border-purple-600">
+        {/* Logo em texto */}
         <div className="flex justify-center mb-6">
-          <Image
-            src="/Vitriny.png"
-            alt="Vitriny Web"
-            width={160}
-            height={50}
-            priority
-            unoptimized
-          />
+          <h1 className="text-3xl font-extrabold text-purple-600">Vitriny Web</h1>
         </div>
+
         <p className="text-gray-600 mb-6 text-center">Faça login na sua conta</p>
         {erro && (
           <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
             <p className="text-red-700">{erro}</p>
           </div>
         )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="sr-only">Email</label>
+            <label htmlFor="email" className="sr-only">
+              Email
+            </label>
             <input
               id="email"
               type="email"
@@ -129,7 +120,9 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label htmlFor="senha" className="sr-only">Senha</label>
+            <label htmlFor="senha" className="sr-only">
+              Senha
+            </label>
             <input
               id="senha"
               type="password"
@@ -148,6 +141,7 @@ export default function LoginPage() {
             {carregando ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
+
         <p className="mt-4 text-center text-sm text-gray-600">
           Não tem conta?{' '}
           <Link href="/registro" className="text-purple-600 hover:underline">
