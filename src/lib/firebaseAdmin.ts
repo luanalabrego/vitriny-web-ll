@@ -7,6 +7,13 @@ const {
   FIREBASE_PRIVATE_KEY,
 } = process.env;
 
+// DEBUG: log para verificar se as ENV estão chegando corretamente
+console.log('Firebase Admin ENV:', {
+  PROJECT_ID: FIREBASE_PROJECT_ID,
+  CLIENT_EMAIL: FIREBASE_CLIENT_EMAIL,
+  PRIVATE_KEY_SET: Boolean(FIREBASE_PRIVATE_KEY),
+});
+
 if (!FIREBASE_PROJECT_ID ||
     !FIREBASE_CLIENT_EMAIL ||
     !FIREBASE_PRIVATE_KEY
@@ -25,6 +32,7 @@ if (!admin.apps.length) {
       privateKey: FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
     }),
   });
+  console.log('✅ Firebase Admin inicializado com sucesso');
 }
 
 export default admin;
