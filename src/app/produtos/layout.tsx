@@ -9,11 +9,13 @@ import type { Usuario } from '@/lib/auth'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null)
+  const [credits, setCredits] = useState<number | null>(null)
   const router = useRouter()
 
+  // Carrega dados do usuário
   useEffect(() => {
     fetch('/api/auth/me', { method: 'GET', credentials: 'include' })
-      .then(async (res) => {
+      .then(async res => {
         if (!res.ok) throw new Error('Não autenticado')
         const user = await res.json()
         setUsuario(user)
@@ -21,10 +23,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       .catch(() => {
         router.replace('/login')
       })
+
+    // Carrega créditos disponíveis
+    fetch('/api/user/credits', { credentials: 'include' })
+      .then(res => res.json())
+      .then(json => {
+        if (typeof json.credits === 'number') {
+          setCredits(json.credits)
+        }
+      })
+      .catch(() => {
+        setCredits(0)
+      })
   }, [router])
 
   const handleLogout = async () => {
-    // Chama o endpoint de logout e, em seguida, redireciona para a tela de login
     await fetch('/api/auth/logout', {
       method: 'GET',
       credentials: 'include'
@@ -46,8 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-
-            {/* Logo estático */}
+            {/* Logo e links */}
             <div className="flex items-center space-x-8">
               <div className="flex-shrink-0">
                 <Image
@@ -100,6 +112,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 />
                 Transformar Imagem
               </Link>
+
+              {/* Créditos disponíveis */}
+              <div className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500">
+                <span className="inline-block mr-1 text-lg">🪙</span>
+                {credits !== null ? credits : '—'}
+              </div>
             </div>
 
             {/* Logout no canto superior direito */}
@@ -111,7 +129,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 🚪 Sair
               </button>
             </div>
-
           </div>
         </div>
       </nav>
