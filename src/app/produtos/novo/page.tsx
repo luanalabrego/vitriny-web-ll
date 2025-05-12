@@ -215,7 +215,7 @@ shape, materials, and branding.
 
     // Bloqueia envio se não houver créditos suficientes
     if (rows.length > credits) {
-      alert(\`Você precisa de \${rows.length} créditos, mas tem apenas \${credits}.\`);
+      alert(`Você precisa de ${rows.length} créditos, mas tem apenas ${credits}.`);
       return;
     }
 
@@ -230,7 +230,7 @@ shape, materials, and branding.
       try {
         // 1) pede URL de upload
         const { uploadUrl, fileName } = await fetch(
-          \`/api/produtos/upload-url?ean=\${encodeURIComponent(row.ean.trim())}\`
+          `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean.trim())}`
         ).then(res => res.json());
         if (!uploadUrl || !fileName) throw new Error('Falha ao obter URL de upload');
 
@@ -240,7 +240,7 @@ shape, materials, and branding.
           headers: { 'Content-Type': 'application/octet-stream' },
           body: row.file
         });
-        if (!putRes.ok) throw new Error(\`Upload original falhou: \${putRes.status}\`);
+        if (!putRes.ok) throw new Error(`Upload original falhou: ${putRes.status}`);
 
         // 2.1) torna o original público
         const publishJson = await fetch('/api/produtos/publish-original', {
@@ -364,6 +364,7 @@ shape, materials, and branding.
             className="hidden"
           />
         </div>
+
 
         {rows.length > 0 && (
           <>
