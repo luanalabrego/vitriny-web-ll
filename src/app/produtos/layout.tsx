@@ -12,8 +12,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [credits, setCredits] = useState<number | null>(null)
   const router = useRouter()
 
-  // Carrega dados do usuário
+  // Carrega dados do usuário e créditos
   useEffect(() => {
+    // Autenticação
     fetch('/api/auth/me', { method: 'GET', credentials: 'include' })
       .then(async res => {
         if (!res.ok) throw new Error('Não autenticado')
@@ -24,12 +25,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.replace('/login')
       })
 
-    // Carrega créditos disponíveis
+    // Créditos disponíveis
     fetch('/api/user/credits', { credentials: 'include' })
       .then(res => res.json())
       .then(json => {
         if (typeof json.credits === 'number') {
           setCredits(json.credits)
+        } else {
+          setCredits(0)
         }
       })
       .catch(() => {
@@ -113,10 +116,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 Transformar Imagem
               </Link>
 
-              {/* Créditos disponíveis */}
-              <div className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500">
-                <span className="inline-block mr-1 text-lg">🪙</span>
-                {credits !== null ? credits : '—'}
+              {/* Créditos disponíveis com fundo roxo */}
+              <div className="inline-flex items-center bg-purple-600 text-white font-bold rounded-md px-3 py-1">
+                <span className="text-lg mr-1">🪙</span>
+                <span>Créditos disponíveis&nbsp;</span>
+                <span>
+                  {credits !== null
+                    ? credits.toString().padStart(4, '0')
+                    : '----'}
+                </span>
               </div>
             </div>
 
