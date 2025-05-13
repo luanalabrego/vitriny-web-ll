@@ -31,7 +31,7 @@ export default function NovoProduto() {
   // Prompts específicos para cada tipo de produto
   const promptByType: Record<string, string> = {
     'Feminino': `
-Create an ultra–high-resolution studio photo  of a female fashion model wearing the exact same outfit as shown in the reference image.
+Create an ultra–high-resolution studio photo of a female fashion model wearing the exact same outfit as shown in the reference image.
 
 Composition & Pose:
 – Full-body shot, model centered and facing slightly off-axis (10–15°) for a dynamic look.  
@@ -54,6 +54,9 @@ Styling & Post-processing:
 – Subtle color grading to ensure absolute fidelity to the real item.
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, shape, and branding.
+
+Note: Some garments may contain sales tags in the reference image, but **these tags must not appear in the final image**. The focus should remain solely on the clothing itself — no price tags, brand tags, or promotional elements should be visible.
+
     `.trim(),
     'Masculino': `
 Create an ultra–high-resolution studio photo of a male fashion model wearing the exact same outfit as shown in the reference image.
@@ -80,6 +83,8 @@ Styling & Post-processing:
 – Subtle color grading to ensure faithful reproduction of the real item’s appearance.
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, tailoring, and branding.
+Note: Some garments may contain sales tags or price labels in the reference image, but these must **not appear in the final photo**. Focus strictly on the garment itself—**do not include price tags, hang tags, or promotional stickers** in the output.
+
     `.trim(),
     'Infantil feminino': `
 Create an ultra–high-resolution studio photo of a young girl model wearing the exact same outfit as shown in the reference image.
@@ -87,7 +92,7 @@ Create an ultra–high-resolution studio photo of a young girl model wearing the
 Composition & Pose:
 – Full-body shot, model centered and facing the camera head-on.  
 – Natural, relaxed stance with a slight shift of weight (one foot slightly forward).  
-– Arms at the sides or one hand gently holding a small prop (e.g., a ribbon) for a playful touch.  
+– Arms at the sides in a neutral, natural position.  
 – Eyes focused directly on the camera with a warm, cheerful smile.
 
 Background & Lighting:
@@ -99,6 +104,8 @@ Clothing Details:
 – Precise replication of color, pattern, and fabric texture.  
 – Logos, labels, and any decorative trims rendered crisply and placed exactly as in the reference.  
 – Natural folds and drape of the fabric to showcase fit and movement suitable for a child.
+– Special attention to playful and decorative elements typical of children's clothing, such as animal illustrations, character prints, colorful patterns, or embroidery. All designs must be accurately replicated with clarity and correct positioning.
+
 
 Styling & Post-processing:
 – Clean, editorial look with crisp focus on the outfit and model.  
@@ -106,8 +113,11 @@ Styling & Post-processing:
 – Subtle, accurate color grading to maintain absolute fidelity to the real item’s colors and details.
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while capturing the youthful, playful spirit of the model.
+
+Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. The focus should remain solely on the outfit — **no tags, stickers, or promotional labels should be included**.
+
     `.trim(),
-    'Infantil Masculino': `
+'Infantil Masculino': `
 Create an ultra–high-resolution studio photo of a young boy model wearing the exact same outfit as shown in the reference image.
 
 Composition & Pose:
@@ -124,6 +134,7 @@ Background & Lighting:
 Clothing Details:
 – Faithful replication of color, pattern, and fabric texture.  
 – Logos, labels, and stitching crisp and precisely positioned as in the reference.  
+– Special attention to playful elements typical of children's clothing, such as animal prints, characters, bold patterns, or decorative details. All designs must be clearly visible and accurately positioned.  
 – Natural folds and drape of the garment to showcase fit and movement appropriate for a child.
 
 Styling & Post-processing:
@@ -132,6 +143,9 @@ Styling & Post-processing:
 – Subtle, accurate color grading to maintain absolute fidelity to the real item’s appearance.
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while keeping the model comfortable and expressive.
+
+Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. Focus exclusively on the clothing — **do not include any price tags, stickers, or promotional labels in the final output**.
+
     `.trim(),
     'Calçado': `
 Generate an ultra–high-resolution studio photograph of the reference footwear only. Frame a tight, 
