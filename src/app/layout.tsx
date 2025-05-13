@@ -14,17 +14,22 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Vitriny Web',
-  description: 'Diga adeus às fotos amadoras!'
+  description: 'Diga adeus às fotos amadoras!',
+  icons: {
+    icon: '/favicon.ico'
+  }
 }
 
 export default function RootLayout({
   children
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
+    <html lang="pt-BR" className="dark">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {children}
+      </body>
     </html>
   )
 }
