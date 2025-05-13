@@ -89,7 +89,7 @@ Create an ultra–high-resolution studio photo of a young girl model wearing the
 Composition & Pose:
 – Full-body shot, model centered and facing the camera head-on.  
 – Natural, relaxed stance with a slight shift of weight (one foot slightly forward).  
-– Arms at the sides or one hand gently holding a small prop (e.g., a ribbon) for a playful touch.  
+– Arms at the sides
 – Eyes focused directly on the camera with a warm, cheerful smile.
 
 Background & Lighting:
