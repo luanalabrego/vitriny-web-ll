@@ -80,7 +80,7 @@ Styling & Post-processing:
 – Subtle color grading to ensure faithful reproduction of the real item’s appearance.
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, tailoring, and branding.
-Note: Some garments may contain sales tags or price labels in the reference image, but these must **not appear in the final photo**. Focus strictly on the garment itself—**do not include price tags, hang tags, or promotional stickers** in the output.
+Note: Some garments may contain sales tags or price labels in the reference image, but these must **not appear in the final photo**. Focus strictly on the garment itself.
 
     `.trim(),
     'Infantil feminino': `
@@ -111,7 +111,7 @@ Styling & Post-processing:
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while capturing the youthful, playful spirit of the model.
 
-Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. The focus should remain solely on the outfit — **no tags, stickers, or promotional labels should be included**.
+Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. The focus should remain solely on the outfit.
 
     `.trim(),
 'Infantil Masculino': `
@@ -141,7 +141,7 @@ Styling & Post-processing:
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while keeping the model comfortable and expressive.
 
-Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. Focus exclusively on the clothing — **do not include any price tags, stickers, or promotional labels in the final output**.
+Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. Focus exclusively on the clothing.
 
     `.trim(),
     'Calçado': `
