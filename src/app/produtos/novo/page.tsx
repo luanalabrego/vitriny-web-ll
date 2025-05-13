@@ -31,31 +31,28 @@ export default function NovoProduto() {
   // Prompts específicos para cada tipo de produto
   const promptByType: Record<string, string> = {
     'Feminino': `
-Create an ultra–high-resolution studio photo of a female fashion model wearing the exact same outfit as shown in the reference image.
+Create an ultra–high-resolution studio photo of a female fashion model wearing the exact same outfit as shown in the reference image, with maximum visual fidelity to all visible garment elements.
 
 Composition & Pose:
-– Full-body shot, model centered and facing slightly off-axis (10–15°) for a dynamic look.  
-– One hand resting naturally on the hip, with a subtle weight shift to emphasize the silhouette.  
-– Soft expression: gentle smile and confident gaze, without looking forced.
+– Full-body shot, model centered and turned slightly off-axis (10–15°) for a natural, confident look.
+– One hand resting on the hip, the other arm relaxed.
+– Subtle weight shift for a dynamic silhouette.
+– Calm, confident facial expression with soft eye contact.
 
 Background & Lighting:
-– Plain, uniform background (white or light gray) with no harsh shadows.  
-– Soft, diffused lighting using a key light and fill light to highlight fabric texture.  
-– No distractions or props in the scene.
+– Plain white or light gray studio background with no distractions.
+– Soft, diffused lighting from multiple angles to evenly illuminate the model and highlight fabric textures.
 
-Clothing Details:
-– Accurate replication of colors, patterns, and fabric textures.  
-– Logos, labels, and stitching positioned exactly as in the reference, with no blurring or cropping.  
-– Natural folds and drapes of the fabric visible to showcase fit and movement.
+Garment Fidelity (critical):
+– Carefully analyze the reference image before generating.
+– Replicate the exact structure, fabric, fit, texture, color, stitching, and any visible garment details.
+– Do not reinterpret, simplify, or redesign any part of the clothing.
+– Maintain the proportions, cut, and appearance of every visible element as shown.
+– Treat this as a professional fashion catalog shoot requiring pixel-accurate visual duplication.
 
-Styling & Post-processing:
-– Editorial style: clean look, crisp focus on the garment.  
-– No compression artifacts or digital noise.  
-– Subtle color grading to ensure absolute fidelity to the real item.
-
-Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, shape, and branding.
-
-Note: Some garments may contain sales tags in the reference image, but **these tags must not appear in the final image**. The focus should remain solely on the clothing itself — no price tags, brand tags, or promotional elements should be visible.
+Post-processing & Output:
+– High-end editorial quality, with no image artifacts or distortions.
+– Sharp focus on the outfit, natural skin tones, clean studio look.
 
     `.trim(),
     'Masculino': `
