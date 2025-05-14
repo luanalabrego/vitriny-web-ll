@@ -4,8 +4,8 @@ import { cookies } from 'next/headers'
 import admin from '@/lib/firebaseAdmin'
 
 export async function GET() {
-  // 1) pega o cookie de sessão (mesmo nome que você usa no /api/auth/login)
-  const sessionCookie = cookies().get('session')?.value
+  // 1) pega o cookie de sessão — use o mesmo nome que seu /api/auth/login define
+  const sessionCookie = cookies().get('vitriny_auth')?.value
   if (!sessionCookie) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
   }
