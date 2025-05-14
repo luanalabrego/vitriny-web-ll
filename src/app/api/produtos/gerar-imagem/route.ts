@@ -114,8 +114,13 @@ if (produto) {
 }
 
 
-    // 7) Retorna o produto
-    return NextResponse.json({ produto }, { status: 200 })
+return NextResponse.json(
+  {
+    url: publicUrl,
+    meta: { ean, descricao, marca, cor, tamanho }
+  },
+  { status: 200 }
+)
 
   } catch (err: any) {
     console.error('[gerar-imagem] ERRO:', err)
