@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  const authCookie = request.cookies.get('vitriny_auth')
+  const authCookie = request.cookies.get('session')
   const pathname = request.nextUrl.pathname
 
   // Quais caminhos DEVEM ficar acessíveis sem cookie:
