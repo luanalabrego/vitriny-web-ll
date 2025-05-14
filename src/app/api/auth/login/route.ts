@@ -3,50 +3,74 @@ export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import admin from '@/lib/firebaseAdmin'   // ← use a instância única do seu lib/firebaseAdmin
+import * as admin from 'firebase-admin'
+
+// Extrai e valida variáveis de ambiente
+const {
+  FIREBASE_PROJECT_ID,
+  FIREBASE_CLIENT_EMAIL,
+  FIREBASE_PRIVATE_KEY
+} = process.env
+
+if (!FIREBASE_PROJECT_ID || !FIREBASE_CLIENT_EMAIL || !FIREBASE_PRIVATE_KEY) {
+  throw new Error(
+    'Variáveis de ambiente do Firebase Admin não definidas: ' +
+    'FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL e FIREBASE_PRIVATE_KEY são obrigatórias.'
+  )
+}
+
+// Inicializa o Admin SDK apenas uma vez
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: FIREBASE_PROJECT_ID,
+      clientEmail: FIREBASE_CLIENT_EMAIL,
+      privateKey: FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    }),
+  })
+}
 
 export async function POST(request: NextRequest) {
   try {
     const { token } = (await request.json()) as { token?: string }
     if (!token) {
       return NextResponse.json(
-        { success: false, message: 'Token é obrigatório.' },
+        { success: false, message: 'Token de autenticação é obrigatório.' },
         { status: 400 }
       )
     }
 
-    // 1) valida o ID token (vai lançar se for inválido/expirado)
-    await admin.auth().verifyIdToken(token)
+    // Verifica o ID token e obtém o payload (uid, email, iat, exp, etc)
+    const decoded = await admin.auth().verifyIdToken(token)
 
-    // 2) gera o session cookie (7 dias)
-    const expiresIn = 7 * 24 * 60 * 60 * 1000  // milissegundos
-    const sessionCookie = await admin.auth().createSessionCookie(token, { expiresIn })
+    // Cria a resposta JSON
+    const response = NextResponse.json({ success: true })
 
-    // 3) monta a resposta e seta o cookie chamado "session"
-    const res = NextResponse.json({ success: true })
-    res.cookies.set({
-      name:    'session',               // ← o mesmo nome que você usa no /api/auth/me
-      value:   sessionCookie,
-      domain:  '.vitrinyweb.com.br',   // para cobrir www e sem www
+    // Define o cookie de sessão
+    response.cookies.set({
+      name: 'vitriny_auth',
+      value: JSON.stringify({ uid: decoded.uid, email: decoded.email }),
       httpOnly: true,
-      secure:   process.env.NODE_ENV === 'production',
-      path:     '/',
-      maxAge:   expiresIn / 1000,       // em segundos
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7, // 7 dias
     })
 
-    return res
+    return response
   } catch (err: any) {
-    console.error('[/api/auth/login] erro:', err)
+    console.error('Erro em /api/auth/login:', err)
+
     const isAuthError =
       err.code === 'auth/id-token-expired' ||
-      err.code === 'auth/argument-error'
+      err.code === 'auth/argument-error' ||
+      /expired/i.test(err.message)
+
     return NextResponse.json(
       {
         success: false,
         message: isAuthError
-          ? 'Token expirado ou inválido.'
-          : 'Erro interno do servidor.'
+          ? 'Sessão expirada ou inválida. Faça login novamente.'
+          : err.message || 'Erro interno do servidor.',
       },
       { status: isAuthError ? 401 : 500 }
     )
