@@ -3,28 +3,7 @@ export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import * as admin from 'firebase-admin'
-
-// Variáveis de ambiente do Admin SDK
-const {
-  FIREBASE_PROJECT_ID,
-  FIREBASE_CLIENT_EMAIL,
-  FIREBASE_PRIVATE_KEY
-} = process.env
-
-if (!FIREBASE_PROJECT_ID || !FIREBASE_CLIENT_EMAIL || !FIREBASE_PRIVATE_KEY) {
-  throw new Error('❌ Variáveis do Firebase Admin não definidas.')
-}
-
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: FIREBASE_PROJECT_ID,
-      clientEmail: FIREBASE_CLIENT_EMAIL,
-      privateKey: FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-    }),
-  })
-}
+import admin from '@/lib/firebaseAdmin'   // ← use a instância única do seu lib/firebaseAdmin
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,22 +15,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verifica ID token (email, uid, exp, etc)
+    // 1) valida o ID token (vai lançar se for inválido/expirado)
     await admin.auth().verifyIdToken(token)
 
-    // Cria um session cookie de longa duração
-    const expiresIn = 7 * 24 * 60 * 60 * 1000 // 7 dias em ms
+    // 2) gera o session cookie (7 dias)
+    const expiresIn = 7 * 24 * 60 * 60 * 1000  // milissegundos
     const sessionCookie = await admin.auth().createSessionCookie(token, { expiresIn })
 
-    // Prepara a resposta com o cookie “session”
+    // 3) monta a resposta e seta o cookie chamado "session"
     const res = NextResponse.json({ success: true })
     res.cookies.set({
-      name: 'session',
-      value: sessionCookie,
+      name:    'session',               // ← o mesmo nome que você usa no /api/auth/me
+      value:   sessionCookie,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: expiresIn / 1000,   // em segundos
+      secure:   process.env.NODE_ENV === 'production',
+      path:     '/',
+      maxAge:   expiresIn / 1000,       // em segundos
       sameSite: 'strict',
     })
 
