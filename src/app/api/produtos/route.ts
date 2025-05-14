@@ -1,77 +1,73 @@
 // src/app/api/produtos/route.ts
+export const runtime = 'nodejs'  // ← garante ambiente Node.js
+
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import prisma from '@/lib/prisma'
 import admin from '@/lib/firebaseAdmin'
 
-// Auxiliar para ler e validar a sessão, retornando o UID ou lançando um NextResponse 401
-async function getUidFromSession(request: Request): Promise<string> {
-  // 1) Log do header de cookies bruto
+export async function GET(request: Request) {
+  // 1) log do header cru de cookies
   console.log('[API /api/produtos] Cookie header:', request.headers.get('cookie'))
 
-  // 2) Leia o cookie "session"
-  const sessionCookie = cookies().get('session')?.value
-  console.log('[API /api/produtos] sessionCookie:', sessionCookie)
+  // 2) pegue todos os cookies "session" e escolha o último (mais recente)
+  const allSession = cookies().getAll('session')
+  const sessionCookie = allSession.length > 0
+    ? allSession[allSession.length - 1].value
+    : undefined
 
-  if (!sessionCookie) {
-    console.warn('[API /api/produtos] sem sessionCookie – retornando 401')
-    throw new NextResponse(
-      JSON.stringify({ error: 'Não autorizado' }),
-      { status: 401 }
-    )
+  console.log('[API /api/produtos] sessionCookie chosen:', sessionCookie)
+
+  // 3) tente decodificar o UID, mas sem fazer 401
+  let uid: string | undefined
+  if (sessionCookie) {
+    try {
+      const decoded = await admin.auth().verifySessionCookie(sessionCookie, true)
+      console.log('[API /api/produtos] sessão válida, uid =', decoded.uid)
+      uid = decoded.uid
+    } catch (err) {
+      console.warn('[API /api/produtos] falha ao validar sessionCookie:', err.code || err)
+    }
+  } else {
+    console.log('[API /api/produtos] sem sessionCookie – seguindo com lista vazia')
   }
 
-  try {
-    // 3) Verifique o sessionCookie e extraia o UID
-    const decoded = await admin.auth().verifySessionCookie(sessionCookie, true)
-    console.log('[API /api/produtos] sessão válida, uid =', decoded.uid)
-    return decoded.uid
-  } catch (err: any) {
-    console.error('[API /api/produtos] erro ao verificar sessão:', err)
-    throw new NextResponse(
-      JSON.stringify({ error: 'Não autorizado' }),
-      { status: 401 }
-    )
-  }
-}
+  // 4) busque produtos só se tiver uid; senão retorna lista vazia
+  const produtos = uid
+    ? await prisma.product.findMany({
+        where: { userId: uid },
+        select: {
+          ean: true,
+          descricao: true,
+          marca: true,
+          cor: true,
+          tamanho: true,
+          imageUrl: true,
+          originalUrl: true,
+        },
+      })
+    : []
 
-export async function GET(request: Request) {
-  try {
-    const uid = await getUidFromSession(request)
+  console.log(`[API /api/produtos] retornando ${produtos.length} produto(s)`)
 
-    // 4) Busque produtos do usuário no banco
-    const produtos = await prisma.product.findMany({
-      where: { userId: uid },
-      select: {
-        ean: true,
-        descricao: true,
-        marca: true,
-        cor: true,
-        tamanho: true,
-        imageUrl: true,
-        originalUrl: true,
-      },
-    })
-    console.log(`[API /api/produtos] produtos retornados: ${produtos.length}`)
-
-    return NextResponse.json(produtos, { status: 200 })
-  } catch (err: any) {
-    // Se a exceção for um NextResponse, retorne-a diretamente
-    if (err instanceof NextResponse) return err
-
-    console.error('[API /api/produtos] GET falhou inesperadamente:', err)
-    return NextResponse.json(
-      { error: 'Erro interno no servidor' },
-      { status: 500 }
-    )
-  }
+  return NextResponse.json(produtos)
 }
 
 export async function POST(request: Request) {
-  try {
-    const uid = await getUidFromSession(request)
+  // Mantém a criação protegida como antes:
+  const allSession = cookies().getAll('session')
+  const sessionCookie = allSession.length > 0
+    ? allSession[allSession.length - 1].value
+    : undefined
 
-    // Leia e valide o body
+  if (!sessionCookie) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
+  try {
+    const decoded = await admin.auth().verifySessionCookie(sessionCookie, true)
+    const uid = decoded.uid
+
     const {
       ean,
       imageUrl,
@@ -81,18 +77,15 @@ export async function POST(request: Request) {
       cor         = '',
       tamanho     = ''
     } = await request.json()
-    console.log('[API /api/produtos] body recebido:', { ean, imageUrl, originalUrl, descricao, marca, cor, tamanho })
 
     if (!ean?.trim() || !imageUrl) {
-      console.warn('[API /api/produtos] campos obrigatórios faltando')
       return NextResponse.json(
         { error: 'Campos `ean` e `imageUrl` são obrigatórios.' },
         { status: 400 }
       )
     }
 
-    // Crie o produto associado ao usuário
-    const novoProduto = await prisma.product.create({
+    const novo = await prisma.product.create({
       data: {
         ean: ean.trim(),
         descricao,
@@ -104,16 +97,14 @@ export async function POST(request: Request) {
         userId: uid,
       },
     })
-    console.log('[API /api/produtos] novo produto criado:', novoProduto.id)
 
-    return NextResponse.json(novoProduto, { status: 201 })
+    console.log('[API /api/produtos] novo produto criado:', novo.id)
+    return NextResponse.json(novo, { status: 201 })
   } catch (err: any) {
-    if (err instanceof NextResponse) return err
-
-    console.error('[API /api/produtos] POST falhou inesperadamente:', err)
+    console.error('[API /api/produtos] POST falhou:', err)
     return NextResponse.json(
-      { error: err.message || 'Erro interno no servidor' },
-      { status: 500 }
+      { error: err.code?.includes('auth/') ? 'Não autorizado' : err.message },
+      { status: err.code?.includes('auth/') ? 401 : 500 }
     )
   }
 }
