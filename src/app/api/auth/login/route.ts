@@ -27,11 +27,12 @@ export async function POST(request: NextRequest) {
     res.cookies.set({
       name:    'session',               // ← o mesmo nome que você usa no /api/auth/me
       value:   sessionCookie,
+      domain:  '.vitrinyweb.com.br',   // para cobrir www e sem www
       httpOnly: true,
       secure:   process.env.NODE_ENV === 'production',
       path:     '/',
       maxAge:   expiresIn / 1000,       // em segundos
-      sameSite: 'strict',
+      sameSite: 'lax',
     })
 
     return res
