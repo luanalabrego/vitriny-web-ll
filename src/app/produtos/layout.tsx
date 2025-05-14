@@ -134,7 +134,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 onClick={handleLogout}
                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded"
               >
-                🚪 Sair
+                Sair
               </button>
             </div>
           </div>

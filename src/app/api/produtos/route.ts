@@ -1,32 +1,51 @@
 // src/app/api/produtos/route.ts
-
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import prisma from '@/lib/prisma'
+import admin from '@/lib/firebaseAdmin'
 
-// GET: lista produtos (agora trazendo imageUrl e originalUrl)
+// GET: lista apenas os produtos do usuário logado
 export async function GET(request: Request) {
+  const sessionCookie = cookies().get('session')?.value
+  if (!sessionCookie) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
   try {
+    const decoded = await admin.auth().verifySessionCookie(sessionCookie, true)
+    const uid = decoded.uid
+
     const produtos = await prisma.product.findMany({
+      where: { userId: uid },
       select: {
         ean: true,
         descricao: true,
         marca: true,
         cor: true,
         tamanho: true,
-        imageUrl: true,     // inclui a URL da imagem ajustada
-        originalUrl: true   // inclui a URL da imagem original (opcional)
+        imageUrl: true,
+        originalUrl: true
       }
     })
+
     return NextResponse.json(produtos, { status: 200 })
   } catch (err: any) {
-    console.error('[API /api/produtos] GET error:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[API /api/produtos] GET auth error:', err)
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 }
 
-// POST: cria um novo produto
+// POST: cria um novo produto associado ao usuário logado
 export async function POST(request: Request) {
+  const sessionCookie = cookies().get('session')?.value
+  if (!sessionCookie) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
   try {
+    const decoded = await admin.auth().verifySessionCookie(sessionCookie, true)
+    const uid = decoded.uid
+
     const {
       ean,
       imageUrl,
@@ -37,7 +56,6 @@ export async function POST(request: Request) {
       tamanho     = ''
     } = await request.json()
 
-    // valida apenas ean e imageUrl
     if (!ean?.trim() || !imageUrl) {
       return NextResponse.json(
         { error: 'Campos `ean` e `imageUrl` são obrigatórios.' },
@@ -53,13 +71,18 @@ export async function POST(request: Request) {
         cor,
         tamanho,
         imageUrl,
-        originalUrl
+        originalUrl,
+        userId: uid      // associa ao usuário
       }
     })
 
     return NextResponse.json(novoProduto, { status: 201 })
   } catch (err: any) {
     console.error('[API /api/produtos] POST error:', err)
+    // Se for erro de autenticação, retornamos 401
+    if (err.code === 'auth/argument-error' || err.code === 'auth/id-token-expired') {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }

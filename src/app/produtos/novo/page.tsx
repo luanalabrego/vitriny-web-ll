@@ -22,7 +22,7 @@ export default function NovoProduto() {
 
   // Busca créditos ao montar o componente
   useEffect(() => {
-    fetch('/api/user/credits')
+    fetch('/api/user/credits', { credentials: 'include' })   // ← envia sessão
       .then(res => res.json())
       .then(json => setCredits(json.credits ?? 0))
       .catch(() => console.error('Não foi possível ler créditos'));
@@ -189,6 +189,7 @@ shape, materials, and branding.
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
+  // 3) Seleção de arquivos
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -201,7 +202,7 @@ shape, materials, and branding.
       marca: '',
       cor: '',
       tamanho: '',
-      productType: 'Feminino', // valor padrão
+      productType: 'Feminino',
     }));
     setRows(prev => [...prev, ...newRows]);
     e.target.value = '';
@@ -214,34 +215,35 @@ shape, materials, and branding.
     field: keyof Omit<Row, 'id' | 'file' | 'preview' | 'result' | 'loading'>,
     value: string
   ) => {
-    setRows(rows.map(r => (r.id === id ? { ...r, [field]: value } : r)));
+    setRows(prev =>
+      prev.map(r => (r.id === id ? { ...r, [field]: value } : r))
+    );
   };
 
+  // 4) Envio de todas as linhas
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
-    // Bloqueia envio se não houver créditos suficientes
     if (rows.length > credits) {
       alert(`Você precisa de ${rows.length} créditos, mas tem apenas ${credits}.`);
       return;
     }
-
     if (rows.some(r => !r.ean.trim())) {
       alert('Preencha o EAN em cada linha antes de enviar.');
       return;
     }
 
-    setRows(rows.map(r => ({ ...r, loading: true, result: undefined })));
+    setRows(prev => prev.map(r => ({ ...r, loading: true, result: undefined })));
 
     const tasks = rows.map(row => (async () => {
       try {
-        // 1) pede URL de upload
+        // 4.1) pega URL de upload
         const { uploadUrl, fileName } = await fetch(
-          `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean.trim())}`
+          `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean.trim())}`,
+          { credentials: 'include' }
         ).then(res => res.json());
         if (!uploadUrl || !fileName) throw new Error('Falha ao obter URL de upload');
 
-        // 2) faz PUT do arquivo original
+        // 4.2) faz PUT do arquivo original
         const putRes = await fetch(uploadUrl, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/octet-stream' },
@@ -249,21 +251,21 @@ shape, materials, and branding.
         });
         if (!putRes.ok) throw new Error(`Upload original falhou: ${putRes.status}`);
 
-        // 2.1) torna o original público
+        // 4.3) torna original público
         const publishJson = await fetch('/api/produtos/publish-original', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fileName })
         }).then(res => res.json());
         const originalUrl = publishJson.publicUrl;
         if (!originalUrl) throw new Error(publishJson.error || 'Falha ao tornar original público');
 
-        // 3) escolhe prompt com base no tipo de produto
+        // 4.4) escolhe prompt e gera imagem ajustada
         const prompt = promptByType[row.productType] || promptByType['Feminino'];
-
-        // 4) gera imagem ajustada
         const jsonImg = await fetch('/api/produtos/gerar-imagem', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ean: row.ean.trim(),
@@ -274,12 +276,15 @@ shape, materials, and branding.
             cor: row.cor,
             tamanho: row.tamanho
           })
-        }).then(res => res.json());
+        })
+          .then(res => {
+            if (res.status === 401) throw new Error('Não autorizado');
+            return res.json();
+          });
         if (!jsonImg.url) throw new Error(jsonImg.error || 'Erro interno ao gerar imagem');
-
         const { url, meta } = jsonImg;
 
-        // 5) atualiza estado visual
+        // 4.5) atualiza estado visual
         setRows(prev =>
           prev.map(r =>
             r.id === row.id
@@ -288,16 +293,21 @@ shape, materials, and branding.
           )
         );
 
-        // 5.1) decrementa 1 crédito no servidor
-        const decJson = await fetch('/api/user/decrement-credits', { method: 'POST' })
-          .then(res => res.json());
-        if (decJson.credits !== undefined) {
-          setCredits(decJson.credits);
-        }
+        // 4.6) decrementa crédito
+        const decJson = await fetch('/api/user/decrement-credits', {
+          method: 'POST',
+          credentials: 'include'
+        })
+          .then(res => {
+            if (res.status === 401) throw new Error('Não autorizado');
+            return res.json();
+          });
+        if (decJson.credits !== undefined) setCredits(decJson.credits);
 
-        // 6) persiste no banco
+        // 4.7) persiste no banco
         await fetch('/api/produtos', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ean: row.ean.trim(),
@@ -371,7 +381,6 @@ shape, materials, and branding.
             className="hidden"
           />
         </div>
-
 
         {rows.length > 0 && (
           <>

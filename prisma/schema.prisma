@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")                     // proxy Accelerate em runtime
@@ -8,15 +6,14 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
+  output   = "node_modules/.prisma/client"
 }
 
 model Product {
-  // Novo campo de chave primária numérica
+  // Chave primária numérica
   id           Int      @id @default(autoincrement())
 
-  // Mantém EAN como campo não único
   ean          String
-
   descricao    String
   marca        String
   cor          String
@@ -27,6 +24,10 @@ model Product {
 
   createdAt    DateTime @default(now())
 
-  // Índice opcional para acelerar buscas por EAN
+  // Campo que associa o produto ao usuário logado (agora opcional para não quebrar migração)
+  userId       String?
+
+  // Índices para acelerar buscas
   @@index([ean])
+  @@index([userId])
 }

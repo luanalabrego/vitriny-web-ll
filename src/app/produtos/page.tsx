@@ -29,12 +29,27 @@ export default function ProdutosPage() {
   const itemsPerPage = 10;
 
   useEffect(() => {
-    fetch('/api/produtos')
-      .then(res => res.json())
-      .then((data: Product[]) => {
-        setProducts(data);
+    fetch('/api/produtos', { 
+      credentials: 'include'   // ← envia o cookie de sessão
+    })
+      .then(res => {
+        if (res.status === 401) {
+          // Se não autorizado, redireciona para o login
+          window.location.assign('/login');
+          return;
+        }
+        return res.json();
+      })
+      .then((data: Product[] | undefined) => {
+        if (data) {
+          setProducts(data);
+        }
+      })
+      .catch(err => {
+        console.error('Erro ao buscar produtos:', err);
       });
   }, []);
+  
 
   const handleFilterChange = (field: keyof typeof filters, value: string) => {
     setFilters(prev => ({ ...prev, [field]: value }));
