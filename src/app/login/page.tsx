@@ -1,11 +1,11 @@
 // src/app/login/page.tsx
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'
+import { signInWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 
 export default function LoginPage() {
@@ -15,15 +15,6 @@ export default function LoginPage() {
   const [carregando, setCarregando] = useState(false)
   const router = useRouter()
 
-  // Ao montar, verifica se já existe sessão ativa
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, user => {
-      if (user) {
-        router.push('/')
-      }
-    })
-    return unsubscribe
-  }, [router])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
