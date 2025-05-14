@@ -82,27 +82,37 @@ export async function POST(request: NextRequest) {
     await outFile.makePublic()
     const publicUrl = `https://storage.googleapis.com/${bucket.name}/produtos/${ean}.png`
 
-    // 6) Upsert no banco (vincula userId e evita duplicatas)
-    const produto = await prisma.product.upsert({
-      where: { ean_userId: { ean, userId: uid } },
-      create: {
-        ean: ean.trim(),
-        userId: uid,
-        descricao,
-        marca,
-        cor,
-        tamanho,
-        imageUrl: publicUrl,
-        originalUrl: null
-      },
-      update: {
-        imageUrl: publicUrl,
-        descricao,
-        marca,
-        cor,
-        tamanho
-      }
-    })
+    // 6) Upsert manual: busca primeiro, depois update ou create
+let produto = await prisma.product.findFirst({
+  where: { ean, userId: uid }
+})
+
+if (produto) {
+  produto = await prisma.product.update({
+    where: { id: produto.id },
+    data: {
+      imageUrl: publicUrl,
+      descricao,
+      marca,
+      cor,
+      tamanho
+    }
+  })
+} else {
+  produto = await prisma.product.create({
+    data: {
+      ean: ean.trim(),
+      userId: uid,
+      descricao,
+      marca,
+      cor,
+      tamanho,
+      imageUrl: publicUrl,
+      originalUrl: null
+    }
+  })
+}
+
 
     // 7) Retorna o produto
     return NextResponse.json({ produto }, { status: 200 })
