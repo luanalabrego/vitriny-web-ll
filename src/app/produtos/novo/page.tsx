@@ -31,7 +31,7 @@ export default function NovoProduto() {
   // Prompts específicos para cada tipo de produto
   const promptByType: Record<string, string> = {
     'Feminino': `
-    \[media pointer="file-service://file-2JokoMPKFu71eXZwRfNitC"]
+    \\[media pointer="file-service://file-2JokoMPKFu71eXZwRfNitC"]
     Create an ultra–high-resolution studio photo of a female fashion model wearing the exact same outfit as shown in the reference image, with maximum visual fidelity to all visible garment elements.
     
     Composition & Pose:
@@ -55,8 +55,8 @@ export default function NovoProduto() {
     – High-end editorial quality, with no image artifacts or distortions.
     – Sharp focus on the outfit, natural skin tones, clean studio look.
     
-        `.trim(),
-        'Masculino': `
+    `.trim(),
+    'Masculino': `
     Create an ultra–high-resolution studio photo of a male fashion model wearing the exact same outfit as shown in the reference image.
     
     Composition & Pose:
@@ -83,8 +83,8 @@ export default function NovoProduto() {
     Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, tailoring, and branding.
     Note: Some garments may contain sales tags or price labels in the reference image, but these must **not appear in the final photo**. Focus strictly on the garment itself—**do not include price tags, hang tags, or promotional stickers** in the output.
     
-        `.trim(),
-        'Infantil feminino': `
+    `.trim(),
+    'Infantil feminino': `
     Create an ultra–high-resolution studio photo of a young girl model wearing the exact same outfit as shown in the reference image.
     
     Composition & Pose:
@@ -104,7 +104,6 @@ export default function NovoProduto() {
     – Natural folds and drape of the fabric to showcase fit and movement suitable for a child.
     – Special attention to playful and decorative elements typical of children's clothing, such as animal illustrations, character prints, colorful patterns, or embroidery. All designs must be accurately replicated with clarity and correct positioning.
     
-    
     Styling & Post-processing:
     – Clean, editorial look with crisp focus on the outfit and model.  
     – No compression artifacts, digital noise, or over-retouching that alters the garment’s appearance.  
@@ -114,7 +113,7 @@ export default function NovoProduto() {
     
     Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. The focus should remain solely on the outfit — **no tags, stickers, or promotional labels should be included**.
     
-        `.trim(),
+    `.trim(),
     'Infantil Masculino': `
     Carefully and thoroughly analyze the reference image before generating. Prioritize visual fidelity above creativity. Every visible element of the outfit must be replicated exactly — as if producing a product catalog image of that specific garment.
     
@@ -142,8 +141,8 @@ export default function NovoProduto() {
     – Subtle, accurate color correction to preserve true tone of the original clothing.
     – Focus should be razor-sharp on all parts of the outfit.
     
-        `.trim(),
-        'Calçado': `
+    `.trim(),
+    'Calçado': `
     Generate an ultra–high-resolution studio photograph of the reference footwear only. Frame a tight, 
     close-up three-quarter view—rotate the shoe 10–15° so both side profile and front details fill the frame. 
     Place it flat on a pristine white (or light-gray) background. Illuminate with multi-angle, soft diffused 
@@ -153,8 +152,9 @@ export default function NovoProduto() {
     tread—without any blurring, distortion or over-retouching. Apply an editorial-grade finish: razor-sharp 
     focus edge-to-edge, no compression artifacts or digital noise, and only very subtle, true-to-life color 
     and contrast adjustments to preserve the exact hue and texture of the shoe.
-        `.trim(),
-        'Bolsa': `
+    
+    `.trim(),
+    'Bolsa': `
     Create an ultra–high-resolution product photo (at least 3000×3000 px) focusing exclusively on the 
     handbag shown in the reference image.
     
@@ -167,7 +167,6 @@ export default function NovoProduto() {
     Background & Lighting:
     – Plain, uniform background (white or light gray) with no distractions.  
     – Soft, diffused multi-angle lighting to eliminate harsh shadows and evenly illuminate all surfaces.  
-    – Use subtle reflectors to bring out interior lining and metal hardware.
     
     Extreme Detail Emphasis:
     – Pixel-perfect replication of every element: grain and texture of leather (or fabric), lining pattern, 
@@ -183,6 +182,7 @@ export default function NovoProduto() {
     
     Reference image will be provided alongside. Ensure absolute, pixel-level fidelity to the handbag’s 
     shape, materials, and branding.    
+    
     `.trim(),
   };
 
@@ -192,17 +192,17 @@ export default function NovoProduto() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
+  // Predefine o EAN como o nome do arquivo sem extensão ao fazer upload
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     const newRows = Array.from(files).map((file, idx) => {
-      // Predefine o EAN como o nome do arquivo sem extensão
       const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
       return {
         id: Date.now() + idx,
         file,
         preview: URL.createObjectURL(file),
-        ean: nameWithoutExt,  // EAN inicial já vem do file.name
+        ean: nameWithoutExt,
         descricao: '',
         marca: '',
         cor: '',
@@ -380,7 +380,6 @@ export default function NovoProduto() {
             className="hidden"
           />
         </div>
-
         {rows.length > 0 && (
           <>
             <button
@@ -479,7 +478,7 @@ export default function NovoProduto() {
                       <td
                         className={`border border-purple-300 p-2 text-center ${
                           row.result?.url ? 'bg-green-500 text-white font-bold' : ''
-                        }`}
+                        }`}  
                       >
                         {row.loading
                           ? 'Gerando...'
@@ -506,7 +505,6 @@ export default function NovoProduto() {
             </div>
           </>
         )}
-
         <button
           type="submit"
           disabled={!canSubmit}
