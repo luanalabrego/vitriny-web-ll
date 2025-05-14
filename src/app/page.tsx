@@ -43,7 +43,9 @@ export default function HomePage() {
         <div className="relative z-10 max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <p className="text-purple-600 text-center mb-8">
             <strong>
-              Bem-vindo, {user.email}. Aplicativo de IA moldado para transformar imagens simples de produtos em artes fotográficas profissionais.
+              Bem-vindo, {user.email}. Transforme produtos em imagens incríveis com apenas alguns cliques.
+Ferramenta inteligente de geração em massa: crie dezenas de fotos profissionais em poucos minutos.
+Rápido, prático e com qualidade de estúdio.
             </strong>
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
