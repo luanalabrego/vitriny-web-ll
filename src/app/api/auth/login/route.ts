@@ -46,14 +46,19 @@ export async function POST(request: NextRequest) {
     // Cria a resposta JSON
     const response = NextResponse.json({ success: true })
 
-    // Define o cookie de sessão
+    // Define o cookie de sessão com nome "session"
     response.cookies.set({
-      name: 'vitriny_auth',
-      value: JSON.stringify({ uid: decoded.uid, email: decoded.email }),
+      name: 'session',                     // ← ALTERADO para "session"
+      value: await admin
+        .auth()
+        .createSessionCookie(token, {      // gera um sessionCookie JWT
+          expiresIn: 60 * 60 * 24 * 7 * 1000 // 7 dias em milissegundos
+        }),
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 dias
+      maxAge: 60 * 60 * 24 * 7,            // 7 dias em segundos
+      sameSite: 'strict'
     })
 
     return response
