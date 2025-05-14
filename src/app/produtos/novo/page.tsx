@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent, ChangeEvent } from 'react';
 
 interface Row {
   id: number;
@@ -17,10 +17,8 @@ interface Row {
 }
 
 export default function NovoProduto() {
-  // Estado de créditos do usuário
   const [credits, setCredits] = useState<number>(0);
 
-  // Busca créditos ao montar o componente
   useEffect(() => {
     fetch('/api/user/credits')
       .then(res => res.json())
@@ -28,162 +26,161 @@ export default function NovoProduto() {
       .catch(() => console.error('Não foi possível ler créditos'));
   }, []);
 
-  // Prompts específicos para cada tipo de produto
   const promptByType: Record<string, string> = {
-    'Feminino': `
-    \\[media pointer="file-service://file-2JokoMPKFu71eXZwRfNitC"]
-    Create an ultra–high-resolution studio photo of a female fashion model wearing the exact same outfit as shown in the reference image, with maximum visual fidelity to all visible garment elements.
-    
-    Composition & Pose:
-    – Full-body shot, model centered and turned slightly off-axis (10–15°) for a natural, confident look.
-    – One hand resting on the hip, the other arm relaxed.
-    – Subtle weight shift for a dynamic silhouette.
-    – Calm, confident facial expression with soft eye contact.
-    
-    Background & Lighting:
-    – Plain white or light gray studio background with no distractions.
-    – Soft, diffused lighting from multiple angles to evenly illuminate the model and highlight fabric textures.
-    
-    Garment Fidelity (critical):
-    – Carefully analyze the reference image before generating.
-    – Replicate the exact structure, fabric, fit, texture, color, stitching, and any visible garment details.
-    – Do not reinterpret, simplify, or redesign any part of the clothing.
-    – Maintain the proportions, cut, and appearance of every visible element as shown.
-    – Treat this as a professional fashion catalog shoot requiring pixel-accurate visual duplication.
-    
-    Post-processing & Output:
-    – High-end editorial quality, with no image artifacts or distortions.
-    – Sharp focus on the outfit, natural skin tones, clean studio look.
-    
-    `.trim(),
-    'Masculino': `
-    Create an ultra–high-resolution studio photo of a male fashion model wearing the exact same outfit as shown in the reference image.
-    
-    Composition & Pose:
-    – Full-body or three-quarter shot, model centered and turned slightly off-axis (10–15°) for a dynamic yet natural stance.  
-    – Arms relaxed—one hand casually in a pocket or both arms naturally at the sides.  
-    – Subtle weight shift on one leg to convey confidence and ease.  
-    – Eyes focused directly on the camera, with a calm, assured expression.
-    
-    Background & Lighting:
-    – Plain, uniform background (white or light gray) with zero distractions.  
-    – Soft, diffused lighting using a key light and fill light to highlight fabric drape and texture.  
-    – No harsh shadows or reflective hotspots.
-    
-    Clothing Details:
-    – Exact match of color, pattern, and weave of the fabric.  
-    – Logos, labels, and stitching rendered crisply and placed precisely as in the reference.  
-    – Visible tailoring details (lapels, seams, hems) and natural folds to showcase fit and movement.
-    
-    Styling & Post-processing:
-    – Editorial quality: clean look, razor-sharp focus on the garment.  
-    – Absolutely no compression artifacts or digital noise.  
-    – Subtle color grading to ensure faithful reproduction of the real item’s appearance.
-    
-    Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, tailoring, and branding.
-    Note: Some garments may contain sales tags or price labels in the reference image, but these must **not appear in the final photo**. Focus strictly on the garment itself—**do not include price tags, hang tags, or promotional stickers** in the output.
-    
-    `.trim(),
-    'Infantil feminino': `
-    Create an ultra–high-resolution studio photo of a young girl model wearing the exact same outfit as shown in the reference image.
-    
-    Composition & Pose:
-    – Full-body shot, model centered and facing the camera head-on.  
-    – Natural, relaxed stance with a slight shift of weight (one foot slightly forward).  
-    – Arms at the sides in a neutral, natural position.  
-    – Eyes focused directly on the camera with a warm, cheerful smile.
-    
-    Background & Lighting:
-    – Plain, uniform background (white or light gray) without distractions.  
-    – Soft, diffused lighting using a key light and fill light to highlight fabric texture and the child’s features.  
-    – No harsh shadows or hotspots; ensure even illumination across the model and garment.
-    
-    Clothing Details:
-    – Precise replication of color, pattern, and fabric texture.  
-    – Logos, labels, and any decorative trims rendered crisply and placed exactly as in the reference.  
-    – Natural folds and drape of the fabric to showcase fit and movement suitable for a child.
-    – Special attention to playful and decorative elements typical of children's clothing, such as animal illustrations, character prints, colorful patterns, or embroidery. All designs must be accurately replicated with clarity and correct positioning.
-    
-    Styling & Post-processing:
-    – Clean, editorial look with crisp focus on the outfit and model.  
-    – No compression artifacts, digital noise, or over-retouching that alters the garment’s appearance.  
-    – Subtle, accurate color grading to maintain absolute fidelity to the real item’s colors and details.
-    
-    Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while capturing the youthful, playful spirit of the model.
-    
-    Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. The focus should remain solely on the outfit — **no tags, stickers, or promotional labels should be included**.
-    
-    `.trim(),
-    'Infantil Masculino': `
-    Carefully and thoroughly analyze the reference image before generating. Prioritize visual fidelity above creativity. Every visible element of the outfit must be replicated exactly — as if producing a product catalog image of that specific garment.
-    
-    IMPORTANT INSTRUCTIONS:
-    – Do not improvise or interpret missing areas.
-    – Do not change, simplify, or redesign any part of the clothing.
-    – Do not substitute textures, stitching, prints, or color shades.
-    – Use the reference image as the definitive blueprint.
-    – Match the garment’s fabric, cut, print placement, and proportions with absolute precision.
-    
-    Generate a full-body ultra-high-resolution studio photo of a young boy model wearing the identical outfit shown in the reference.
-    
-    Pose & Expression:
-    – Model should stand facing the camera, relaxed, one knee slightly bent.
-    – Arms naturally at the sides or one hand casually in a pocket.
-    – Expression: friendly smile, direct eye contact.
-    
-    Lighting & Background:
-    – Plain white or light gray background.
-    – Soft, balanced studio lighting to evenly expose all garment details.
-    – Highlight fabric texture and preserve all visual accuracy — no creative adjustments.
-    
-    Post-processing & Quality:
-    – Editorial-level photo clarity with no artifacts or distortions.
-    – Subtle, accurate color correction to preserve true tone of the original clothing.
-    – Focus should be razor-sharp on all parts of the outfit.
-    
-    `.trim(),
-    'Calçado': `
-    Generate an ultra–high-resolution studio photograph of the reference footwear only. Frame a tight, 
-    close-up three-quarter view—rotate the shoe 10–15° so both side profile and front details fill the frame. 
-    Place it flat on a pristine white (or light-gray) background. Illuminate with multi-angle, soft diffused 
-    lighting to eliminate all shadows, using a subtle reflector under the sole to add gentle fill light.  
-    
-    Ensure pixel-perfect fidelity to every element—leather grain, stitching, hardware, ornamentation and sole 
-    tread—without any blurring, distortion or over-retouching. Apply an editorial-grade finish: razor-sharp 
-    focus edge-to-edge, no compression artifacts or digital noise, and only very subtle, true-to-life color 
-    and contrast adjustments to preserve the exact hue and texture of the shoe.
-    
-    `.trim(),
-    'Bolsa': `
-    Create an ultra–high-resolution product photo (at least 3000×3000 px) focusing exclusively on the 
-    handbag shown in the reference image.
-    
-    Composition & Framing:
-    – Full-frame shot capturing the entire bag, slightly rotated (10–15°) to showcase front and side 
-      profiles.  
-    – Bag placed on a flat surface or elegantly suspended by its strap to reveal silhouette and hardware 
-      details.
-    
-    Background & Lighting:
-    – Plain, uniform background (white or light gray) with no distractions.  
-    – Soft, diffused multi-angle lighting to eliminate harsh shadows and evenly illuminate all surfaces.  
-    
-    Extreme Detail Emphasis:
-    – Pixel-perfect replication of every element: grain and texture of leather (or fabric), lining pattern, 
-      zipper teeth, hardware finish (buckles, clasps, studs), embossed logos, stitching density.  
-    – Logos, metal engravings, and tag placements must align exactly with the reference—no blurring or 
-      distortion.
-    
-    Styling & Post-processing:
-    – Editorial-grade clarity: razor-sharp focus on every seam, texture, and hardware element.  
-    – No compression artifacts or digital noise.  
-    – Subtle, true-to-life color grading and contrast adjustments to maintain absolute fidelity to the real 
-      item’s appearance.
-    
-    Reference image will be provided alongside. Ensure absolute, pixel-level fidelity to the handbag’s 
-    shape, materials, and branding.    
-    
-    `.trim(),
+  'Feminino': `
+\\[media pointer="file-service://file-2JokoMPKFu71eXZwRfNitC"]
+Create an ultra–high-resolution studio photo of a female fashion model wearing the exact same outfit as shown in the reference image, with maximum visual fidelity to all visible garment elements.
+
+Composition & Pose:
+– Full-body shot, model centered and turned slightly off-axis (10–15°) for a natural, confident look.
+– One hand resting on the hip, the other arm relaxed.
+– Subtle weight shift for a dynamic silhouette.
+– Calm, confident facial expression with soft eye contact.
+
+Background & Lighting:
+– Plain white or light gray studio background with no distractions.
+– Soft, diffused lighting from multiple angles to evenly illuminate the model and highlight fabric textures.
+
+Garment Fidelity (critical):
+– Carefully analyze the reference image before generating.
+– Replicate the exact structure, fabric, fit, texture, color, stitching, and any visible garment details.
+– Do not reinterpret, simplify, or redesign any part of the clothing.
+– Maintain the proportions, cut, and appearance of every visible element as shown.
+– Treat this as a professional fashion catalog shoot requiring pixel-accurate visual duplication.
+
+Post-processing & Output:
+– High-end editorial quality, with no image artifacts or distortions.
+– Sharp focus on the outfit, natural skin tones, clean studio look.
+
+`.trim(),
+'Masculino': `
+Create an ultra–high-resolution studio photo of a male fashion model wearing the exact same outfit as shown in the reference image.
+
+Composition & Pose:
+– Full-body or three-quarter shot, model centered and turned slightly off-axis (10–15°) for a dynamic yet natural stance.  
+– Arms relaxed—one hand casually in a pocket or both arms naturally at the sides.  
+– Subtle weight shift on one leg to convey confidence and ease.  
+– Eyes focused directly on the camera, with a calm, assured expression.
+
+Background & Lighting:
+– Plain, uniform background (white or light gray) with zero distractions.  
+– Soft, diffused lighting using a key light and fill light to highlight fabric drape and texture.  
+– No harsh shadows or reflective hotspots.
+
+Clothing Details:
+– Exact match of color, pattern, and weave of the fabric.  
+– Logos, labels, and stitching rendered crisply and placed precisely as in the reference.  
+– Visible tailoring details (lapels, seams, hems) and natural folds to showcase fit and movement.
+
+Styling & Post-processing:
+– Editorial quality: clean look, razor-sharp focus on the garment.  
+– Absolutely no compression artifacts or digital noise.  
+– Subtle color grading to ensure faithful reproduction of the real item’s appearance.
+
+Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, tailoring, and branding.
+Note: Some garments may contain sales tags or price labels in the reference image, but these must **not appear in the final photo**. Focus strictly on the garment itself—**do not include price tags, hang tags, or promotional stickers** in the output.
+
+`.trim(),
+'Infantil feminino': `
+Create an ultra–high-resolution studio photo of a young girl model wearing the exact same outfit as shown in the reference image.
+
+Composition & Pose:
+– Full-body shot, model centered and facing the camera head-on.  
+– Natural, relaxed stance with a slight shift of weight (one foot slightly forward).  
+– Arms at the sides in a neutral, natural position.  
+– Eyes focused directly on the camera with a warm, cheerful smile.
+
+Background & Lighting:
+– Plain, uniform background (white or light gray) without distractions.  
+– Soft, diffused lighting using a key light and fill light to highlight fabric texture and the child’s features.  
+– No harsh shadows or hotspots; ensure even illumination across the model and garment.
+
+Clothing Details:
+– Precise replication of color, pattern, and fabric texture.  
+– Logos, labels, and any decorative trims rendered crisply and placed exactly as in the reference.  
+– Natural folds and drape of the fabric to showcase fit and movement suitable for a child.
+– Special attention to playful and decorative elements typical of children's clothing, such as animal illustrations, character prints, colorful patterns, or embroidery. All designs must be accurately replicated with clarity and correct positioning.
+
+Styling & Post-processing:
+– Clean, editorial look with crisp focus on the outfit and model.  
+– No compression artifacts, digital noise, or over-retouching that alters the garment’s appearance.  
+– Subtle, accurate color grading to maintain absolute fidelity to the real item’s colors and details.
+
+Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while capturing the youthful, playful spirit of the model.
+
+Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. The focus should remain solely on the outfit — **no tags, stickers, or promotional labels should be included**.
+
+`.trim(),
+'Infantil Masculino': `
+Carefully and thoroughly analyze the reference image before generating. Prioritize visual fidelity above creativity. Every visible element of the outfit must be replicated exactly — as if producing a product catalog image of that specific garment.
+
+IMPORTANT INSTRUCTIONS:
+– Do not improvise or interpret missing areas.
+– Do not change, simplify, or redesign any part of the clothing.
+– Do not substitute textures, stitching, prints, or color shades.
+– Use the reference image as the definitive blueprint.
+– Match the garment’s fabric, cut, print placement, and proportions with absolute precision.
+
+Generate a full-body ultra-high-resolution studio photo of a young boy model wearing the identical outfit shown in the reference.
+
+Pose & Expression:
+– Model should stand facing the camera, relaxed, one knee slightly bent.
+– Arms naturally at the sides or one hand casually in a pocket.
+– Expression: friendly smile, direct eye contact.
+
+Lighting & Background:
+– Plain white or light gray background.
+– Soft, balanced studio lighting to evenly expose all garment details.
+– Highlight fabric texture and preserve all visual accuracy — no creative adjustments.
+
+Post-processing & Quality:
+– Editorial-level photo clarity with no artifacts or distortions.
+– Subtle, accurate color correction to preserve true tone of the original clothing.
+– Focus should be razor-sharp on all parts of the outfit.
+
+`.trim(),
+'Calçado': `
+Generate an ultra–high-resolution studio photograph of the reference footwear only. Frame a tight, 
+close-up three-quarter view—rotate the shoe 10–15° so both side profile and front details fill the frame. 
+Place it flat on a pristine white (or light-gray) background. Illuminate with multi-angle, soft diffused 
+lighting to eliminate all shadows, using a subtle reflector under the sole to add gentle fill light.  
+
+Ensure pixel-perfect fidelity to every element—leather grain, stitching, hardware, ornamentation and sole 
+tread—without any blurring, distortion or over-retouching. Apply an editorial-grade finish: razor-sharp 
+focus edge-to-edge, no compression artifacts or digital noise, and only very subtle, true-to-life color 
+and contrast adjustments to preserve the exact hue and texture of the shoe.
+
+`.trim(),
+'Bolsa': `
+Create an ultra–high-resolution product photo (at least 3000×3000 px) focusing exclusively on the 
+handbag shown in the reference image.
+
+Composition & Framing:
+– Full-frame shot capturing the entire bag, slightly rotated (10–15°) to showcase front and side 
+  profiles.  
+– Bag placed on a flat surface or elegantly suspended by its strap to reveal silhouette and hardware 
+  details.
+
+Background & Lighting:
+– Plain, uniform background (white or light gray) with no distractions.  
+– Soft, diffused multi-angle lighting to eliminate harsh shadows and evenly illuminate all surfaces.  
+
+Extreme Detail Emphasis:
+– Pixel-perfect replication of every element: grain and texture of leather (or fabric), lining pattern, 
+  zipper teeth, hardware finish (buckles, clasps, studs), embossed logos, stitching density.  
+– Logos, metal engravings, and tag placements must align exactly with the reference—no blurring or 
+  distortion.
+
+Styling & Post-processing:
+– Editorial-grade clarity: razor-sharp focus on every seam, texture, and hardware element.  
+– No compression artifacts or digital noise.  
+– Subtle, true-to-life color grading and contrast adjustments to maintain absolute fidelity to the real 
+  item’s appearance.
+
+Reference image will be provided alongside. Ensure absolute, pixel-level fidelity to the handbag’s 
+shape, materials, and branding.    
+
+`.trim(),
   };
 
   const [rows, setRows] = useState<Row[]>([]);
@@ -192,27 +189,37 @@ export default function NovoProduto() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Predefine o EAN como o nome do arquivo sem extensão ao fazer upload
-  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ----------------------------------------------------
+  // handleFiles atualizado para sempre pré-definir o EAN
+  // ----------------------------------------------------
+  const handleFiles = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
+
     const newRows = Array.from(files).map((file, idx) => {
-      const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+      // pega o nome sem a última extensão
+      const dotIndex = file.name.lastIndexOf('.');
+      const nameWithoutExt =
+        dotIndex !== -1 ? file.name.substring(0, dotIndex) : file.name;
+
       return {
         id: Date.now() + idx,
         file,
         preview: URL.createObjectURL(file),
-        ean: nameWithoutExt,
+        ean: nameWithoutExt,       // <--- aqui já inicializa com o nome do arquivo
         descricao: '',
         marca: '',
         cor: '',
         tamanho: '',
-        productType: 'Feminino', // valor padrão
+        productType: 'Feminino',   // valor padrão
       };
     });
+
     setRows(prev => [...prev, ...newRows]);
+    // limpa o valor do input para permitir re-upload do mesmo arquivo se quiser
     e.target.value = '';
   };
+  // ----------------------------------------------------
 
   const clearSelection = () => setRows([]);
 
@@ -227,30 +234,25 @@ export default function NovoProduto() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Bloqueia envio se não houver créditos suficientes
     if (rows.length > credits) {
       alert(`Você precisa de ${rows.length} créditos, mas tem apenas ${credits}.`);
       return;
     }
 
-    // Verifica se todos os EANs estão preenchidos
     if (rows.some(r => !r.ean.trim())) {
       alert('Preencha o EAN em cada linha antes de enviar.');
       return;
     }
 
-    // Marca todas as linhas como carregando
     setRows(rows.map(r => ({ ...r, loading: true, result: undefined })));
 
     const tasks = rows.map(row => (async () => {
       try {
-        // 1) Obter URL de upload
         const { uploadUrl, fileName } = await fetch(
           `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean.trim())}`
         ).then(res => res.json());
         if (!uploadUrl || !fileName) throw new Error('Falha ao obter URL de upload');
 
-        // 2) Upload do arquivo original
         const putRes = await fetch(uploadUrl, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/octet-stream' },
@@ -258,7 +260,6 @@ export default function NovoProduto() {
         });
         if (!putRes.ok) throw new Error(`Upload original falhou: ${putRes.status}`);
 
-        // 3) Tornar original público
         const publishJson = await fetch('/api/produtos/publish-original', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -267,10 +268,8 @@ export default function NovoProduto() {
         const originalUrl = publishJson.publicUrl;
         if (!originalUrl) throw new Error(publishJson.error || 'Falha ao tornar original público');
 
-        // 4) Seleciona prompt
         const prompt = promptByType[row.productType] || promptByType['Feminino'];
 
-        // 5) Gera imagem ajustada
         const jsonImg = await fetch('/api/produtos/gerar-imagem', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -288,7 +287,6 @@ export default function NovoProduto() {
 
         const { url, meta } = jsonImg;
 
-        // 6) Atualiza estado visual da linha
         setRows(prev =>
           prev.map(r =>
             r.id === row.id
@@ -297,14 +295,12 @@ export default function NovoProduto() {
           )
         );
 
-        // 7) Decrementa crédito no servidor
         const decJson = await fetch('/api/user/decrement-credits', { method: 'POST' })
           .then(res => res.json());
         if (decJson.credits !== undefined) {
           setCredits(decJson.credits);
         }
 
-        // 8) Persiste dados no banco
         await fetch('/api/produtos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -380,6 +376,7 @@ export default function NovoProduto() {
             className="hidden"
           />
         </div>
+
         {rows.length > 0 && (
           <>
             <button
@@ -478,7 +475,7 @@ export default function NovoProduto() {
                       <td
                         className={`border border-purple-300 p-2 text-center ${
                           row.result?.url ? 'bg-green-500 text-white font-bold' : ''
-                        }`}  
+                        }`}
                       >
                         {row.loading
                           ? 'Gerando...'
@@ -505,6 +502,7 @@ export default function NovoProduto() {
             </div>
           </>
         )}
+
         <button
           type="submit"
           disabled={!canSubmit}
