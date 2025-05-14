@@ -220,9 +220,10 @@ shape, materials, and branding.
     );
   };
 
-  // 4) Envio de todas as linhas
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+  
+    // valida créditos e EANs
     if (rows.length > credits) {
       alert(`Você precisa de ${rows.length} créditos, mas tem apenas ${credits}.`);
       return;
@@ -231,86 +232,83 @@ shape, materials, and branding.
       alert('Preencha o EAN em cada linha antes de enviar.');
       return;
     }
-
-    setRows(prev => prev.map(r => ({ ...r, loading: true, result: undefined })));
-
-    const tasks = rows.map(row => (async () => {
+  
+    // marca todas as linhas como carregando
+    setRows(rows => rows.map(r => ({ ...r, loading: true, result: undefined })));
+  
+    await Promise.all(rows.map(async row => {
       try {
-        // 4.1) pega URL de upload
-        const { uploadUrl, fileName } = await fetch(
-          `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean.trim())}`,
+        // 1) GET upload-url
+        const resUpload = await fetch(
+          `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean)}`,
           { credentials: 'include' }
-        ).then(res => res.json());
-        if (!uploadUrl || !fileName) throw new Error('Falha ao obter URL de upload');
-
-        // 4.2) faz PUT do arquivo original
-        const putRes = await fetch(uploadUrl, {
+        );
+        const uploadJson = await resUpload.json();
+        if (!resUpload.ok) {
+          throw new Error(uploadJson.error || `Status ${resUpload.status}`);
+        }
+  
+        // 2) PUT original
+        const putRes = await fetch(uploadJson.uploadUrl, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/octet-stream' },
           body: row.file
         });
-        if (!putRes.ok) throw new Error(`Upload original falhou: ${putRes.status}`);
-
-        // 4.3) torna original público
-        const publishJson = await fetch('/api/produtos/publish-original', {
+        if (!putRes.ok) {
+          throw new Error(`Upload original falhou: ${putRes.status}`);
+        }
+  
+        // 3) POST publish-original
+        const resPub = await fetch('/api/produtos/publish-original', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fileName })
-        }).then(res => res.json());
-        const originalUrl = publishJson.publicUrl;
-        if (!originalUrl) throw new Error(publishJson.error || 'Falha ao tornar original público');
-
-        // 4.4) escolhe prompt e gera imagem ajustada
-        const prompt = promptByType[row.productType] || promptByType['Feminino'];
-        const jsonImg = await fetch('/api/produtos/gerar-imagem', {
+          body: JSON.stringify({ fileName: uploadJson.fileName })
+        });
+        const pubJson = await resPub.json();
+        if (!resPub.ok) {
+          throw new Error(pubJson.error || `Status ${resPub.status}`);
+        }
+        const originalUrl = pubJson.publicUrl;
+  
+        // 4) POST gerar-imagem
+        const resImg = await fetch('/api/produtos/gerar-imagem', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            ean: row.ean.trim(),
-            fileName,
-            prompt,
+            ean: row.ean,
+            fileName: uploadJson.fileName,
+            prompt: promptByType[row.productType],
             descricao: row.descricao,
             marca: row.marca,
             cor: row.cor,
             tamanho: row.tamanho
           })
-        })
-          .then(res => {
-            if (res.status === 401) throw new Error('Não autorizado');
-            return res.json();
-          });
-        if (!jsonImg.url) throw new Error(jsonImg.error || 'Erro interno ao gerar imagem');
-        const { url, meta } = jsonImg;
-
-        // 4.5) atualiza estado visual
-        setRows(prev =>
-          prev.map(r =>
-            r.id === row.id
-              ? { ...r, loading: false, result: { url, originalUrl, meta } }
-              : r
-          )
-        );
-
-        // 4.6) decrementa crédito
-        const decJson = await fetch('/api/user/decrement-credits', {
+        });
+        const imgJson = await resImg.json();
+        if (!resImg.ok) {
+          throw new Error(imgJson.error || `Status ${resImg.status}`);
+        }
+        const { url, meta } = imgJson;
+  
+        // 5) POST decrement-credits
+        const resDec = await fetch('/api/user/decrement-credits', {
           method: 'POST',
           credentials: 'include'
-        })
-          .then(res => {
-            if (res.status === 401) throw new Error('Não autorizado');
-            return res.json();
-          });
-        if (decJson.credits !== undefined) setCredits(decJson.credits);
-
-        // 4.7) persiste no banco
-        await fetch('/api/produtos', {
+        });
+        const decJson = await resDec.json();
+        if (resDec.ok && decJson.credits !== undefined) {
+          setCredits(decJson.credits);
+        }
+  
+        // 6) POST persist no banco
+        const resPost = await fetch('/api/produtos', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            ean: row.ean.trim(),
+            ean: row.ean,
             descricao: row.descricao,
             marca: row.marca,
             cor: row.cor,
@@ -319,20 +317,32 @@ shape, materials, and branding.
             imageUrl: url
           })
         });
-      } catch (err: any) {
+        const postJson = await resPost.json();
+        if (!resPost.ok) {
+          throw new Error(postJson.error || `Status ${resPost.status}`);
+        }
+  
+        // 7) atualiza estado da linha com sucesso
         setRows(prev =>
           prev.map(r =>
             r.id === row.id
-              ? { ...r, loading: false, result: { error: err.message || 'Erro inesperado' } }
+              ? { ...r, loading: false, result: { url, originalUrl, meta } }
+              : r
+          )
+        );
+      } catch (err: any) {
+        // 8) atualiza estado da linha com erro
+        setRows(prev =>
+          prev.map(r =>
+            r.id === row.id
+              ? { ...r, loading: false, result: { error: err.message } }
               : r
           )
         );
       }
-    })());
-
-    await Promise.all(tasks);
-  };
-
+    }));
+  };  
+  
   const canSubmit =
     rows.length > 0 &&
     rows.every(r => r.ean.trim()) &&

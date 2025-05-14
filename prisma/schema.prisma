@@ -24,10 +24,12 @@ model Product {
 
   createdAt    DateTime @default(now())
 
-  // Campo que associa o produto ao usuário logado (agora opcional para não quebrar migração)
-  userId       String?
+  // Campo que associa o produto ao usuário logado
+  userId       String
 
   // Índices para acelerar buscas
   @@index([ean])
   @@index([userId])
+  // Constraint única composta para upsert por ean + userId
+  @@unique([ean, userId])
 }
