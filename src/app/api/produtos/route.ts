@@ -4,17 +4,42 @@ import { cookies } from 'next/headers'
 import prisma from '@/lib/prisma'
 import admin from '@/lib/firebaseAdmin'
 
-// GET: lista apenas os produtos do usuário logado
-export async function GET(request: Request) {
+// Auxiliar para ler e validar a sessão, retornando o UID ou lançando um NextResponse 401
+async function getUidFromSession(request: Request): Promise<string> {
+  // 1) Log do header de cookies bruto
+  console.log('[API /api/produtos] Cookie header:', request.headers.get('cookie'))
+
+  // 2) Leia o cookie "session"
   const sessionCookie = cookies().get('session')?.value
+  console.log('[API /api/produtos] sessionCookie:', sessionCookie)
+
   if (!sessionCookie) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    console.warn('[API /api/produtos] sem sessionCookie – retornando 401')
+    throw new NextResponse(
+      JSON.stringify({ error: 'Não autorizado' }),
+      { status: 401 }
+    )
   }
 
   try {
+    // 3) Verifique o sessionCookie e extraia o UID
     const decoded = await admin.auth().verifySessionCookie(sessionCookie, true)
-    const uid = decoded.uid
+    console.log('[API /api/produtos] sessão válida, uid =', decoded.uid)
+    return decoded.uid
+  } catch (err: any) {
+    console.error('[API /api/produtos] erro ao verificar sessão:', err)
+    throw new NextResponse(
+      JSON.stringify({ error: 'Não autorizado' }),
+      { status: 401 }
+    )
+  }
+}
 
+export async function GET(request: Request) {
+  try {
+    const uid = await getUidFromSession(request)
+
+    // 4) Busque produtos do usuário no banco
     const produtos = await prisma.product.findMany({
       where: { userId: uid },
       select: {
@@ -24,28 +49,29 @@ export async function GET(request: Request) {
         cor: true,
         tamanho: true,
         imageUrl: true,
-        originalUrl: true
-      }
+        originalUrl: true,
+      },
     })
+    console.log(`[API /api/produtos] produtos retornados: ${produtos.length}`)
 
     return NextResponse.json(produtos, { status: 200 })
   } catch (err: any) {
-    console.error('[API /api/produtos] GET auth error:', err)
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    // Se a exceção for um NextResponse, retorne-a diretamente
+    if (err instanceof NextResponse) return err
+
+    console.error('[API /api/produtos] GET falhou inesperadamente:', err)
+    return NextResponse.json(
+      { error: 'Erro interno no servidor' },
+      { status: 500 }
+    )
   }
 }
 
-// POST: cria um novo produto associado ao usuário logado
 export async function POST(request: Request) {
-  const sessionCookie = cookies().get('session')?.value
-  if (!sessionCookie) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-  }
-
   try {
-    const decoded = await admin.auth().verifySessionCookie(sessionCookie, true)
-    const uid = decoded.uid
+    const uid = await getUidFromSession(request)
 
+    // Leia e valide o body
     const {
       ean,
       imageUrl,
@@ -55,14 +81,17 @@ export async function POST(request: Request) {
       cor         = '',
       tamanho     = ''
     } = await request.json()
+    console.log('[API /api/produtos] body recebido:', { ean, imageUrl, originalUrl, descricao, marca, cor, tamanho })
 
     if (!ean?.trim() || !imageUrl) {
+      console.warn('[API /api/produtos] campos obrigatórios faltando')
       return NextResponse.json(
         { error: 'Campos `ean` e `imageUrl` são obrigatórios.' },
         { status: 400 }
       )
     }
 
+    // Crie o produto associado ao usuário
     const novoProduto = await prisma.product.create({
       data: {
         ean: ean.trim(),
@@ -72,17 +101,19 @@ export async function POST(request: Request) {
         tamanho,
         imageUrl,
         originalUrl,
-        userId: uid      // associa ao usuário
-      }
+        userId: uid,
+      },
     })
+    console.log('[API /api/produtos] novo produto criado:', novoProduto.id)
 
     return NextResponse.json(novoProduto, { status: 201 })
   } catch (err: any) {
-    console.error('[API /api/produtos] POST error:', err)
-    // Se for erro de autenticação, retornamos 401
-    if (err.code === 'auth/argument-error' || err.code === 'auth/id-token-expired') {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-    }
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    if (err instanceof NextResponse) return err
+
+    console.error('[API /api/produtos] POST falhou inesperadamente:', err)
+    return NextResponse.json(
+      { error: err.message || 'Erro interno no servidor' },
+      { status: 500 }
+    )
   }
 }
