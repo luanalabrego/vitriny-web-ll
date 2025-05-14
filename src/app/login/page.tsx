@@ -1,9 +1,7 @@
-// src/app/login/page.tsx
 'use client'
 
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
@@ -142,13 +140,6 @@ export default function LoginPage() {
             {carregando ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
-
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Não tem conta?{' '}
-          <Link href="/registro" className="text-purple-600 hover:underline">
-            Registre-se
-          </Link>
-        </p>
       </div>
     </div>
   )
