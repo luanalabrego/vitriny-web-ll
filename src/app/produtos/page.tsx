@@ -51,7 +51,7 @@ export default function ProdutosPage() {
     (!filters.tamanho  || p.tamanho?.toLowerCase().includes(filters.tamanho.toLowerCase())) &&
     (!filters.cor      || p.cor?.toLowerCase().includes(filters.cor.toLowerCase())) &&
     (!filters.descricao|| p.descricao?.toLowerCase().includes(filters.descricao.toLowerCase())) &&
-    (!filters.label    || p.label === filters.label) &&
+    (!filters.label || p.label?.toLowerCase().includes(filters.label.toLowerCase())) &&
     (!filters.observacao || p.observacao?.toLowerCase().includes(filters.observacao.toLowerCase()))
   );
 
@@ -86,7 +86,7 @@ export default function ProdutosPage() {
 
       {/* Filters */}
       <div className="grid grid-cols-7 gap-2 mb-4">
-        {(['ean','marca','tamanho','cor','descricao','label','observacao'] as const).map(field => (
+        {(['ean','marca','tamanho','cor','descricao','Aprovação','observacao'] as const).map(field => (
           <input
             key={field}
             placeholder={`Filtrar ${field}`}
@@ -109,7 +109,7 @@ export default function ProdutosPage() {
               <th className="border border-purple-300 px-4 py-2">Descrição</th>
               <th className="border border-purple-300 px-4 py-2">Foto Original</th>
               <th className="border border-purple-300 px-4 py-2">Ajustada</th>
-              <th className="border border-purple-300 px-4 py-2">Label</th>
+              <th className="border border-purple-300 px-4 py-2">Aprovação</th>
               <th className="border border-purple-300 px-4 py-2">Observação</th>
             </tr>
           </thead>
