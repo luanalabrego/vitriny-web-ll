@@ -113,23 +113,23 @@ export default function ProdutosPage() {
   return (
     <div className="p-6 text-black">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Lista de Produtos</h1>
-        <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
-          <button
-            onClick={exportToExcel}
-            className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-          >
-            📥 Exportar Excel
-          </button>
-          <button
-            onClick={downloadZip}
-            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            📦 Download Fotos
-          </button>
-        </div>
-      </div>
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
+  <h1 className="text-2xl font-bold text-center sm:text-left">Lista de Produtos</h1>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full sm:w-auto">
+    <button
+      onClick={exportToExcel}
+      className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+    >
+      📥 Exportar Excel
+    </button>
+    <button
+      onClick={downloadZip}
+      className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+    >
+      📦 Download Fotos
+    </button>
+  </div>
+</div>
 
       {/* Filters */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
