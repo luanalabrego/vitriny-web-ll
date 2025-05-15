@@ -30,7 +30,8 @@ export default function NovoProduto() {
 
   // Prompts específicos para cada tipo de produto
   const promptByType: Record<string, string> = {
-    'Feminino': `
+  'Feminino': `
+\\[media pointer="file-service://file-2JokoMPKFu71eXZwRfNitC"]
 Create an ultra–high-resolution studio photo of a female fashion model wearing the exact same outfit as shown in the reference image, with maximum visual fidelity to all visible garment elements.
 
 Composition & Pose:
@@ -54,8 +55,8 @@ Post-processing & Output:
 – High-end editorial quality, with no image artifacts or distortions.
 – Sharp focus on the outfit, natural skin tones, clean studio look.
 
-    `.trim(),
-    'Masculino': `
+`.trim(),
+'Masculino': `
 Create an ultra–high-resolution studio photo of a male fashion model wearing the exact same outfit as shown in the reference image.
 
 Composition & Pose:
@@ -80,16 +81,16 @@ Styling & Post-processing:
 – Subtle color grading to ensure faithful reproduction of the real item’s appearance.
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, tailoring, and branding.
-Note: Some garments may contain sales tags or price labels in the reference image, but these must **not appear in the final photo**. Focus strictly on the garment itself.
+Note: Some garments may contain sales tags or price labels in the reference image, but these must **not appear in the final photo**. Focus strictly on the garment itself—**do not include price tags, hang tags, or promotional stickers** in the output.
 
-    `.trim(),
-    'Infantil feminino': `
+`.trim(),
+'Infantil feminino': `
 Create an ultra–high-resolution studio photo of a young girl model wearing the exact same outfit as shown in the reference image.
 
 Composition & Pose:
 – Full-body shot, model centered and facing the camera head-on.  
 – Natural, relaxed stance with a slight shift of weight (one foot slightly forward).  
-– Arms at the sides
+– Arms at the sides in a neutral, natural position.  
 – Eyes focused directly on the camera with a warm, cheerful smile.
 
 Background & Lighting:
@@ -101,6 +102,7 @@ Clothing Details:
 – Precise replication of color, pattern, and fabric texture.  
 – Logos, labels, and any decorative trims rendered crisply and placed exactly as in the reference.  
 – Natural folds and drape of the fabric to showcase fit and movement suitable for a child.
+– Special attention to playful and decorative elements typical of children's clothing, such as animal illustrations, character prints, colorful patterns, or embroidery. All designs must be accurately replicated with clarity and correct positioning.
 
 Styling & Post-processing:
 – Clean, editorial look with crisp focus on the outfit and model.  
@@ -109,38 +111,38 @@ Styling & Post-processing:
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while capturing the youthful, playful spirit of the model.
 
-    `.trim(),
+Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. The focus should remain solely on the outfit — **no tags, stickers, or promotional labels should be included**.
+
+`.trim(),
 'Infantil Masculino': `
-Create an ultra–high-resolution studio photo of a young boy model wearing the exact same outfit as shown in the reference image.
+Carefully and thoroughly analyze the reference image before generating. Prioritize visual fidelity above creativity. Every visible element of the outfit must be replicated exactly — as if producing a product catalog image of that specific garment.
 
-Composition & Pose:
-– Full-body shot, model centered and facing the camera head-on.  
-– Natural, relaxed stance with a slight bend in one knee for comfort.  
-– Arms at the sides or one hand playfully in a pocket.  
-– Eyes looking directly at the camera with a friendly, confident smile.
+IMPORTANT INSTRUCTIONS:
+– Do not improvise or interpret missing areas.
+– Do not change, simplify, or redesign any part of the clothing.
+– Do not substitute textures, stitching, prints, or color shades.
+– Use the reference image as the definitive blueprint.
+– Match the garment’s fabric, cut, print placement, and proportions with absolute precision.
 
-Background & Lighting:
-– Plain, uniform background (white or light gray) with no distractions.  
-– Soft, diffused lighting using a key light and fill light to highlight fabric texture without harsh shadows.  
-– Ensure even illumination across the child’s face and clothing.
+Generate a full-body ultra-high-resolution studio photo of a young boy model wearing the identical outfit shown in the reference.
 
-Clothing Details:
-– Faithful replication of color, pattern, and fabric texture.  
-– Logos, labels, and stitching crisp and precisely positioned as in the reference.  
-– Special attention to playful elements typical of children's clothing, such as animal prints, characters, bold patterns, or decorative details. All designs must be clearly visible and accurately positioned.  
-– Natural folds and drape of the garment to showcase fit and movement appropriate for a child.
+Pose & Expression:
+– Model should stand facing the camera, relaxed, one knee slightly bent.
+– Arms naturally at the sides or one hand casually in a pocket.
+– Expression: friendly smile, direct eye contact.
 
-Styling & Post-processing:
-– Clean, editorial look with razor-sharp focus on the outfit.  
-– No compression artifacts, digital noise, or over-retouching.  
-– Subtle, accurate color grading to maintain absolute fidelity to the real item’s appearance.
+Lighting & Background:
+– Plain white or light gray background.
+– Soft, balanced studio lighting to evenly expose all garment details.
+– Highlight fabric texture and preserve all visual accuracy — no creative adjustments.
 
-Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while keeping the model comfortable and expressive.
+Post-processing & Quality:
+– Editorial-level photo clarity with no artifacts or distortions.
+– Subtle, accurate color correction to preserve true tone of the original clothing.
+– Focus should be razor-sharp on all parts of the outfit.
 
-Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. Focus exclusively on the clothing.
-
-    `.trim(),
-    'Calçado': `
+`.trim(),
+'Calçado': `
 Generate an ultra–high-resolution studio photograph of the reference footwear only. Frame a tight, 
 close-up three-quarter view—rotate the shoe 10–15° so both side profile and front details fill the frame. 
 Place it flat on a pristine white (or light-gray) background. Illuminate with multi-angle, soft diffused 
@@ -150,8 +152,9 @@ Ensure pixel-perfect fidelity to every element—leather grain, stitching, hardw
 tread—without any blurring, distortion or over-retouching. Apply an editorial-grade finish: razor-sharp 
 focus edge-to-edge, no compression artifacts or digital noise, and only very subtle, true-to-life color 
 and contrast adjustments to preserve the exact hue and texture of the shoe.
-    `.trim(),
-    'Bolsa': `
+
+`.trim(),
+'Bolsa': `
 Create an ultra–high-resolution product photo (at least 3000×3000 px) focusing exclusively on the 
 handbag shown in the reference image.
 
@@ -164,7 +167,6 @@ Composition & Framing:
 Background & Lighting:
 – Plain, uniform background (white or light gray) with no distractions.  
 – Soft, diffused multi-angle lighting to eliminate harsh shadows and evenly illuminate all surfaces.  
-– Use subtle reflectors to bring out interior lining and metal hardware.
 
 Extreme Detail Emphasis:
 – Pixel-perfect replication of every element: grain and texture of leather (or fabric), lining pattern, 
@@ -179,8 +181,9 @@ Styling & Post-processing:
   item’s appearance.
 
 Reference image will be provided alongside. Ensure absolute, pixel-level fidelity to the handbag’s 
-shape, materials, and branding.
-    `.trim(),
+shape, materials, and branding.    
+
+`.trim(),
   };
 
   const [rows, setRows] = useState<Row[]>([]);
@@ -196,7 +199,8 @@ shape, materials, and branding.
       id: Date.now() + idx,
       file,
       preview: URL.createObjectURL(file),
-      ean: '',
+      // Aqui preenchemos o EAN com o nome do arquivo
+      ean: file.name,
       descricao: '',
       marca: '',
       cor: '',
@@ -219,29 +223,23 @@ shape, materials, and branding.
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
-    // Bloqueia envio se não houver créditos suficientes
     if (rows.length > credits) {
       alert(`Você precisa de ${rows.length} créditos, mas tem apenas ${credits}.`);
       return;
     }
-
     if (rows.some(r => !r.ean.trim())) {
       alert('Preencha o EAN em cada linha antes de enviar.');
       return;
     }
-
     setRows(rows.map(r => ({ ...r, loading: true, result: undefined })));
 
     const tasks = rows.map(row => (async () => {
       try {
-        // 1) pede URL de upload
         const { uploadUrl, fileName } = await fetch(
           `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean.trim())}`
         ).then(res => res.json());
         if (!uploadUrl || !fileName) throw new Error('Falha ao obter URL de upload');
 
-        // 2) faz PUT do arquivo original
         const putRes = await fetch(uploadUrl, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/octet-stream' },
@@ -249,7 +247,6 @@ shape, materials, and branding.
         });
         if (!putRes.ok) throw new Error(`Upload original falhou: ${putRes.status}`);
 
-        // 2.1) torna o original público
         const publishJson = await fetch('/api/produtos/publish-original', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -258,10 +255,7 @@ shape, materials, and branding.
         const originalUrl = publishJson.publicUrl;
         if (!originalUrl) throw new Error(publishJson.error || 'Falha ao tornar original público');
 
-        // 3) escolhe prompt com base no tipo de produto
         const prompt = promptByType[row.productType] || promptByType['Feminino'];
-
-        // 4) gera imagem ajustada
         const jsonImg = await fetch('/api/produtos/gerar-imagem', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -278,8 +272,6 @@ shape, materials, and branding.
         if (!jsonImg.url) throw new Error(jsonImg.error || 'Erro interno ao gerar imagem');
 
         const { url, meta } = jsonImg;
-
-        // 5) atualiza estado visual
         setRows(prev =>
           prev.map(r =>
             r.id === row.id
@@ -288,14 +280,12 @@ shape, materials, and branding.
           )
         );
 
-        // 5.1) decrementa 1 crédito no servidor
         const decJson = await fetch('/api/user/decrement-credits', { method: 'POST' })
           .then(res => res.json());
         if (decJson.credits !== undefined) {
           setCredits(decJson.credits);
         }
 
-        // 6) persiste no banco
         await fetch('/api/produtos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -371,7 +361,6 @@ shape, materials, and branding.
             className="hidden"
           />
         </div>
-
 
         {rows.length > 0 && (
           <>
