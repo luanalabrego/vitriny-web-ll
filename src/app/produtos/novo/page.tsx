@@ -364,14 +364,14 @@ shape, materials, and branding.
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-flex items-center"
+            className="px-4 py-2 w-full sm:w-auto bg-blue-600 text-white rounded hover:bg-blue-700 inline-flex items-center"
           >
             📁 Selecionar Imagens
           </button>
           <button
             type="button"
             onClick={clearSelection}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 inline-flex items-center"
+            className="px-4 py-2 w-full sm:w-auto bg-red-600 text-white rounded hover:bg-red-700 inline-flex items-center"
           >
             🗑️ Limpar Seleção
           </button>
@@ -403,16 +403,16 @@ shape, materials, and branding.
               {showDetails ? 'Ver menos' : 'Ver mais'}
             </button>
             <div className="overflow-x-auto">
-              <table className="min-w-full table-auto border-collapse border border-purple-300 text-black text-xs sm:text-base"></>
+            <table className="min-w-full table-auto border-collapse border border-purple-300 text-black text-xs sm:text-base">
                 <thead>
                   <tr className="bg-purple-600 text-white">
                     <th className="border border-white px-2 py-1">Foto</th>
                     <th className="border border-purple-300 px-2 py-1">Tipo</th>
                     <th className="border border-purple-300 px-2 py-1">EAN</th>
-                    {showDetails && <th className="hidden sm:table-cell border border-purple-300 px-2 py-1">Descrição</th>
-                    {showDetails && <th className="border border-purple-300 px-2 py-1">Marca</th>}
-                    {showDetails && <th className="border border-purple-300 px-2 py-1">Cor</th>}
-                    {showDetails && <th className="border border-purple-300 px-2 py-1">Tamanho</th>}
+                    {showDetails && <th className="hidden sm:table-cell border border-purple-300 px-2 py-1">Descrição</th>}
+                    {showDetails && <th className="hidden sm:table-cell border border-purple-300 px-2 py-1">Marca</th>}
+                    {showDetails && <th className="hidden sm:table-cell border border-purple-300 px-2 py-1">Cor</th>}
+                    {showDetails && <th className="hidden sm:table-cell border border-purple-300 px-2 py-1">Tamanho</th>}
                     <th className="border border-purple-300 px-2 py-1">Status</th>
                     <th className="border border-purple-300 px-2 py-1">Foto ajustada</th>
                     <th className="border border-purple-300 px-2 py-1">Aprovação</th>
@@ -422,7 +422,7 @@ shape, materials, and branding.
                 <tbody>
                   {rows.map(row => (
                     <tr key={row.id} className="hover:bg-gray-50">
-                      <td className="hidden sm:table-cell border border-purple-300 p-2">
+                      <td className="border border-purple-300 p-2">
                         {row.preview && (
                           <img
                             src={row.preview}
@@ -455,7 +455,7 @@ shape, materials, and branding.
                         />
                       </td>
                       {showDetails && (
-                        <td className="border border-purple-300 p-2">
+                        <td className="hidden sm:table-cell border border-purple-300 p-2">
                           <input
                             value={row.descricao}
                             onChange={e => handleFieldChange(row.id, 'descricao', e.target.value)}
@@ -464,7 +464,7 @@ shape, materials, and branding.
                         </td>
                       )}
                       {showDetails && (
-                        <td className="border border-purple-300 p-2">
+                        <td className="hidden sm:table-cell border border-purple-300 p-2">
                           <input
                             value={row.marca}
                             onChange={e => handleFieldChange(row.id, 'marca', e.target.value)}
@@ -473,7 +473,7 @@ shape, materials, and branding.
                         </td>
                       )}
                       {showDetails && (
-                        <td className="border border-purple-300 p-2">
+                        <td className="hidden sm:table-cell border border-purple-300 p-2">
                           <input
                             value={row.cor}
                             onChange={e => handleFieldChange(row.id, 'cor', e.target.value)}
@@ -482,7 +482,7 @@ shape, materials, and branding.
                         </td>
                       )}
                       {showDetails && (
-                        <td className="border border-purple-300 p-2">
+                        <td className="hidden sm:table-cell border border-purple-300 p-2">
                           <input
                             value={row.tamanho}
                             onChange={e => handleFieldChange(row.id, 'tamanho', e.target.value)}
@@ -552,7 +552,7 @@ shape, materials, and branding.
                 type="button"
                 onClick={handleCategorizeAll}
                 disabled={!canCategorize}
-                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+                className="px-4 py-2 w-full sm:w-auto bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
               >
                 Categorizar Todas
               </button>
