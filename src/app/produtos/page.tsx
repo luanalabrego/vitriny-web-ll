@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 const STORAGE_BASE = 'https://storage.googleapis.com/vitriny-web.firebasestorage.app/';
 
@@ -15,7 +17,7 @@ interface Product {
   imageUrl?: string;
   aprovacao?: string;
   observacao?: string;
-  createdAt: string;   // 👈 ISO string
+  createdAt: string; // usado apenas para filtro, não exibido
 }
 
 export default function ProdutosPage() {
@@ -29,7 +31,7 @@ export default function ProdutosPage() {
     aprovacao: '',
     observacao: '',
     dateFrom: '',
-    dateTo: '',
+    dateTo: ''
   });
   const [modalSrc, setModalSrc] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,7 +39,7 @@ export default function ProdutosPage() {
 
   useEffect(() => {
     fetch('/api/produtos')
-      .then(res => res.json())
+      .then(res => res.ok ? res.json() : Promise.reject(res.status))
       .then((data: Product[]) => setProducts(data))
       .catch(console.error);
   }, []);
@@ -50,7 +52,7 @@ export default function ProdutosPage() {
   const safe = (s?: string) => (s ?? '').toLowerCase();
 
   const filtered = products.filter(p => {
-    // data
+    // filtro por data
     const created = new Date(p.createdAt);
     if (filters.dateFrom) {
       const from = new Date(filters.dateFrom);
@@ -61,7 +63,6 @@ export default function ProdutosPage() {
       to.setHours(23,59,59);
       if (created > to) return false;
     }
-
     // demais filtros
     return (
       (!filters.ean       || p.ean.includes(filters.ean)) &&
@@ -86,20 +87,22 @@ export default function ProdutosPage() {
   const resolveUrl = (url?: string | null) =>
     url?.startsWith('http') ? url : `${STORAGE_BASE}${url}`;
 
-  // botão que dispara download de todas as imageUrl filtradas
-  const downloadFilteredPhotos = () => {
-    filtered.forEach(prod => {
-      if (!prod.imageUrl) return;
-      const url = resolveUrl(prod.imageUrl);
-      const a = document.createElement('a');
-      a.href = url;
-      // usar extensão conforme URL, ou .jpg por default
-      const ext = url.split('.').pop() || 'jpg';
-      a.download = `${prod.ean}.${ext}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    });
+  // cria um ZIP com todas as imagens filtradas
+  const downloadZip = async () => {
+    const zip = new JSZip();
+    await Promise.all(
+      filtered.map(async prod => {
+        if (!prod.imageUrl) return;
+        const url = resolveUrl(prod.imageUrl);
+        const resp = await fetch(url);
+        if (!resp.ok) return;
+        const blob = await resp.blob();
+        const ext = url.split('.').pop() || 'jpg';
+        zip.file(`${prod.ean}.${ext}`, blob);
+      })
+    );
+    const content = await zip.generateAsync({ type: 'blob' });
+    saveAs(content, 'fotos.zip');
   };
 
   return (
@@ -114,10 +117,10 @@ export default function ProdutosPage() {
             📥 Exportar Excel
           </button>
           <button
-            onClick={downloadFilteredPhotos}
+            onClick={downloadZip}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
-            📷 Download Fotos
+            📦 Download Fotos
           </button>
         </div>
       </div>
@@ -134,12 +137,9 @@ export default function ProdutosPage() {
             key={field}
             type={field.startsWith('date') ? 'date' : 'text'}
             placeholder={
-              field === 'aprovacao'
-                ? 'Filtrar Aprovação'
-                : field === 'dateFrom'
-                ? 'Data de (início)'
-                : field === 'dateTo'
-                ? 'Data até'
+              field === 'aprovacao' ? 'Filtrar Aprovação'
+                : field === 'dateFrom' ? 'Data de (início)'
+                : field === 'dateTo'   ? 'Data até'
                 : `Filtrar ${field}`
             }
             value={filters[field]}
@@ -149,32 +149,31 @@ export default function ProdutosPage() {
         ))}
       </div>
 
-      {/* Table */}
+      {/* Table sem borda externa, só células roxas */}
       <div className="overflow-x-auto">
-        <table className="min-w-full table-auto border-collapse border border-purple-300 text-black">
+        <table className="min-w-full table-auto border-collapse text-black">
           <thead>
             <tr className="bg-purple-600 text-white">
-              <th className="border px-4 py-2">EAN</th>
-              <th className="border px-4 py-2">Marca</th>
-              <th className="border px-4 py-2">Tamanho</th>
-              <th className="border px-4 py-2">Cor</th>
-              <th className="border px-4 py-2">Descrição</th>
-              <th className="border px-4 py-2">Original</th>
-              <th className="border px-4 py-2">Ajustada</th>
-              <th className="border px-4 py-2">Aprovação</th>
-              <th className="border px-4 py-2">Observação</th>
-              <th className="border px-4 py-2">Criado em</th>
+              <th className="border border-purple-300 px-4 py-2">EAN</th>
+              <th className="border border-purple-300 px-4 py-2">Marca</th>
+              <th className="border border-purple-300 px-4 py-2">Tamanho</th>
+              <th className="border border-purple-300 px-4 py-2">Cor</th>
+              <th className="border border-purple-300 px-4 py-2">Descrição</th>
+              <th className="border border-purple-300 px-4 py-2">Original</th>
+              <th className="border border-purple-300 px-4 py-2">Ajustada</th>
+              <th className="border border-purple-300 px-4 py-2">Aprovação</th>
+              <th className="border border-purple-300 px-4 py-2">Observação</th>
             </tr>
           </thead>
           <tbody>
             {paginated.map(prod => (
               <tr key={prod.ean} className="hover:bg-gray-50">
-                <td className="border px-4 py-2">{prod.ean}</td>
-                <td className="border px-4 py-2">{prod.marca || '-'}</td>
-                <td className="border px-4 py-2">{prod.tamanho || '-'}</td>
-                <td className="border px-4 py-2">{prod.cor || '-'}</td>
-                <td className="border px-4 py-2">{prod.descricao || '-'}</td>
-                <td className="border px-4 py-2 text-center">
+                <td className="border border-purple-300 px-4 py-2">{prod.ean}</td>
+                <td className="border border-purple-300 px-4 py-2">{prod.marca || '-'}</td>
+                <td className="border border-purple-300 px-4 py-2">{prod.tamanho || '-'}</td>
+                <td className="border border-purple-300 px-4 py-2">{prod.cor || '-'}</td>
+                <td className="border border-purple-300 px-4 py-2">{prod.descricao || '-'}</td>
+                <td className="border border-purple-300 px-4 py-2 text-center">
                   {prod.originalUrl
                     ? <img
                         src={resolveUrl(prod.originalUrl)}
@@ -183,7 +182,7 @@ export default function ProdutosPage() {
                       />
                     : '—'}
                 </td>
-                <td className="border px-4 py-2 text-center">
+                <td className="border border-purple-300 px-4 py-2 text-center">
                   {prod.imageUrl
                     ? <img
                         src={resolveUrl(prod.imageUrl)}
@@ -192,11 +191,8 @@ export default function ProdutosPage() {
                       />
                     : '—'}
                 </td>
-                <td className="border px-4 py-2">{prod.aprovacao || '-'}</td>
-                <td className="border px-4 py-2">{prod.observacao || '-'}</td>
-                <td className="border px-4 py-2">
-                  {new Date(prod.createdAt).toLocaleDateString()}
-                </td>
+                <td className="border border-purple-300 px-4 py-2">{prod.aprovacao || '-'}</td>
+                <td className="border border-purple-300 px-4 py-2">{prod.observacao || '-'}</td>
               </tr>
             ))}
           </tbody>
@@ -212,7 +208,7 @@ export default function ProdutosPage() {
         >
           Anterior
         </button>
-        <span>Página {currentPage} de {Math.ceil(filtered.length / itemsPerPage)}</span>
+        <span>Página {currentPage} de {Math.max(1, Math.ceil(filtered.length / itemsPerPage))}</span>
         <button
           onClick={() => setCurrentPage(p => Math.min(p + 1, Math.ceil(filtered.length / itemsPerPage)))}
           disabled={currentPage === Math.ceil(filtered.length / itemsPerPage)}
@@ -222,7 +218,7 @@ export default function ProdutosPage() {
         </button>
       </div>
 
-      {/* Modal */}
+      {/* Modal de imagem */}
       {modalSrc && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
