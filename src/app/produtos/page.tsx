@@ -9,11 +9,7 @@ const STORAGE_BASE = 'https://storage.googleapis.com/vitriny-web.firebasestorage
 
 interface Product {
   ean: string;
-  descricao?: string;
   marca?: string;
-  cor?: string;
-  tamanho?: string;
-  originalUrl?: string | null;
   imageUrl?: string;
   aprovacao?: string;
   observacao?: string;
@@ -25,9 +21,6 @@ export default function ProdutosPage() {
   const [filters, setFilters] = useState({
     ean: '',
     marca: '',
-    tamanho: '',
-    cor: '',
-    descricao: '',
     aprovacao: '',
     observacao: '',
     dateFrom: '',
@@ -51,25 +44,28 @@ export default function ProdutosPage() {
 
   const safe = (s?: string) => (s ?? '').toLowerCase();
 
+  // função para criar Date no timezone local sem offset UTC
+  const parseLocalDate = (dateStr: string, endOfDay = false) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return endOfDay
+      ? new Date(y, m - 1, d, 23, 59, 59)
+      : new Date(y, m - 1, d, 0, 0, 0);
+  };
+
   const filtered = products.filter(p => {
-    // filtro por data
-    const created = new Date(p.createdAt);
+    // filtro por data local
     if (filters.dateFrom) {
-      const from = new Date(filters.dateFrom);
-      if (created < from) return false;
+      const from = parseLocalDate(filters.dateFrom);
+      if (new Date(p.createdAt) < from) return false;
     }
     if (filters.dateTo) {
-      const to = new Date(filters.dateTo);
-      to.setHours(23, 59, 59);
-      if (created > to) return false;
+      const to = parseLocalDate(filters.dateTo, true);
+      if (new Date(p.createdAt) > to) return false;
     }
-    // demais filtros
+
     return (
       (!filters.ean       || p.ean.includes(filters.ean)) &&
       (!filters.marca     || safe(p.marca).includes(filters.marca.toLowerCase())) &&
-      (!filters.tamanho   || safe(p.tamanho).includes(filters.tamanho.toLowerCase())) &&
-      (!filters.cor       || safe(p.cor).includes(filters.cor.toLowerCase())) &&
-      (!filters.descricao || safe(p.descricao).includes(filters.descricao.toLowerCase())) &&
       (!filters.aprovacao || safe(p.aprovacao).includes(filters.aprovacao.toLowerCase())) &&
       (!filters.observacao|| safe(p.observacao).includes(filters.observacao.toLowerCase()))
     );
@@ -88,6 +84,10 @@ export default function ProdutosPage() {
     url?.startsWith('http') ? url : `${STORAGE_BASE}${url}`;
 
   const downloadZip = async () => {
+    if (!filters.aprovacao) {
+      alert('Escolha um valor de Aprovação para nomear o ZIP.');
+      return;
+    }
     const zip = new JSZip();
     await Promise.all(filtered.map(async prod => {
       if (!prod.imageUrl) return;
@@ -98,8 +98,10 @@ export default function ProdutosPage() {
       const ext = url.split('.').pop() || 'jpg';
       zip.file(`${prod.ean}.${ext}`, blob);
     }));
-    const content = await zip.generateAsync({ type: 'blob' });
-    saveAs(content, 'fotos.zip');
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const datePart = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+    const zipName = `${filters.aprovacao}_${datePart}.zip`;
+    saveAs(blob, zipName);
   };
 
   return (
@@ -123,18 +125,16 @@ export default function ProdutosPage() {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-9 gap-2 mb-4">
-        {(
-          ['ean','marca','tamanho','cor','descricao','aprovacao','observacao','dateFrom','dateTo'] as const
-        ).map(field => (
+      <div className="grid grid-cols-6 gap-2 mb-4">
+        {(['ean','marca','aprovacao','observacao','dateFrom','dateTo'] as const).map(field => (
           <input
             key={field}
             type={field.startsWith('date') ? 'date' : 'text'}
             placeholder={
               field === 'aprovacao' ? 'Filtrar Aprovação'
-              : field === 'dateFrom' ? 'Data de (início)'
-              : field === 'dateTo'   ? 'Data até'
-              : `Filtrar ${field}`
+                : field === 'dateFrom' ? 'Data de...'
+                : field === 'dateTo'   ? 'Data até...'
+                : `Filtrar ${field}`
             }
             value={filters[field]}
             onChange={e => handleFilterChange(field, e.target.value)}
@@ -143,16 +143,13 @@ export default function ProdutosPage() {
         ))}
       </div>
 
-      {/* Table without outer border, only purple cell borders */}
+      {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full table-auto border-collapse text-black">
           <thead>
             <tr className="bg-purple-600 text-white">
               <th className="border border-purple-300 px-4 py-2">EAN</th>
               <th className="border border-purple-300 px-4 py-2">Marca</th>
-              <th className="border border-purple-300 px-4 py-2">Tamanho</th>
-              <th className="border border-purple-300 px-4 py-2">Cor</th>
-              <th className="border border-purple-300 px-4 py-2">Descrição</th>
               <th className="border border-purple-300 px-4 py-2">Original</th>
               <th className="border border-purple-300 px-4 py-2">Ajustada</th>
               <th className="border border-purple-300 px-4 py-2">Aprovação</th>
@@ -164,9 +161,6 @@ export default function ProdutosPage() {
               <tr key={prod.ean} className="hover:bg-gray-50">
                 <td className="border border-purple-300 px-4 py-2">{prod.ean}</td>
                 <td className="border border-purple-300 px-4 py-2">{prod.marca || '-'}</td>
-                <td className="border border-purple-300 px-4 py-2">{prod.tamanho || '-'}</td>
-                <td className="border border-purple-300 px-4 py-2">{prod.cor || '-'}</td>
-                <td className="border border-purple-300 px-4 py-2">{prod.descricao || '-'}</td>
                 <td className="border border-purple-300 px-4 py-2 text-center">
                   {prod.originalUrl
                     ? <img
@@ -202,7 +196,9 @@ export default function ProdutosPage() {
         >
           Anterior
         </button>
-        <span>Página {currentPage} de {Math.max(1, Math.ceil(filtered.length / itemsPerPage))}</span>
+        <span>
+          Página {currentPage} de {Math.max(1, Math.ceil(filtered.length / itemsPerPage))}
+        </span>
         <button
           onClick={() => setCurrentPage(p => Math.min(p + 1, Math.ceil(filtered.length / itemsPerPage)))}
           disabled={currentPage === Math.ceil(filtered.length / itemsPerPage)}
