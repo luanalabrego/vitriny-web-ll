@@ -13,7 +13,7 @@ interface Product {
   imageUrl?: string;
   aprovacao?: string;
   observacao?: string;
-  createdAt: string;   // usado só para filtro, não exibido
+  createdAt: string;
 }
 
 export default function ProdutosPage() {
@@ -44,7 +44,12 @@ export default function ProdutosPage() {
 
   const safe = (s?: string) => (s ?? '').toLowerCase();
 
-  // função para criar Date no timezone local sem offset UTC
+  // cria Date local sem considerar hora UTC
+  const localMidnight = (iso: string) => {
+    const d = new Date(iso);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  };
+  // parse YYYY-MM-DD para Date local, opcional final do dia
   const parseLocalDate = (dateStr: string, endOfDay = false) => {
     const [y, m, d] = dateStr.split('-').map(Number);
     return endOfDay
@@ -53,16 +58,17 @@ export default function ProdutosPage() {
   };
 
   const filtered = products.filter(p => {
-    // filtro por data local
+    // filter por data usando somente a data local de createdAt
+    const created = localMidnight(p.createdAt);
     if (filters.dateFrom) {
       const from = parseLocalDate(filters.dateFrom);
-      if (new Date(p.createdAt) < from) return false;
+      if (created < from) return false;
     }
     if (filters.dateTo) {
       const to = parseLocalDate(filters.dateTo, true);
-      if (new Date(p.createdAt) > to) return false;
+      if (created > to) return false;
     }
-
+    // demais filtros
     return (
       (!filters.ean       || p.ean.includes(filters.ean)) &&
       (!filters.marca     || safe(p.marca).includes(filters.marca.toLowerCase())) &&
@@ -71,7 +77,10 @@ export default function ProdutosPage() {
     );
   });
 
-  const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const paginated = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(filtered);
@@ -84,24 +93,26 @@ export default function ProdutosPage() {
     url?.startsWith('http') ? url : `${STORAGE_BASE}${url}`;
 
   const downloadZip = async () => {
-    if (!filters.aprovacao) {
-      alert('Escolha um valor de Aprovação para nomear o ZIP.');
-      return;
-    }
     const zip = new JSZip();
-    await Promise.all(filtered.map(async prod => {
-      if (!prod.imageUrl) return;
-      const url = resolveUrl(prod.imageUrl);
-      const res = await fetch(url);
-      if (!res.ok) return;
-      const blob = await res.blob();
-      const ext = url.split('.').pop() || 'jpg';
-      zip.file(`${prod.ean}.${ext}`, blob);
-    }));
+    await Promise.all(
+      filtered.map(async prod => {
+        if (!prod.imageUrl) return;
+        const url = resolveUrl(prod.imageUrl);
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const ext = url.split('.').pop() || 'jpg';
+        zip.file(`${prod.ean}.${ext}`, blob);
+      })
+    );
     const blob = await zip.generateAsync({ type: 'blob' });
-    const datePart = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-    const zipName = `${filters.aprovacao}_${datePart}.zip`;
-    saveAs(blob, zipName);
+    const datePart = new Date()
+      .toLocaleDateString('pt-BR')
+      .replace(/\//g, '-');
+    const namePart = filters.aprovacao
+      ? filters.aprovacao
+      : datePart;
+    saveAs(blob, `${namePart}_${datePart}.zip`);
   };
 
   return (
