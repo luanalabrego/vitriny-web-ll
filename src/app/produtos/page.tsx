@@ -46,11 +46,11 @@ export default function ProdutosPage() {
   };
 
   const filtered = products.filter(p =>
-    (!filters.ean       || p.ean.includes(filters.ean)) &&
-    (!filters.marca     || p.marca?.toLowerCase().includes(filters.marca.toLowerCase())) &&
-    (!filters.tamanho   || p.tamanho?.toLowerCase().includes(filters.tamanho.toLowerCase())) &&
-    (!filters.cor       || p.cor?.toLowerCase().includes(filters.cor.toLowerCase())) &&
-    (!filters.descricao || p.descricao?.toLowerCase().includes(filters.descricao.toLowerCase())) &&
+    (!filters.ean      || p.ean.includes(filters.ean)) &&
+    (!filters.marca    || p.marca?.toLowerCase().includes(filters.marca.toLowerCase())) &&
+    (!filters.tamanho  || p.tamanho?.toLowerCase().includes(filters.tamanho.toLowerCase())) &&
+    (!filters.cor      || p.cor?.toLowerCase().includes(filters.cor.toLowerCase())) &&
+    (!filters.descricao|| p.descricao?.toLowerCase().includes(filters.descricao.toLowerCase())) &&
     (!filters.aprovacao || p.aprovacao?.toLowerCase().includes(filters.aprovacao.toLowerCase())) &&
     (!filters.observacao || p.observacao?.toLowerCase().includes(filters.observacao.toLowerCase()))
   );
@@ -121,6 +121,8 @@ export default function ProdutosPage() {
                 <td className="border border-purple-300 px-4 py-2">{prod.tamanho || '-'}</td>
                 <td className="border border-purple-300 px-4 py-2">{prod.cor || '-'}</td>
                 <td className="border border-purple-300 px-4 py-2">{prod.descricao || '-'}</td>
+
+                {/* Foto Original */}
                 <td className="border border-purple-300 px-4 py-2 text-center">
                   {prod.originalUrl ? (
                     <img
@@ -133,6 +135,8 @@ export default function ProdutosPage() {
                     <span className="text-gray-500">—</span>
                   )}
                 </td>
+
+                {/* Foto Ajustada */}
                 <td className="border border-purple-300 px-4 py-2 text-center">
                   {prod.imageUrl ? (
                     <img
@@ -145,6 +149,7 @@ export default function ProdutosPage() {
                     <span className="text-gray-500">—</span>
                   )}
                 </td>
+
                 <td className="border border-purple-300 px-4 py-2">{prod.aprovacao || '-'}</td>
                 <td className="border border-purple-300 px-4 py-2">{prod.observacao || '-'}</td>
               </tr>
