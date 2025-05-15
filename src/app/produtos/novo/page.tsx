@@ -35,7 +35,7 @@ export default function NovoProduto() {
   }, []);
 
   const promptByType: Record<string, string> = {
-    'Feminino': `
+  'Feminino': `
 \\[media pointer="file-service://file-2JokoMPKFu71eXZwRfNitC"]
 Create an ultra–high-resolution studio photo of a female fashion model wearing the exact same outfit as shown in the reference image, with maximum visual fidelity to all visible garment elements.
 
@@ -59,8 +59,9 @@ Garment Fidelity (critical):
 Post-processing & Output:
 – High-end editorial quality, with no image artifacts or distortions.
 – Sharp focus on the outfit, natural skin tones, clean studio look.
+
 `.trim(),
-    'Masculino': `
+'Masculino': `
 Create an ultra–high-resolution studio photo of a male fashion model wearing the exact same outfit as shown in the reference image.
 
 Composition & Pose:
@@ -86,14 +87,16 @@ Styling & Post-processing:
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, tailoring, and branding.
 Note: Some garments may contain sales tags or price labels in the reference image, but these must **not appear in the final photo**. Focus strictly on the garment itself—**do not include price tags, hang tags, or promotional stickers** in the output.
+
 `.trim(),
-    'Infantil feminino': `
+
+'Infantil feminino': `
 Create an ultra–high-resolution studio photo of a young girl model wearing the exact same outfit as shown in the reference image.
 
 Composition & Pose:
 – Full-body shot, model centered and facing the camera head-on.  
 – Natural, relaxed stance with a slight shift of weight (one foot slightly forward).  
-– Arms at the sides  
+– Arms at the sides
 – Eyes focused directly on the camera with a warm, cheerful smile.
 
 Background & Lighting:
@@ -112,8 +115,9 @@ Styling & Post-processing:
 – Subtle, accurate color grading to maintain absolute fidelity to the real item’s colors and details.
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while capturing the youthful, playful spirit of the model.
+
 `.trim(),
-    'Infantil Masculino': `
+'Infantil Masculino': `
 Carefully and thoroughly analyze the reference image before generating. Prioritize visual fidelity above creativity. Every visible element of the outfit must be replicated exactly — as if producing a product catalog image of that specific garment.
 
 IMPORTANT INSTRUCTIONS:
@@ -139,8 +143,9 @@ Post-processing & Quality:
 – Editorial-level photo clarity with no artifacts or distortions.
 – Subtle, accurate color correction to preserve true tone of the original clothing.
 – Focus should be razor-sharp on all parts of the outfit.
+
 `.trim(),
-    'Calçado': `
+'Calçado': `
 Generate an ultra–high-resolution studio photograph of the reference footwear only. Frame a tight, 
 close-up three-quarter view—rotate the shoe 10–15° so both side profile and front details fill the frame. 
 Place it flat on a pristine white (or light-gray) background. Illuminate with multi-angle, soft diffused 
@@ -150,8 +155,9 @@ Ensure pixel-perfect fidelity to every element—leather grain, stitching, hardw
 tread—without any blurring, distortion or over-retouching. Apply an editorial-grade finish: razor-sharp 
 focus edge-to-edge, no compression artifacts or digital noise, and only very subtle, true-to-life color 
 and contrast adjustments to preserve the exact hue and texture of the shoe.
+
 `.trim(),
-    'Bolsa': `
+'Bolsa': `
 Create an ultra–high-resolution product photo (at least 3000×3000 px) focusing exclusively on the 
 handbag shown in the reference image.
 
@@ -179,6 +185,7 @@ Styling & Post-processing:
 
 Reference image will be provided alongside. Ensure absolute, pixel-level fidelity to the handbag’s 
 shape, materials, and branding.    
+
 `.trim(),
   };
 
@@ -192,7 +199,7 @@ shape, materials, and branding.
         id: Date.now() + idx,
         file,
         preview: URL.createObjectURL(file),
-        ean: nameWithoutExt,
+        ean: nameWithoutExt,    // <-- aqui
         descricao: '',
         marca: '',
         cor: '',
@@ -346,28 +353,44 @@ shape, materials, and branding.
   return (
     <>
       <form onSubmit={handleSubmit} className="p-6 space-y-4 text-black">
-        <div className="flex flex-col sm:flex-row items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-center gap-4">
           <button
             type="button"
             onClick={() => cameraInputRef.current?.click()}
-            className="px-2 sm:px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 w-full sm:w-auto"
+            className="px-4 py-2 w-full sm:w-auto bg-green-600 text-white rounded hover:bg-green-700 inline-flex items-center"
           >
             📷 Tirar Foto
           </button>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="px-2 sm:px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full sm:w-auto"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-flex items-center"
           >
             📁 Selecionar Imagens
           </button>
           <button
             type="button"
             onClick={clearSelection}
-            className="px-2 sm:px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 w-full sm:w-auto"
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 inline-flex items-center"
           >
             🗑️ Limpar Seleção
           </button>
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            ref={cameraInputRef}
+            onChange={handleFiles}
+            className="hidden"
+          />
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleFiles}
+            className="hidden"
+          />
         </div>
 
         {rows.length > 0 && (
@@ -380,30 +403,26 @@ shape, materials, and branding.
               {showDetails ? 'Ver menos' : 'Ver mais'}
             </button>
             <div className="overflow-x-auto">
-              <table className="min-w-full table-auto border-collapse border border-purple-300 text-black text-xs sm:text-base">
+              <table className="min-w-full table-auto border-collapse border border-purple-300 text-black text-xs sm:text-base"></>
                 <thead>
                   <tr className="bg-purple-600 text-white">
-                    <th className="border border-white px-1 py-1 sm:px-2 sm:py-1">Foto</th>
-                    <th className="border border-purple-300 px-1 py-1 sm:px-2 sm:py-1">Tipo</th>
-                    <th className="border border-purple-300 px-1 py-1 sm:px-2 sm:py-1">EAN</th>
-                    {showDetails && (
-                      <>
-                        <th className="hidden sm:table-cell border border-purple-300 px-1 py-1 sm:px-2 sm:py-1">Descrição</th>
-                        <th className="hidden sm:table-cell border border-purple-300 px-1 py-1 sm:px-2 sm:py-1">Marca</th>
-                        <th className="hidden sm:table-cell border border-purple-300 px-1 py-1 sm:px-2 sm:py-1">Cor</th>
-                        <th className="hidden sm:table-cell border border-purple-300 px-1 py-1 sm:px-2 sm:py-1">Tamanho</th>
-                      </>
-                    )}
-                    <th className="border border-purple-300 px-1 py-1 sm:px-2 sm:py-1">Status</th>
-                    <th className="border border-purple-300 px-1 py-1 sm:px-2 sm:py-1">Foto ajustada</th>
-                    <th className="border border-purple-300 px-1 py-1 sm:px-2 sm:py-1">Aprovação</th>
-                    <th className="border border-purple-300 px-1 py-1 sm:px-2 sm:py-1">Observação</th>
+                    <th className="border border-white px-2 py-1">Foto</th>
+                    <th className="border border-purple-300 px-2 py-1">Tipo</th>
+                    <th className="border border-purple-300 px-2 py-1">EAN</th>
+                    {showDetails && <th className="hidden sm:table-cell border border-purple-300 px-2 py-1">Descrição</th>
+                    {showDetails && <th className="border border-purple-300 px-2 py-1">Marca</th>}
+                    {showDetails && <th className="border border-purple-300 px-2 py-1">Cor</th>}
+                    {showDetails && <th className="border border-purple-300 px-2 py-1">Tamanho</th>}
+                    <th className="border border-purple-300 px-2 py-1">Status</th>
+                    <th className="border border-purple-300 px-2 py-1">Foto ajustada</th>
+                    <th className="border border-purple-300 px-2 py-1">Aprovação</th>
+                    <th className="border border-purple-300 px-2 py-1">Observação</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map(row => (
                     <tr key={row.id} className="hover:bg-gray-50">
-                      <td className="border border-purple-300 p-1 sm:p-2">
+                      <td className="hidden sm:table-cell border border-purple-300 p-2">
                         {row.preview && (
                           <img
                             src={row.preview}
@@ -413,11 +432,11 @@ shape, materials, and branding.
                           />
                         )}
                       </td>
-                      <td className="border border-purple-300 p-1 sm:p-2">
+                      <td className="border border-purple-300 p-2">
                         <select
                           value={row.productType}
                           onChange={e => handleFieldChange(row.id, 'productType', e.target.value)}
-                          className="border rounded p-1 w-full text-xs sm:text-base bg-white"
+                          className="border rounded p-1 w-full bg-white"
                         >
                           <option>Feminino</option>
                           <option>Masculino</option>
@@ -427,47 +446,51 @@ shape, materials, and branding.
                           <option>Bolsa</option>
                         </select>
                       </td>
-                      <td className="border border-purple-300 p-1 sm:p-2">
+                      <td className="border border-purple-300 p-2">
                         <input
                           value={row.ean}
                           onChange={e => handleFieldChange(row.id, 'ean', e.target.value)}
-                          className="border rounded p-1 w-full text-xs sm:text-base"
+                          className="border rounded p-1 w-full"
                           required
                         />
                       </td>
                       {showDetails && (
-                        <>
-                          <td className="hidden sm:table-cell border border-purple-300 p-1 sm:p-2">
-                            <input
-                              value={row.descricao}
-                              onChange={e => handleFieldChange(row.id, 'descricao', e.target.value)}
-                              className="border rounded p-1 w-full text-xs sm:text-base"
-                            />
-                          </td>
-                          <td className="hidden sm:table-cell border border-purple-300 p-1 sm:p-2">
-                            <input
-                              value={row.marca}
-                              onChange={e => handleFieldChange(row.id, 'marca', e.target.value)}
-                              className="border rounded p-1 w-full text-xs sm:text-base"
-                            />
-                          </td>
-                          <td className="hidden sm:table-cell border border-purple-300 p-1 sm:p-2">
-                            <input
-                              value={row.cor}
-                              onChange={e => handleFieldChange(row.id, 'cor', e.target.value)}
-                              className="border rounded p-1 w-full text-xs sm:text-base"
-                            />
-                          </td>
-                          <td className="hidden sm:table-cell border border-purple-300 p-1 sm:p-2">
-                            <input
-                              value={row.tamanho}
-                              onChange={e => handleFieldChange(row.id, 'tamanho', e.target.value)}
-                              className="border rounded p-1 w-full text-xs sm:text-base"
-                            />
-                          </td>
-                        </>
+                        <td className="border border-purple-300 p-2">
+                          <input
+                            value={row.descricao}
+                            onChange={e => handleFieldChange(row.id, 'descricao', e.target.value)}
+                            className="border rounded p-1 w-full"
+                          />
+                        </td>
                       )}
-                      <td className="border border-purple-300 p-1 sm:p-2 text-center text-xs sm:text-base">
+                      {showDetails && (
+                        <td className="border border-purple-300 p-2">
+                          <input
+                            value={row.marca}
+                            onChange={e => handleFieldChange(row.id, 'marca', e.target.value)}
+                            className="border rounded p-1 w-full"
+                          />
+                        </td>
+                      )}
+                      {showDetails && (
+                        <td className="border border-purple-300 p-2">
+                          <input
+                            value={row.cor}
+                            onChange={e => handleFieldChange(row.id, 'cor', e.target.value)}
+                            className="border rounded p-1 w-full"
+                          />
+                        </td>
+                      )}
+                      {showDetails && (
+                        <td className="border border-purple-300 p-2">
+                          <input
+                            value={row.tamanho}
+                            onChange={e => handleFieldChange(row.id, 'tamanho', e.target.value)}
+                            className="border rounded p-1 w-full"
+                          />
+                        </td>
+                      )}
+                      <td className="border border-purple-300 p-2 text-center">
                         {row.loading
                           ? 'Gerando...'
                           : row.result?.error
@@ -476,7 +499,7 @@ shape, materials, and branding.
                           ? 'OK'
                           : '-'}
                       </td>
-                      <td className="border border-purple-300 p-1 sm:p-2 text-center">
+                      <td className="border border-purple-300 p-2 text-center">
                         {row.result?.url && (
                           <img
                             src={row.result.url}
@@ -486,12 +509,12 @@ shape, materials, and branding.
                           />
                         )}
                       </td>
-                      <td className="border border-purple-300 p-1 sm:p-2">
+                      <td className="border border-purple-300 p-2">
                         {row.result?.url ? (
                           <select
                             value={row.aprovacao}
                             onChange={e => handleFieldChange(row.id, 'aprovacao', e.target.value)}
-                            className="border rounded p-1 w-full text-xs sm:text-base bg-white"
+                            className="border rounded p-1 w-full bg-white text-black"
                           >
                             <option value="">—</option>
                             <option value="Aprovado">Aprovado</option>
@@ -501,13 +524,13 @@ shape, materials, and branding.
                           </select>
                         ) : '—'}
                       </td>
-                      <td className="border border-purple-300 p-1 sm:p-2">
+                      <td className="border border-purple-300 p-2">
                         {row.result?.url ? (
                           <input
                             type="text"
                             value={row.observacao}
                             onChange={e => handleFieldChange(row.id, 'observacao', e.target.value)}
-                            className="border rounded p-1 w-full text-xs sm:text-base"
+                            className="border rounded p-1 w-full text-black"
                           />
                         ) : '—'}
                       </td>
@@ -521,7 +544,7 @@ shape, materials, and branding.
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="px-2 sm:px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 w-full sm:w-auto"
+                className="px-4 py-2 w-full sm:w-auto bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
               >
                 Enviar Todas
               </button>
@@ -529,18 +552,19 @@ shape, materials, and branding.
                 type="button"
                 onClick={handleCategorizeAll}
                 disabled={!canCategorize}
-                className="px-2 sm:px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 w-full sm:w-auto"
+                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
               >
                 Categorizar Todas
               </button>
             </div>
           </>
         )}
+
       </form>
 
       {modalImage && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
           onClick={() => setModalImage(null)}
         >
           <img
