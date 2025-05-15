@@ -18,6 +18,7 @@ export async function GET(request: Request) {
         imageUrl: true,
         aprovacao: true,
         observacao: true,
+        createdAt: true,   
       }
     })
     return NextResponse.json(produtos, { status: 200 })

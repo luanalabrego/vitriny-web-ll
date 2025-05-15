@@ -15,6 +15,7 @@ interface Product {
   imageUrl?: string;
   aprovacao?: string;
   observacao?: string;
+  createdAt: string;   // 👈 ISO string
 }
 
 export default function ProdutosPage() {
@@ -26,7 +27,9 @@ export default function ProdutosPage() {
     cor: '',
     descricao: '',
     aprovacao: '',
-    observacao: ''
+    observacao: '',
+    dateFrom: '',
+    dateTo: '',
   });
   const [modalSrc, setModalSrc] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,9 +38,8 @@ export default function ProdutosPage() {
   useEffect(() => {
     fetch('/api/produtos')
       .then(res => res.json())
-      .then((data: Product[]) => {
-        setProducts(data);
-      });
+      .then((data: Product[]) => setProducts(data))
+      .catch(console.error);
   }, []);
 
   const handleFilterChange = (field: keyof typeof filters, value: string) => {
@@ -45,21 +47,33 @@ export default function ProdutosPage() {
     setCurrentPage(1);
   };
 
-  const filtered = products.filter(p => {
-    const valor = (s?: string) => (s ?? '').toLowerCase();
+  const safe = (s?: string) => (s ?? '').toLowerCase();
 
+  const filtered = products.filter(p => {
+    // data
+    const created = new Date(p.createdAt);
+    if (filters.dateFrom) {
+      const from = new Date(filters.dateFrom);
+      if (created < from) return false;
+    }
+    if (filters.dateTo) {
+      const to = new Date(filters.dateTo);
+      to.setHours(23,59,59);
+      if (created > to) return false;
+    }
+
+    // demais filtros
     return (
       (!filters.ean       || p.ean.includes(filters.ean)) &&
-      (!filters.marca     || valor(p.marca).includes(filters.marca.toLowerCase())) &&
-      (!filters.tamanho   || valor(p.tamanho).includes(filters.tamanho.toLowerCase())) &&
-      (!filters.cor       || valor(p.cor).includes(filters.cor.toLowerCase())) &&
-      (!filters.descricao || valor(p.descricao).includes(filters.descricao.toLowerCase())) &&
-      (!filters.aprovacao || valor(p.aprovacao).includes(filters.aprovacao.toLowerCase())) &&
-      (!filters.observacao || valor(p.observacao).includes(filters.observacao.toLowerCase()))
+      (!filters.marca     || safe(p.marca).includes(filters.marca.toLowerCase())) &&
+      (!filters.tamanho   || safe(p.tamanho).includes(filters.tamanho.toLowerCase())) &&
+      (!filters.cor       || safe(p.cor).includes(filters.cor.toLowerCase())) &&
+      (!filters.descricao || safe(p.descricao).includes(filters.descricao.toLowerCase())) &&
+      (!filters.aprovacao || safe(p.aprovacao).includes(filters.aprovacao.toLowerCase())) &&
+      (!filters.observacao|| safe(p.observacao).includes(filters.observacao.toLowerCase()))
     );
   });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
   const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const exportToExcel = () => {
@@ -70,30 +84,64 @@ export default function ProdutosPage() {
   };
 
   const resolveUrl = (url?: string | null) =>
-    url
-      ? url.startsWith('http')
-        ? url
-        : `${STORAGE_BASE}${url}`
-      : '';
+    url?.startsWith('http') ? url : `${STORAGE_BASE}${url}`;
+
+  // botão que dispara download de todas as imageUrl filtradas
+  const downloadFilteredPhotos = () => {
+    filtered.forEach(prod => {
+      if (!prod.imageUrl) return;
+      const url = resolveUrl(prod.imageUrl);
+      const a = document.createElement('a');
+      a.href = url;
+      // usar extensão conforme URL, ou .jpg por default
+      const ext = url.split('.').pop() || 'jpg';
+      a.download = `${prod.ean}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+  };
 
   return (
     <div className="p-6 text-black">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Lista de Produtos</h1>
-        <button
-          onClick={exportToExcel}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 inline-flex items-center"
-        >
-          📥 Exportar Excel
-        </button>
+        <div className="space-x-2">
+          <button
+            onClick={exportToExcel}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            📥 Exportar Excel
+          </button>
+          <button
+            onClick={downloadFilteredPhotos}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            📷 Download Fotos
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-7 gap-2 mb-4">
-        {(['ean','marca','tamanho','cor','descricao','aprovacao','observacao'] as const).map(field => (
+      <div className="grid grid-cols-9 gap-2 mb-4">
+        {(
+          [
+            'ean','marca','tamanho','cor','descricao',
+            'aprovacao','observacao','dateFrom','dateTo'
+          ] as const
+        ).map(field => (
           <input
             key={field}
-            placeholder={`Filtrar ${field === 'aprovacao' ? 'Aprovação' : field}`}
+            type={field.startsWith('date') ? 'date' : 'text'}
+            placeholder={
+              field === 'aprovacao'
+                ? 'Filtrar Aprovação'
+                : field === 'dateFrom'
+                ? 'Data de (início)'
+                : field === 'dateTo'
+                ? 'Data até'
+                : `Filtrar ${field}`
+            }
             value={filters[field]}
             onChange={e => handleFilterChange(field, e.target.value)}
             className="border border-purple-300 p-1 rounded text-black"
@@ -106,56 +154,49 @@ export default function ProdutosPage() {
         <table className="min-w-full table-auto border-collapse border border-purple-300 text-black">
           <thead>
             <tr className="bg-purple-600 text-white">
-              <th className="border border-purple-300 px-4 py-2">EAN</th>
-              <th className="border border-purple-300 px-4 py-2">Marca</th>
-              <th className="border border-purple-300 px-4 py-2">Tamanho</th>
-              <th className="border border-purple-300 px-4 py-2">Cor</th>
-              <th className="border border-purple-300 px-4 py-2">Descrição</th>
-              <th className="border border-purple-300 px-4 py-2">Foto Original</th>
-              <th className="border border-purple-300 px-4 py-2">Ajustada</th>
-              <th className="border border-purple-300 px-4 py-2">Aprovação</th>
-              <th className="border border-purple-300 px-4 py-2">Observação</th>
+              <th className="border px-4 py-2">EAN</th>
+              <th className="border px-4 py-2">Marca</th>
+              <th className="border px-4 py-2">Tamanho</th>
+              <th className="border px-4 py-2">Cor</th>
+              <th className="border px-4 py-2">Descrição</th>
+              <th className="border px-4 py-2">Original</th>
+              <th className="border px-4 py-2">Ajustada</th>
+              <th className="border px-4 py-2">Aprovação</th>
+              <th className="border px-4 py-2">Observação</th>
+              <th className="border px-4 py-2">Criado em</th>
             </tr>
           </thead>
           <tbody>
             {paginated.map(prod => (
               <tr key={prod.ean} className="hover:bg-gray-50">
-                <td className="border border-purple-300 px-4 py-2">{prod.ean}</td>
-                <td className="border border-purple-300 px-4 py-2">{prod.marca || '-'}</td>
-                <td className="border border-purple-300 px-4 py-2">{prod.tamanho || '-'}</td>
-                <td className="border border-purple-300 px-4 py-2">{prod.cor || '-'}</td>
-                <td className="border border-purple-300 px-4 py-2">{prod.descricao || '-'}</td>
-
-                {/* Foto Original */}
-                <td className="border border-purple-300 px-4 py-2 text-center">
-                  {prod.originalUrl ? (
-                    <img
-                      src={resolveUrl(prod.originalUrl)}
-                      alt="Original"
-                      className="h-24 object-cover rounded cursor-pointer inline-block"
-                      onClick={() => setModalSrc(resolveUrl(prod.originalUrl))}
-                    />
-                  ) : (
-                    <span className="text-gray-500">—</span>
-                  )}
+                <td className="border px-4 py-2">{prod.ean}</td>
+                <td className="border px-4 py-2">{prod.marca || '-'}</td>
+                <td className="border px-4 py-2">{prod.tamanho || '-'}</td>
+                <td className="border px-4 py-2">{prod.cor || '-'}</td>
+                <td className="border px-4 py-2">{prod.descricao || '-'}</td>
+                <td className="border px-4 py-2 text-center">
+                  {prod.originalUrl
+                    ? <img
+                        src={resolveUrl(prod.originalUrl)}
+                        className="h-16 object-cover rounded cursor-pointer"
+                        onClick={() => setModalSrc(resolveUrl(prod.originalUrl))}
+                      />
+                    : '—'}
                 </td>
-
-                {/* Foto Ajustada */}
-                <td className="border border-purple-300 px-4 py-2 text-center">
-                  {prod.imageUrl ? (
-                    <img
-                      src={resolveUrl(prod.imageUrl)}
-                      alt="Ajustada"
-                      className="h-24 object-cover rounded cursor-pointer inline-block"
-                      onClick={() => setModalSrc(resolveUrl(prod.imageUrl))}
-                    />
-                  ) : (
-                    <span className="text-gray-500">—</span>
-                  )}
+                <td className="border px-4 py-2 text-center">
+                  {prod.imageUrl
+                    ? <img
+                        src={resolveUrl(prod.imageUrl)}
+                        className="h-16 object-cover rounded cursor-pointer"
+                        onClick={() => setModalSrc(resolveUrl(prod.imageUrl))}
+                      />
+                    : '—'}
                 </td>
-
-                <td className="border border-purple-300 px-4 py-2">{prod.aprovacao || '-'}</td>
-                <td className="border border-purple-300 px-4 py-2">{prod.observacao || '-'}</td>
+                <td className="border px-4 py-2">{prod.aprovacao || '-'}</td>
+                <td className="border px-4 py-2">{prod.observacao || '-'}</td>
+                <td className="border px-4 py-2">
+                  {new Date(prod.createdAt).toLocaleDateString()}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -171,10 +212,10 @@ export default function ProdutosPage() {
         >
           Anterior
         </button>
-        <span>Página {currentPage} de {totalPages}</span>
+        <span>Página {currentPage} de {Math.ceil(filtered.length / itemsPerPage)}</span>
         <button
-          onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage(p => Math.min(p + 1, Math.ceil(filtered.length / itemsPerPage)))}
+          disabled={currentPage === Math.ceil(filtered.length / itemsPerPage)}
           className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
         >
           Próximo
@@ -187,11 +228,7 @@ export default function ProdutosPage() {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
           onClick={() => setModalSrc(null)}
         >
-          <img
-            src={modalSrc}
-            alt="Ampliado"
-            className="max-h-[90%] max-w-[90%] rounded shadow-lg"
-          />
+          <img src={modalSrc} className="max-h-[90%] max-w-[90%] rounded shadow-lg" />
         </div>
       )}
     </div>
