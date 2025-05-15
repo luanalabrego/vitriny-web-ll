@@ -1,4 +1,3 @@
-// src/app/(dashboard)/layout.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -24,7 +23,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [router])
 
   const handleLogout = async () => {
-    // Chama o endpoint de logout e, em seguida, redireciona para a tela de login
     await fetch('/api/auth/logout', {
       method: 'GET',
       credentials: 'include'
@@ -45,10 +43,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Navegação superior dentro do dashboard */}
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex flex-wrap justify-between items-center h-auto py-4 gap-4">
 
             {/* Logo estático */}
-            <div className="flex items-center space-x-8">
+            <div className="flex flex-wrap items-center gap-4">
               <div className="flex-shrink-0">
                 <Image
                   src="/Vitriny.png"
