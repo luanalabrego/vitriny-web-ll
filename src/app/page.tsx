@@ -1,4 +1,3 @@
-// src/app/page.tsx
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Image from 'next/image'
@@ -46,15 +45,16 @@ export default function HomePage() {
               Bem-vindo, {user.email}. Aplicativo de IA moldado para transformar imagens simples de produtos em artes fotográficas profissionais.
             </strong>
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <Link
               href="/produtos/novo"
-              className="bg-white rounded-lg shadow p-6 hover:bg-gray-50"
+              className="bg-white rounded-lg shadow p-6 hover:bg-gray-50 transition w-full"
             >
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center text-center">
                 <Image src="/icons/camera.png" alt="Transformar Produto" width={48} height={48} />
                 <h2 className="mt-4 text-lg font-semibold text-purple-600">Transformar Produto</h2>
-                <p className="mt-2 text-sm text-purple-600 text-center">
+                <p className="mt-2 text-sm text-purple-600">
                   Envie imagens para gerar fotos de catálogo profissionais.
                 </p>
               </div>
@@ -62,18 +62,20 @@ export default function HomePage() {
 
             <Link
               href="/produtos"
-              className="bg-white rounded-lg shadow p-6 hover:bg-gray-50"
+              className="bg-white rounded-lg shadow p-6 hover:bg-gray-50 transition w-full"
             >
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center text-center">
                 <Image src="/icons/produtos.png" alt="Produtos" width={48} height={48} />
                 <h2 className="mt-4 text-lg font-semibold text-purple-600">Produtos</h2>
-                <p className="mt-2 text-sm text-purple-600 text-center">
+                <p className="mt-2 text-sm text-purple-600">
                   Gerencie e exporte seu catálogo de produtos.
                 </p>
               </div>
             </Link>
 
-            <LogoutButton />
+            <div className="bg-white rounded-lg shadow p-6 flex items-center justify-center hover:bg-gray-50 transition w-full">
+              <LogoutButton />
+            </div>
           </div>
         </div>
       </section>
