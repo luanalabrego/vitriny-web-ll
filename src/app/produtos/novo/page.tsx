@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, FormEvent } from 'react';
 
 interface Row {
   id: number;
+  persistedId?: number;               // novo: guarda o ID retornado pela API
   file: File | null;
   preview: string | null;
   ean: string;
@@ -206,7 +207,7 @@ shape, materials, and branding.
       marca: '',
       cor: '',
       tamanho: '',
-      productType: 'Feminino', // valor padrão
+      productType: 'Feminino',
       label: '',
       observacao: '',
     }));
@@ -218,7 +219,7 @@ shape, materials, and branding.
 
   const handleFieldChange = (
     id: number,
-    field: keyof Omit<Row, 'id' | 'file' | 'preview' | 'result' | 'loading'>,
+    field: keyof Omit<Row, 'id' | 'file' | 'preview' | 'result' | 'loading' | 'persistedId'>,
     value: string
   ) => {
     setRows(rows.map(r => (r.id === id ? { ...r, [field]: value } : r)));
@@ -278,25 +279,10 @@ shape, materials, and branding.
           })
         }).then(res => res.json());
         if (!jsonImg.url) throw new Error(jsonImg.error || 'Erro interno ao gerar imagem');
-
         const { url, meta } = jsonImg;
-        setRows(prev =>
-          prev.map(r =>
-            r.id === row.id
-              ? { ...r, loading: false, result: { url, originalUrl, meta } }
-              : r
-          )
-        );
 
-        // 5) decrementar crédito
-        const decJson = await fetch('/api/user/decrement-credits', { method: 'POST' })
-          .then(res => res.json());
-        if (decJson.credits !== undefined) {
-          setCredits(decJson.credits);
-        }
-
-        // 6) persistir no banco incluindo label e observacao
-        await fetch('/api/produtos', {
+        // 5) persistir no banco e capturar o ID
+        const created = await fetch('/api/produtos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -310,7 +296,28 @@ shape, materials, and branding.
             label: row.label,
             observacao: row.observacao
           })
-        });
+        }).then(res => res.json());
+
+        // 6) atualizar estado da linha
+        setRows(prev =>
+          prev.map(r =>
+            r.id === row.id
+              ? {
+                  ...r,
+                  loading: false,
+                  result: { url, originalUrl, meta },
+                  persistedId: created.id
+                }
+              : r
+          )
+        );
+
+        // 7) decrementar crédito
+        const decJson = await fetch('/api/user/decrement-credits', { method: 'POST' })
+          .then(res => res.json());
+        if (decJson.credits !== undefined) {
+          setCredits(decJson.credits);
+        }
       } catch (err: any) {
         setRows(prev =>
           prev.map(r =>
@@ -325,11 +332,26 @@ shape, materials, and branding.
     await Promise.all(tasks);
   };
 
+  // botao para categorizar tudo de uma vez
+  const handleCategorizeAll = async () => {
+    const toCat = rows.filter(r => r.persistedId && r.result?.url);
+    await Promise.all(toCat.map(row =>
+      fetch(`/api/produtos/${row.persistedId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: row.label, observacao: row.observacao })
+      })
+    ));
+    alert('Todas as categorias foram salvas!');
+  };
+
   const canSubmit =
     rows.length > 0 &&
     rows.every(r => r.ean.trim()) &&
     !rows.some(r => r.loading) &&
     credits >= rows.length;
+
+  const canCategorize = rows.some(r => r.persistedId && r.result?.url);
 
   return (
     <>
@@ -492,11 +514,7 @@ shape, materials, and branding.
                           className="border rounded p-1 w-full text-black"
                         />
                       </td>
-                      <td
-                        className={`border border-purple-300 p-2 text-center ${
-                          row.result?.url ? 'bg-green-500 text-white font-bold' : ''
-                        }`}
-                      >
+                      <td className={`border border-purple-300 p-2 text-center ${row.result?.url ? 'bg-green-500 text-white font-bold' : ''}`}>
                         {row.loading
                           ? 'Gerando...'
                           : row.result?.error
@@ -520,6 +538,15 @@ shape, materials, and branding.
                 </tbody>
               </table>
             </div>
+
+            <button
+              type="button"
+              onClick={handleCategorizeAll}
+              disabled={!canCategorize}
+              className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+            >
+              Categorizar Todas
+            </button>
           </>
         )}
 
