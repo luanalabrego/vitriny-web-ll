@@ -45,15 +45,19 @@ export default function ProdutosPage() {
     setCurrentPage(1);
   };
 
-  const filtered = products.filter(p =>
-    (!filters.ean      || p.ean.includes(filters.ean)) &&
-    (!filters.marca    || p.marca?.toLowerCase().includes(filters.marca.toLowerCase())) &&
-    (!filters.tamanho  || p.tamanho?.toLowerCase().includes(filters.tamanho.toLowerCase())) &&
-    (!filters.cor      || p.cor?.toLowerCase().includes(filters.cor.toLowerCase())) &&
-    (!filters.descricao|| p.descricao?.toLowerCase().includes(filters.descricao.toLowerCase())) &&
-    (!filters.aprovacao || p.aprovacao?.toLowerCase().includes(filters.aprovacao.toLowerCase())) &&
-    (!filters.observacao || p.observacao?.toLowerCase().includes(filters.observacao.toLowerCase()))
-  );
+  const filtered = products.filter(p => {
+    const valor = (s?: string) => (s ?? '').toLowerCase();
+
+    return (
+      (!filters.ean       || p.ean.includes(filters.ean)) &&
+      (!filters.marca     || valor(p.marca).includes(filters.marca.toLowerCase())) &&
+      (!filters.tamanho   || valor(p.tamanho).includes(filters.tamanho.toLowerCase())) &&
+      (!filters.cor       || valor(p.cor).includes(filters.cor.toLowerCase())) &&
+      (!filters.descricao || valor(p.descricao).includes(filters.descricao.toLowerCase())) &&
+      (!filters.aprovacao || valor(p.aprovacao).includes(filters.aprovacao.toLowerCase())) &&
+      (!filters.observacao || valor(p.observacao).includes(filters.observacao.toLowerCase()))
+    );
+  });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
   const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
