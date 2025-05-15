@@ -194,23 +194,27 @@ shape, materials, and branding.
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    const newRows = Array.from(files).map((file, idx) => ({
-      id: Date.now() + idx,
-      file,
-      preview: URL.createObjectURL(file),
-      ean: file.name,
-      descricao: '',
-      marca: '',
-      cor: '',
-      tamanho: '',
-      productType: 'Feminino',
-      label: '',
-      observacao: '',
-    }));
+    const newRows = Array.from(files).map((file, idx) => {
+      // Remove a extensão do nome do arquivo para usar como EAN
+      const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+      return {
+        id: Date.now() + idx,
+        file,
+        preview: URL.createObjectURL(file),
+        ean: nameWithoutExt,    // <-- aqui
+        descricao: '',
+        marca: '',
+        cor: '',
+        tamanho: '',
+        productType: 'Feminino',
+        label: '',
+        observacao: '',
+      };
+    });
     setRows(prev => [...prev, ...newRows]);
     e.target.value = '';
   };
-
+  
   const clearSelection = () => setRows([]);
 
   const handleFieldChange = (
@@ -413,7 +417,7 @@ shape, materials, and branding.
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Tamanho</th>}
                     <th className="border border-purple-300 px-2 py-1">Status</th>
                     <th className="border border-purple-300 px-2 py-1">Foto ajustada</th>
-                    <th className="border border-purple-300 px-2 py-1">Label</th>
+                    <th className="border border-purple-300 px-2 py-1">Aprovação</th>
                     <th className="border border-purple-300 px-2 py-1">Observação</th>
                   </tr>
                 </thead>
