@@ -8,11 +8,11 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { label, observacao } = await request.json()
+    const { aprovacao, observacao } = await request.json()
 
     const updated = await prisma.product.update({
       where: { id: Number(params.id) },
-      data: { label, observacao }
+      data: { aprovacao, observacao }
     })
 
     return NextResponse.json(updated, { status: 200 })
