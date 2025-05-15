@@ -17,7 +17,7 @@ interface Product {
   imageUrl?: string;
   aprovacao?: string;
   observacao?: string;
-  createdAt: string; // usado apenas para filtro, não exibido
+  createdAt: string;   // usado só para filtro, não exibido
 }
 
 export default function ProdutosPage() {
@@ -31,7 +31,7 @@ export default function ProdutosPage() {
     aprovacao: '',
     observacao: '',
     dateFrom: '',
-    dateTo: ''
+    dateTo: '',
   });
   const [modalSrc, setModalSrc] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,7 +39,7 @@ export default function ProdutosPage() {
 
   useEffect(() => {
     fetch('/api/produtos')
-      .then(res => res.ok ? res.json() : Promise.reject(res.status))
+      .then(res => res.json())
       .then((data: Product[]) => setProducts(data))
       .catch(console.error);
   }, []);
@@ -60,7 +60,7 @@ export default function ProdutosPage() {
     }
     if (filters.dateTo) {
       const to = new Date(filters.dateTo);
-      to.setHours(23,59,59);
+      to.setHours(23, 59, 59);
       if (created > to) return false;
     }
     // demais filtros
@@ -87,20 +87,17 @@ export default function ProdutosPage() {
   const resolveUrl = (url?: string | null) =>
     url?.startsWith('http') ? url : `${STORAGE_BASE}${url}`;
 
-  // cria um ZIP com todas as imagens filtradas
   const downloadZip = async () => {
     const zip = new JSZip();
-    await Promise.all(
-      filtered.map(async prod => {
-        if (!prod.imageUrl) return;
-        const url = resolveUrl(prod.imageUrl);
-        const resp = await fetch(url);
-        if (!resp.ok) return;
-        const blob = await resp.blob();
-        const ext = url.split('.').pop() || 'jpg';
-        zip.file(`${prod.ean}.${ext}`, blob);
-      })
-    );
+    await Promise.all(filtered.map(async prod => {
+      if (!prod.imageUrl) return;
+      const url = resolveUrl(prod.imageUrl);
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const ext = url.split('.').pop() || 'jpg';
+      zip.file(`${prod.ean}.${ext}`, blob);
+    }));
     const content = await zip.generateAsync({ type: 'blob' });
     saveAs(content, 'fotos.zip');
   };
@@ -128,19 +125,16 @@ export default function ProdutosPage() {
       {/* Filters */}
       <div className="grid grid-cols-9 gap-2 mb-4">
         {(
-          [
-            'ean','marca','tamanho','cor','descricao',
-            'aprovacao','observacao','dateFrom','dateTo'
-          ] as const
+          ['ean','marca','tamanho','cor','descricao','aprovacao','observacao','dateFrom','dateTo'] as const
         ).map(field => (
           <input
             key={field}
             type={field.startsWith('date') ? 'date' : 'text'}
             placeholder={
               field === 'aprovacao' ? 'Filtrar Aprovação'
-                : field === 'dateFrom' ? 'Data de (início)'
-                : field === 'dateTo'   ? 'Data até'
-                : `Filtrar ${field}`
+              : field === 'dateFrom' ? 'Data de (início)'
+              : field === 'dateTo'   ? 'Data até'
+              : `Filtrar ${field}`
             }
             value={filters[field]}
             onChange={e => handleFilterChange(field, e.target.value)}
@@ -149,7 +143,7 @@ export default function ProdutosPage() {
         ))}
       </div>
 
-      {/* Table sem borda externa, só células roxas */}
+      {/* Table without outer border, only purple cell borders */}
       <div className="overflow-x-auto">
         <table className="min-w-full table-auto border-collapse text-black">
           <thead>
@@ -218,13 +212,16 @@ export default function ProdutosPage() {
         </button>
       </div>
 
-      {/* Modal de imagem */}
+      {/* Modal */}
       {modalSrc && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
           onClick={() => setModalSrc(null)}
         >
-          <img src={modalSrc} className="max-h-[90%] max-w-[90%] rounded shadow-lg" />
+          <img
+            src={modalSrc}
+            className="max-h-[90%] max-w-[90%] rounded shadow-lg"
+          />
         </div>
       )}
     </div>
