@@ -11,7 +11,7 @@ generator client {
 }
 
 model Product {
-  // Novo campo de chave primária numérica
+  // Chave primária numérica
   id           Int      @id @default(autoincrement())
 
   // Mantém EAN como campo não único
@@ -24,6 +24,10 @@ model Product {
 
   originalUrl  String?
   imageUrl     String
+
+  // NOVOS CAMPOS PARA CATEGORIZAÇÃO
+  label        String?   // “Aprovado” | “Reprovado” | “Refazer foto” | “Retoque Designer”
+  observacao   String?   // campo de texto livre
 
   createdAt    DateTime @default(now())
 

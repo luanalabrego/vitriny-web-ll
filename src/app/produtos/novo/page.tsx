@@ -12,6 +12,8 @@ interface Row {
   cor: string;
   tamanho: string;
   productType: string;
+  label: string;
+  observacao: string;
   result?: { url?: string; originalUrl?: string; error?: string; meta?: any };
   loading?: boolean;
 }
@@ -199,13 +201,14 @@ shape, materials, and branding.
       id: Date.now() + idx,
       file,
       preview: URL.createObjectURL(file),
-      // Aqui preenchemos o EAN com o nome do arquivo
       ean: file.name,
       descricao: '',
       marca: '',
       cor: '',
       tamanho: '',
       productType: 'Feminino', // valor padrão
+      label: '',
+      observacao: '',
     }));
     setRows(prev => [...prev, ...newRows]);
     e.target.value = '';
@@ -231,15 +234,18 @@ shape, materials, and branding.
       alert('Preencha o EAN em cada linha antes de enviar.');
       return;
     }
+
     setRows(rows.map(r => ({ ...r, loading: true, result: undefined })));
 
     const tasks = rows.map(row => (async () => {
       try {
+        // 1) URL de upload
         const { uploadUrl, fileName } = await fetch(
           `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean.trim())}`
         ).then(res => res.json());
         if (!uploadUrl || !fileName) throw new Error('Falha ao obter URL de upload');
 
+        // 2) PUT do arquivo original
         const putRes = await fetch(uploadUrl, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/octet-stream' },
@@ -247,6 +253,7 @@ shape, materials, and branding.
         });
         if (!putRes.ok) throw new Error(`Upload original falhou: ${putRes.status}`);
 
+        // 3) tornar original público
         const publishJson = await fetch('/api/produtos/publish-original', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -255,6 +262,7 @@ shape, materials, and branding.
         const originalUrl = publishJson.publicUrl;
         if (!originalUrl) throw new Error(publishJson.error || 'Falha ao tornar original público');
 
+        // 4) gerar imagem ajustada
         const prompt = promptByType[row.productType] || promptByType['Feminino'];
         const jsonImg = await fetch('/api/produtos/gerar-imagem', {
           method: 'POST',
@@ -280,12 +288,14 @@ shape, materials, and branding.
           )
         );
 
+        // 5) decrementar crédito
         const decJson = await fetch('/api/user/decrement-credits', { method: 'POST' })
           .then(res => res.json());
         if (decJson.credits !== undefined) {
           setCredits(decJson.credits);
         }
 
+        // 6) persistir no banco incluindo label e observacao
         await fetch('/api/produtos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -296,7 +306,9 @@ shape, materials, and branding.
             cor: row.cor,
             tamanho: row.tamanho,
             originalUrl,
-            imageUrl: url
+            imageUrl: url,
+            label: row.label,
+            observacao: row.observacao
           })
         });
       } catch (err: any) {
@@ -382,6 +394,8 @@ shape, materials, and branding.
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Marca</th>}
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Cor</th>}
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Tamanho</th>}
+                    <th className="border border-purple-300 px-2 py-1">Label</th>
+                    <th className="border border-purple-300 px-2 py-1">Observação</th>
                     <th className="border border-purple-300 px-2 py-1">Status</th>
                     <th className="border border-purple-300 px-2 py-1">Foto ajustada</th>
                   </tr>
@@ -457,6 +471,27 @@ shape, materials, and branding.
                           />
                         </td>
                       )}
+                      <td className="border border-purple-300 p-2">
+                        <select
+                          value={row.label}
+                          onChange={e => handleFieldChange(row.id, 'label', e.target.value)}
+                          className="border rounded p-1 w-full bg-white text-black"
+                        >
+                          <option value="">—</option>
+                          <option value="Aprovado">Aprovado</option>
+                          <option value="Reprovado">Reprovado</option>
+                          <option value="Refazer foto">Refazer foto</option>
+                          <option value="Retoque Designer">Retoque Designer</option>
+                        </select>
+                      </td>
+                      <td className="border border-purple-300 p-2">
+                        <input
+                          type="text"
+                          value={row.observacao}
+                          onChange={e => handleFieldChange(row.id, 'observacao', e.target.value)}
+                          className="border rounded p-1 w-full text-black"
+                        />
+                      </td>
                       <td
                         className={`border border-purple-300 p-2 text-center ${
                           row.result?.url ? 'bg-green-500 text-white font-bold' : ''

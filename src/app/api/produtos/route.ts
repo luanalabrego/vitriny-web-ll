@@ -3,18 +3,21 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 
-// GET: lista produtos (agora trazendo imageUrl e originalUrl)
+// GET: lista produtos (agora trazendo id, label e observacao)
 export async function GET(request: Request) {
   try {
     const produtos = await prisma.product.findMany({
       select: {
+        id: true,
         ean: true,
         descricao: true,
         marca: true,
         cor: true,
         tamanho: true,
-        imageUrl: true,     // inclui a URL da imagem ajustada
-        originalUrl: true   // inclui a URL da imagem original (opcional)
+        originalUrl: true,
+        imageUrl: true,
+        label: true,
+        observacao: true,
       }
     })
     return NextResponse.json(produtos, { status: 200 })
@@ -24,7 +27,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST: cria um novo produto
+// POST: cria um novo produto (label e observacao ficam nulos)
 export async function POST(request: Request) {
   try {
     const {
@@ -37,7 +40,6 @@ export async function POST(request: Request) {
       tamanho     = ''
     } = await request.json()
 
-    // valida apenas ean e imageUrl
     if (!ean?.trim() || !imageUrl) {
       return NextResponse.json(
         { error: 'Campos `ean` e `imageUrl` são obrigatórios.' },
@@ -53,7 +55,8 @@ export async function POST(request: Request) {
         cor,
         tamanho,
         imageUrl,
-        originalUrl
+        originalUrl,
+        // label e observacao serão null por padrão
       }
     })
 

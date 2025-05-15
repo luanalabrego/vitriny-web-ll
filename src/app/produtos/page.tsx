@@ -11,8 +11,10 @@ interface Product {
   marca?: string;
   cor?: string;
   tamanho?: string;
-  imageUrl?: string;
   originalUrl?: string | null;
+  imageUrl?: string;
+  label?: string;
+  observacao?: string;
 }
 
 export default function ProdutosPage() {
@@ -22,7 +24,9 @@ export default function ProdutosPage() {
     marca: '',
     tamanho: '',
     cor: '',
-    descricao: ''
+    descricao: '',
+    label: '',
+    observacao: ''
   });
   const [modalSrc, setModalSrc] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -42,11 +46,13 @@ export default function ProdutosPage() {
   };
 
   const filtered = products.filter(p =>
-    (!filters.ean    || p.ean.includes(filters.ean)) &&
-    (!filters.marca  || p.marca!.toLowerCase().includes(filters.marca.toLowerCase())) &&
-    (!filters.tamanho|| p.tamanho!.toLowerCase().includes(filters.tamanho.toLowerCase())) &&
-    (!filters.cor    || p.cor!.toLowerCase().includes(filters.cor.toLowerCase())) &&
-    (!filters.descricao || p.descricao!.toLowerCase().includes(filters.descricao.toLowerCase()))
+    (!filters.ean      || p.ean.includes(filters.ean)) &&
+    (!filters.marca    || p.marca?.toLowerCase().includes(filters.marca.toLowerCase())) &&
+    (!filters.tamanho  || p.tamanho?.toLowerCase().includes(filters.tamanho.toLowerCase())) &&
+    (!filters.cor      || p.cor?.toLowerCase().includes(filters.cor.toLowerCase())) &&
+    (!filters.descricao|| p.descricao?.toLowerCase().includes(filters.descricao.toLowerCase())) &&
+    (!filters.label    || p.label === filters.label) &&
+    (!filters.observacao || p.observacao?.toLowerCase().includes(filters.observacao.toLowerCase()))
   );
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
@@ -79,8 +85,8 @@ export default function ProdutosPage() {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-5 gap-2 mb-4">
-        {(['ean','marca','tamanho','cor','descricao'] as const).map(field => (
+      <div className="grid grid-cols-7 gap-2 mb-4">
+        {(['ean','marca','tamanho','cor','descricao','label','observacao'] as const).map(field => (
           <input
             key={field}
             placeholder={`Filtrar ${field}`}
@@ -103,6 +109,8 @@ export default function ProdutosPage() {
               <th className="border border-purple-300 px-4 py-2">Descrição</th>
               <th className="border border-purple-300 px-4 py-2">Foto Original</th>
               <th className="border border-purple-300 px-4 py-2">Ajustada</th>
+              <th className="border border-purple-300 px-4 py-2">Label</th>
+              <th className="border border-purple-300 px-4 py-2">Observação</th>
             </tr>
           </thead>
           <tbody>
@@ -141,6 +149,9 @@ export default function ProdutosPage() {
                     <span className="text-gray-500">—</span>
                   )}
                 </td>
+
+                <td className="border border-purple-300 px-4 py-2">{prod.label || '-'}</td>
+                <td className="border border-purple-300 px-4 py-2">{prod.observacao || '-'}</td>
               </tr>
             ))}
           </tbody>
