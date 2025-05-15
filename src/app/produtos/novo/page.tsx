@@ -89,13 +89,14 @@ Reference image will be provided alongside. Ensure maximum fidelity to the garme
 Note: Some garments may contain sales tags or price labels in the reference image, but these must **not appear in the final photo**. Focus strictly on the garment itself—**do not include price tags, hang tags, or promotional stickers** in the output.
 
 `.trim(),
+
 'Infantil feminino': `
 Create an ultra–high-resolution studio photo of a young girl model wearing the exact same outfit as shown in the reference image.
 
 Composition & Pose:
 – Full-body shot, model centered and facing the camera head-on.  
 – Natural, relaxed stance with a slight shift of weight (one foot slightly forward).  
-– Arms at the sides in a neutral, natural position.  
+– Arms at the sides
 – Eyes focused directly on the camera with a warm, cheerful smile.
 
 Background & Lighting:
@@ -107,7 +108,6 @@ Clothing Details:
 – Precise replication of color, pattern, and fabric texture.  
 – Logos, labels, and any decorative trims rendered crisply and placed exactly as in the reference.  
 – Natural folds and drape of the fabric to showcase fit and movement suitable for a child.
-– Special attention to playful and decorative elements typical of children's clothing, such as animal illustrations, character prints, colorful patterns, or embroidery. All designs must be accurately replicated with clarity and correct positioning.
 
 Styling & Post-processing:
 – Clean, editorial look with crisp focus on the outfit and model.  
@@ -115,8 +115,6 @@ Styling & Post-processing:
 – Subtle, accurate color grading to maintain absolute fidelity to the real item’s colors and details.
 
 Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while capturing the youthful, playful spirit of the model.
-
-Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. The focus should remain solely on the outfit — **no tags, stickers, or promotional labels should be included**.
 
 `.trim(),
 'Infantil Masculino': `
