@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 
-// GET: lista produtos (agora trazendo id, label e observacao)
+// GET /api/produtos — lista todos os produtos com o campo “aprovacao” em vez de “label”
 export async function GET(request: Request) {
   try {
     const produtos = await prisma.product.findMany({
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
         tamanho: true,
         originalUrl: true,
         imageUrl: true,
-        label: true,
+        aprovacao: true,
         observacao: true,
       }
     })
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST: cria um novo produto (label e observacao ficam nulos)
+// POST /api/produtos — cria um novo produto (aprovacao e observacao ficam nulos por padrão)
 export async function POST(request: Request) {
   try {
     const {
@@ -37,7 +37,9 @@ export async function POST(request: Request) {
       descricao   = '',
       marca       = '',
       cor         = '',
-      tamanho     = ''
+      tamanho     = '',
+      aprovacao   = null,
+      observacao  = null,
     } = await request.json()
 
     if (!ean?.trim() || !imageUrl) {
@@ -56,7 +58,8 @@ export async function POST(request: Request) {
         tamanho,
         imageUrl,
         originalUrl,
-        // label e observacao serão null por padrão
+        aprovacao,
+        observacao,
       }
     })
 
