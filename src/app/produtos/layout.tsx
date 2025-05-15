@@ -1,4 +1,3 @@
-// src/app/(dashboard)/layout.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -12,9 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [credits, setCredits] = useState<number | null>(null)
   const router = useRouter()
 
-  // Carrega dados do usuário e créditos
   useEffect(() => {
-    // Autenticação
     fetch('/api/auth/me', { method: 'GET', credentials: 'include' })
       .then(async res => {
         if (!res.ok) throw new Error('Não autenticado')
@@ -25,7 +22,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.replace('/login')
       })
 
-    // Créditos disponíveis
     fetch('/api/user/credits', { credentials: 'include' })
       .then(res => res.json())
       .then(json => {
@@ -61,9 +57,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Navegação superior dentro do dashboard */}
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex flex-wrap justify-between items-center gap-4 py-4">
             {/* Logo e links */}
-            <div className="flex items-center space-x-8">
+            <div className="flex flex-wrap items-center gap-4 overflow-x-auto">
               <div className="flex-shrink-0">
                 <Image
                   src="/Vitriny.png"
@@ -76,7 +72,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               <Link
                 href="/"
-                className="inline-flex items-center px-1 pt-1 border-b-2 border-purple-600 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                className="inline-flex items-center px-1 pt-1 border-b-2 border-purple-600 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 whitespace-nowrap"
               >
                 <Image
                   src="/icons/dashboard.png"
@@ -90,7 +86,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               <Link
                 href="/produtos"
-                className="inline-flex items-center px-1 pt-1 border-b-2 border-purple-600 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                className="inline-flex items-center px-1 pt-1 border-b-2 border-purple-600 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 whitespace-nowrap"
               >
                 <Image
                   src="/icons/produtos.png"
@@ -104,7 +100,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               <Link
                 href="/produtos/novo"
-                className="inline-flex items-center px-1 pt-1 border-b-2 border-purple-600 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                className="inline-flex items-center px-1 pt-1 border-b-2 border-purple-600 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 whitespace-nowrap"
               >
                 <Image
                   src="/icons/camera.png"
@@ -116,8 +112,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 Transformar Imagem
               </Link>
 
-              {/* Créditos disponíveis com fundo roxo */}
-              <div className="inline-flex items-center bg-purple-600 text-white font-bold rounded-md px-3 py-1">
+              {/* Créditos disponíveis */}
+              <div className="inline-flex items-center bg-purple-600 text-white font-bold rounded-md px-3 py-1 whitespace-nowrap">
                 <span className="text-lg mr-1">🪙</span>
                 <span>Créditos disponíveis&nbsp;</span>
                 <span>
@@ -128,7 +124,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             </div>
 
-            {/* Logout no canto superior direito */}
+            {/* Logout */}
             <div>
               <button
                 onClick={handleLogout}
