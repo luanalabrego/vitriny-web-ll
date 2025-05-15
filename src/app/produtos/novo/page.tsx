@@ -13,7 +13,7 @@ interface Row {
   cor: string;
   tamanho: string;
   productType: string;
-  label: string;
+  aprovacao: string;
   observacao: string;
   result?: { url?: string; originalUrl?: string; error?: string; meta?: any };
   loading?: boolean;
@@ -207,7 +207,7 @@ shape, materials, and branding.
         cor: '',
         tamanho: '',
         productType: 'Feminino',
-        label: '',
+        aprovacao: '',
         observacao: '',
       };
     });
@@ -293,7 +293,7 @@ shape, materials, and branding.
             tamanho: row.tamanho,
             originalUrl,
             imageUrl: url,
-            label: row.label,
+            aprovacao: row.aprovacao,
             observacao: row.observacao
           })
         }).then(res => res.json());
@@ -338,7 +338,7 @@ shape, materials, and branding.
       fetch(`/api/produtos/${row.persistedId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label: row.label, observacao: row.observacao })
+        body: JSON.stringify({ aprovacao: row.aprovacao, observacao: row.observacao })
       })
     ));
     alert('Todas as categorias foram salvas!');
@@ -514,8 +514,8 @@ shape, materials, and branding.
                       <td className="border border-purple-300 p-2">
                         {row.result?.url ? (
                           <select
-                            value={row.label}
-                            onChange={e => handleFieldChange(row.id, 'label', e.target.value)}
+                            value={row.aprovacao}
+                            onChange={e => handleFieldChange(row.id, 'aprovacao', e.target.value)}
                             className="border rounded p-1 w-full bg-white text-black"
                           >
                             <option value="">—</option>
