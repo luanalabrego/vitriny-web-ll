@@ -12,7 +12,7 @@ generator client {
 
 model Product {
   // Chave primária numérica
-  id           Int      @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
 
   // Mantém EAN como campo não único
   ean          String
@@ -26,11 +26,15 @@ model Product {
   imageUrl     String
 
   // NOVOS CAMPOS PARA CATEGORIZAÇÃO
-  label        String?   // “Aprovado” | “Reprovado” | “Refazer foto” | “Retoque Designer”
+  // Agora usamos `aprovacao` na API/Front, mas mapeamos para a coluna existente `label`
+  aprovacao    String?   @map("label")  
   observacao   String?   // campo de texto livre
 
-  createdAt    DateTime @default(now())
+  createdAt    DateTime  @default(now())
 
   // Índice opcional para acelerar buscas por EAN
   @@index([ean])
+
+  // Se você quiser que o nome da tabela também seja em snake_case:
+  // @@map("Product")
 }

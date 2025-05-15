@@ -13,7 +13,7 @@ interface Product {
   tamanho?: string;
   originalUrl?: string | null;
   imageUrl?: string;
-  label?: string;
+  aprovacao?: string;
   observacao?: string;
 }
 
@@ -25,7 +25,7 @@ export default function ProdutosPage() {
     tamanho: '',
     cor: '',
     descricao: '',
-    label: '',
+    aprovacao: '',
     observacao: ''
   });
   const [modalSrc, setModalSrc] = useState<string | null>(null);
@@ -46,12 +46,12 @@ export default function ProdutosPage() {
   };
 
   const filtered = products.filter(p =>
-    (!filters.ean      || p.ean.includes(filters.ean)) &&
-    (!filters.marca    || p.marca?.toLowerCase().includes(filters.marca.toLowerCase())) &&
-    (!filters.tamanho  || p.tamanho?.toLowerCase().includes(filters.tamanho.toLowerCase())) &&
-    (!filters.cor      || p.cor?.toLowerCase().includes(filters.cor.toLowerCase())) &&
-    (!filters.descricao|| p.descricao?.toLowerCase().includes(filters.descricao.toLowerCase())) &&
-    (!filters.label || p.label?.toLowerCase().includes(filters.label.toLowerCase())) &&
+    (!filters.ean       || p.ean.includes(filters.ean)) &&
+    (!filters.marca     || p.marca?.toLowerCase().includes(filters.marca.toLowerCase())) &&
+    (!filters.tamanho   || p.tamanho?.toLowerCase().includes(filters.tamanho.toLowerCase())) &&
+    (!filters.cor       || p.cor?.toLowerCase().includes(filters.cor.toLowerCase())) &&
+    (!filters.descricao || p.descricao?.toLowerCase().includes(filters.descricao.toLowerCase())) &&
+    (!filters.aprovacao || p.aprovacao?.toLowerCase().includes(filters.aprovacao.toLowerCase())) &&
     (!filters.observacao || p.observacao?.toLowerCase().includes(filters.observacao.toLowerCase()))
   );
 
@@ -86,10 +86,10 @@ export default function ProdutosPage() {
 
       {/* Filters */}
       <div className="grid grid-cols-7 gap-2 mb-4">
-        {(['ean','marca','tamanho','cor','descricao','Aprovação','observacao'] as const).map(field => (
+        {(['ean','marca','tamanho','cor','descricao','aprovacao','observacao'] as const).map(field => (
           <input
             key={field}
-            placeholder={`Filtrar ${field}`}
+            placeholder={`Filtrar ${field === 'aprovacao' ? 'Aprovação' : field}`}
             value={filters[field]}
             onChange={e => handleFilterChange(field, e.target.value)}
             className="border border-purple-300 p-1 rounded text-black"
@@ -121,8 +121,6 @@ export default function ProdutosPage() {
                 <td className="border border-purple-300 px-4 py-2">{prod.tamanho || '-'}</td>
                 <td className="border border-purple-300 px-4 py-2">{prod.cor || '-'}</td>
                 <td className="border border-purple-300 px-4 py-2">{prod.descricao || '-'}</td>
-
-                {/* Foto Original */}
                 <td className="border border-purple-300 px-4 py-2 text-center">
                   {prod.originalUrl ? (
                     <img
@@ -135,8 +133,6 @@ export default function ProdutosPage() {
                     <span className="text-gray-500">—</span>
                   )}
                 </td>
-
-                {/* Foto Ajustada */}
                 <td className="border border-purple-300 px-4 py-2 text-center">
                   {prod.imageUrl ? (
                     <img
@@ -149,8 +145,7 @@ export default function ProdutosPage() {
                     <span className="text-gray-500">—</span>
                   )}
                 </td>
-
-                <td className="border border-purple-300 px-4 py-2">{prod.label || '-'}</td>
+                <td className="border border-purple-300 px-4 py-2">{prod.aprovacao || '-'}</td>
                 <td className="border border-purple-300 px-4 py-2">{prod.observacao || '-'}</td>
               </tr>
             ))}
