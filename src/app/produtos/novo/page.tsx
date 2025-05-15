@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, FormEvent } from 'react';
 
 interface Row {
   id: number;
-  persistedId?: number;               // novo: guarda o ID retornado pela API
+  persistedId?: number;
   file: File | null;
   preview: string | null;
   ean: string;
@@ -20,10 +20,13 @@ interface Row {
 }
 
 export default function NovoProduto() {
-  // Estado de créditos do usuário
   const [credits, setCredits] = useState<number>(0);
+  const [rows, setRows] = useState<Row[]>([]);
+  const [modalImage, setModalImage] = useState<string | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Busca créditos ao montar o componente
   useEffect(() => {
     fetch('/api/user/credits')
       .then(res => res.json())
@@ -31,7 +34,6 @@ export default function NovoProduto() {
       .catch(() => console.error('Não foi possível ler créditos'));
   }, []);
 
-  // Prompts específicos para cada tipo de produto
   const promptByType: Record<string, string> = {
   'Feminino': `
 \\[media pointer="file-service://file-2JokoMPKFu71eXZwRfNitC"]
@@ -189,12 +191,6 @@ shape, materials, and branding.
 `.trim(),
   };
 
-  const [rows, setRows] = useState<Row[]>([]);
-  const [modalImage, setModalImage] = useState<string | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -281,7 +277,7 @@ shape, materials, and branding.
         if (!jsonImg.url) throw new Error(jsonImg.error || 'Erro interno ao gerar imagem');
         const { url, meta } = jsonImg;
 
-        // 5) persistir no banco e capturar o ID
+        // 5) persistir no banco
         const created = await fetch('/api/produtos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -332,7 +328,6 @@ shape, materials, and branding.
     await Promise.all(tasks);
   };
 
-  // botao para categorizar tudo de uma vez
   const handleCategorizeAll = async () => {
     const toCat = rows.filter(r => r.persistedId && r.result?.url);
     await Promise.all(toCat.map(row =>
@@ -416,10 +411,10 @@ shape, materials, and branding.
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Marca</th>}
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Cor</th>}
                     {showDetails && <th className="border border-purple-300 px-2 py-1">Tamanho</th>}
-                    <th className="border border-purple-300 px-2 py-1">Label</th>
-                    <th className="border border-purple-300 px-2 py-1">Observação</th>
                     <th className="border border-purple-300 px-2 py-1">Status</th>
                     <th className="border border-purple-300 px-2 py-1">Foto ajustada</th>
+                    <th className="border border-purple-300 px-2 py-1">Label</th>
+                    <th className="border border-purple-300 px-2 py-1">Observação</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -493,28 +488,7 @@ shape, materials, and branding.
                           />
                         </td>
                       )}
-                      <td className="border border-purple-300 p-2">
-                        <select
-                          value={row.label}
-                          onChange={e => handleFieldChange(row.id, 'label', e.target.value)}
-                          className="border rounded p-1 w-full bg-white text-black"
-                        >
-                          <option value="">—</option>
-                          <option value="Aprovado">Aprovado</option>
-                          <option value="Reprovado">Reprovado</option>
-                          <option value="Refazer foto">Refazer foto</option>
-                          <option value="Retoque Designer">Retoque Designer</option>
-                        </select>
-                      </td>
-                      <td className="border border-purple-300 p-2">
-                        <input
-                          type="text"
-                          value={row.observacao}
-                          onChange={e => handleFieldChange(row.id, 'observacao', e.target.value)}
-                          className="border rounded p-1 w-full text-black"
-                        />
-                      </td>
-                      <td className={`border border-purple-300 p-2 text-center ${row.result?.url ? 'bg-green-500 text-white font-bold' : ''}`}>
+                      <td className="border border-purple-300 p-2 text-center">
                         {row.loading
                           ? 'Gerando...'
                           : row.result?.error
@@ -533,30 +507,57 @@ shape, materials, and branding.
                           />
                         )}
                       </td>
+                      <td className="border border-purple-300 p-2">
+                        {row.result?.url ? (
+                          <select
+                            value={row.label}
+                            onChange={e => handleFieldChange(row.id, 'label', e.target.value)}
+                            className="border rounded p-1 w-full bg-white text-black"
+                          >
+                            <option value="">—</option>
+                            <option value="Aprovado">Aprovado</option>
+                            <option value="Reprovado">Reprovado</option>
+                            <option value="Refazer foto">Refazer foto</option>
+                            <option value="Retoque Designer">Retoque Designer</option>
+                          </select>
+                        ) : '—'}
+                      </td>
+                      <td className="border border-purple-300 p-2">
+                        {row.result?.url ? (
+                          <input
+                            type="text"
+                            value={row.observacao}
+                            onChange={e => handleFieldChange(row.id, 'observacao', e.target.value)}
+                            className="border rounded p-1 w-full text-black"
+                          />
+                        ) : '—'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            <button
-              type="button"
-              onClick={handleCategorizeAll}
-              disabled={!canCategorize}
-              className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
-            >
-              Categorizar Todas
-            </button>
+            <div className="flex gap-4 mt-4">
+              <button
+                type="submit"
+                disabled={!canSubmit}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              >
+                Enviar Todas
+              </button>
+              <button
+                type="button"
+                onClick={handleCategorizeAll}
+                disabled={!canCategorize}
+                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+              >
+                Categorizar Todas
+              </button>
+            </div>
           </>
         )}
 
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-        >
-          Enviar Todas
-        </button>
       </form>
 
       {modalImage && (
