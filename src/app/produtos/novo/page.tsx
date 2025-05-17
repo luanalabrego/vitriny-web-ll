@@ -17,165 +17,159 @@ interface Row {
 }
 
 export default function NovoProduto() {
-  // Estado de créditos do usuário
   const [credits, setCredits] = useState<number>(0);
+  const [rows, setRows] = useState<Row[]>([]);
+  const [modalImage, setModalImage] = useState<string | null>(null);
+  const [showDetails, setShowDetails] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Busca créditos ao montar o componente
   useEffect(() => {
-    fetch('/api/user/credits', { credentials: 'include' })   // ← envia sessão
+    fetch('/api/user/credits', { credentials: 'include' })
       .then(res => res.json())
       .then(json => setCredits(json.credits ?? 0))
       .catch(() => console.error('Não foi possível ler créditos'));
   }, []);
 
-  // Prompts específicos para cada tipo de produto
   const promptByType: Record<string, string> = {
     'Feminino': `
-\\[media pointer="file-service://file-2JokoMPKFu71eXZwRfNitC"]
-Create an ultra–high-resolution studio photo of a female fashion model wearing the exact same outfit as shown in the reference image, with maximum visual fidelity to all visible garment elements.
-
-Composition & Pose:
-– Full-body shot, model centered and turned slightly off-axis (10–15°) for a natural, confident look.
-– One hand resting on the hip, the other arm relaxed.
-– Subtle weight shift for a dynamic silhouette.
-– Calm, confident facial expression with soft eye contact.
-
-Background & Lighting:
-– Plain white or light gray studio background with no distractions.
-– Soft, diffused lighting from multiple angles to evenly illuminate the model and highlight fabric textures.
-
-Garment Fidelity (critical):
-– Carefully analyze the reference image before generating.
-– Replicate the exact structure, fabric, fit, texture, color, stitching, and any visible garment details.
-– Do not reinterpret, simplify, or redesign any part of the clothing.
-– Maintain the proportions, cut, and appearance of every visible element as shown.
-– Treat this as a professional fashion catalog shoot requiring pixel-accurate visual duplication.
-
-Post-processing & Output:
-– High-end editorial quality, with no image artifacts or distortions.
-– Sharp focus on the outfit, natural skin tones, clean studio look.
-    `.trim(),
-    'Masculino': `
-Create an ultra–high-resolution studio photo of a male fashion model wearing the exact same outfit as shown in the reference image.
-
-Composition & Pose:
-– Full-body or three-quarter shot, model centered and turned slightly off-axis (10–15°) for a dynamic yet natural stance.
-– Arms relaxed—one hand casually in a pocket or both arms naturally at the sides.
-– Subtle weight shift on one leg to convey confidence and ease.
-– Eyes focused directly on the camera, with a calm, assured expression.
-
-Background & Lighting:
-– Plain, uniform background (white or light gray) with zero distractions.
-– Soft, diffused lighting using a key light and fill light to highlight fabric drape and texture.
-– No harsh shadows or reflective hotspots.
-
-Clothing Details:
-– Exact match of color, pattern, and weave of the fabric.
-– Logos, labels, and stitching rendered crisply and placed precisely as in the reference.
-– Visible tailoring details (lapels, seams, hems) and natural folds to showcase fit and movement.
-
-Styling & Post-processing:
-– Editorial quality: clean look, razor-sharp focus on the garment.
-– Absolutely no compression artifacts or digital noise.
-– Subtle color grading to ensure faithful reproduction of the real item’s appearance.
-
-Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. Focus strictly on the garment itself.
-    `.trim(),
-    'Infantil feminino': `
-Create an ultra–high-resolution studio photo of a young girl model wearing the exact same outfit as shown in the reference image.
-
-Composition & Pose:
-– Full-body shot, model centered and facing the camera head-on.
-– Natural, relaxed stance with a slight shift of weight (one foot slightly forward).
-– Arms at the sides.
-– Eyes focused directly on the camera with a warm, cheerful smile.
-
-Background & Lighting:
-– Plain, uniform background (white or light gray) without distractions.
-– Soft, diffused lighting using a key light and fill light to highlight fabric texture and the child’s features.
-– No harsh shadows or hotspots; ensure even illumination across the model and garment.
-
-Clothing Details:
-– Precise replication of color, pattern, and fabric texture.
-– Logos, labels, and any decorative trims rendered crisply and placed exactly as in the reference.
-– Natural folds and drape of the fabric to showcase fit and movement suitable for a child.
-– Special attention to playful and decorative elements typical of children's clothing, such as animal illustrations, character prints, colorful patterns, or embroidery. All designs must be accurately replicated with clarity and correct positioning.
-
-Styling & Post-processing:
-– Clean, editorial look with crisp focus on the outfit and model.
-– No compression artifacts, digital noise, or over-retouching that alters the garment’s appearance.
-– Subtle, accurate color grading to maintain absolute fidelity to the real item’s colors and details.
-
-Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while capturing the youthful, playful spirit of the model.
-    `.trim(),
-    'Infantil Masculino': `
-Create an ultra–high-resolution studio photo of a young boy model wearing the exact same outfit as shown in the reference image.
-
-Composition & Pose:
-– Full-body shot, model centered and facing the camera head-on.
-– Natural, relaxed stance with a slight bend in one knee for comfort.
-– Arms at the sides or one hand playfully in a pocket.
-– Eyes looking directly at the camera with a friendly, confident smile.
-
-Background & Lighting:
-– Plain, uniform background (white or light gray) with no distractions.
-– Soft, diffused lighting using a key light and fill light to highlight fabric texture without harsh shadows.
-– Ensure even illumination across the child’s face and clothing.
-
-Clothing Details:
-– Faithful replication of color, pattern, and fabric texture.
-– Logos, labels, and stitching crisp and precisely positioned as in the reference.
-– Special attention to playful elements typical of children's clothing, such as animal prints, characters, bold patterns, or decorative details. All designs must be clearly visible and accurately positioned.
-– Natural folds and drape of the garment to showcase fit and movement appropriate for a child.
-
-Styling & Post-processing:
-– Clean, editorial look with razor-sharp focus on the outfit.
-– No compression artifacts, digital noise, or over-retouching.
-– Subtle, accurate color grading to maintain absolute fidelity to the real item’s appearance.
-
-Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. Focus exclusively on the clothing.
-    `.trim(),
-    'Calçado': `
-Generate an ultra–high-resolution studio photograph of the reference footwear only. Frame a tight, close-up three-quarter view—rotate the shoe 10–15° so both side profile and front details fill the frame. Place it on a pristine white (or light-gray) background. Illuminate with multi-angle, soft diffused lighting to eliminate shadows, using a subtle reflector under the sole to add gentle fill light.
-
-Ensure pixel-perfect fidelity to every element—leather grain, stitching, hardware, ornamentation and sole tread—without any blurring, distortion or over-retouching. Apply an editorial-grade finish: razor-sharp focus edge-to-edge, no compression artifacts or digital noise, and only very subtle, true-to-life color and contrast adjustments to preserve the exact hue and texture of the shoe.
-    `.trim(),
-    'Bolsa': `
-Create an ultra–high-resolution product photo (at least 3000×3000 px) focusing exclusively on the handbag shown in the reference image.
-
-Composition & Framing:
-– Full-frame shot capturing the entire bag, slightly rotated (10–15°) to showcase front and side profiles.
-– Bag placed on a flat surface or elegantly suspended by its strap to reveal silhouette and hardware details.
-
-Background & Lighting:
-– Plain, uniform background (white or light gray) with no distractions.
-– Soft, diffused multi-angle lighting to eliminate harsh shadows and evenly illuminate all surfaces.
-
-Extreme Detail Emphasis:
-– Pixel-perfect replication of every element: grain and texture of leather (or fabric), lining pattern, zipper teeth, hardware finish (buckles, clasps, studs), embossed logos, stitching density.
-– Logos, metal engravings, and tag placements must align exactly with the reference—no blurring or distortion.
-
-Styling & Post-processing:
-– Editorial-grade clarity: razor-sharp focus on every seam, texture, and hardware element.
-– No compression artifacts or digital noise.
-– Subtle, true-to-life color grading and contrast adjustments to maintain absolute fidelity to the real item’s appearance.
-
-Reference image will be provided alongside. Ensure absolute, pixel-level fidelity to the handbag’s shape, materials, and branding.
-    `.trim(),
+    \\[media pointer="file-service://file-2JokoMPKFu71eXZwRfNitC"]
+    Create an ultra–high-resolution studio photo of a female fashion model wearing the exact same outfit as shown in the reference image, with maximum visual fidelity to all visible garment elements.
+    
+    Composition & Pose:
+    – Full-body shot, model centered and turned slightly off-axis (10–15°) for a natural, confident look.
+    – One hand resting on the hip, the other arm relaxed.
+    – Subtle weight shift for a dynamic silhouette.
+    – Calm, confident facial expression with soft eye contact.
+    
+    Background & Lighting:
+    – Plain white or light gray studio background with no distractions.
+    – Soft, diffused lighting from multiple angles to evenly illuminate the model and highlight fabric textures.
+    
+    Garment Fidelity (critical):
+    – Carefully analyze the reference image before generating.
+    – Replicate the exact structure, fabric, fit, texture, color, stitching, and any visible garment details.
+    – Do not reinterpret, simplify, or redesign any part of the clothing.
+    – Maintain the proportions, cut, and appearance of every visible element as shown.
+    – Treat this as a professional fashion catalog shoot requiring pixel-accurate visual duplication.
+    
+    Post-processing & Output:
+    – High-end editorial quality, with no image artifacts or distortions.
+    – Sharp focus on the outfit, natural skin tones, clean studio look.
+        `.trim(),
+        'Masculino': `
+    Create an ultra–high-resolution studio photo of a male fashion model wearing the exact same outfit as shown in the reference image.
+    
+    Composition & Pose:
+    – Full-body or three-quarter shot, model centered and turned slightly off-axis (10–15°) for a dynamic yet natural stance.
+    – Arms relaxed—one hand casually in a pocket or both arms naturally at the sides.
+    – Subtle weight shift on one leg to convey confidence and ease.
+    – Eyes focused directly on the camera, with a calm, assured expression.
+    
+    Background & Lighting:
+    – Plain, uniform background (white or light gray) with zero distractions.
+    – Soft, diffused lighting using a key light and fill light to highlight fabric drape and texture.
+    – No harsh shadows or reflective hotspots.
+    
+    Clothing Details:
+    – Exact match of color, pattern, and weave of the fabric.
+    – Logos, labels, and stitching rendered crisply and placed precisely as in the reference.
+    – Visible tailoring details (lapels, seams, hems) and natural folds to showcase fit and movement.
+    
+    Styling & Post-processing:
+    – Editorial quality: clean look, razor-sharp focus on the garment.
+    – Absolutely no compression artifacts or digital noise.
+    – Subtle color grading to ensure faithful reproduction of the real item’s appearance.
+    
+    Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. Focus strictly on the garment itself.
+        `.trim(),
+        'Infantil feminino': `
+    Create an ultra–high-resolution studio photo of a young girl model wearing the exact same outfit as shown in the reference image.
+    
+    Composition & Pose:
+    – Full-body shot, model centered and facing the camera head-on.
+    – Natural, relaxed stance with a slight shift of weight (one foot slightly forward).
+    – Arms at the sides.
+    – Eyes focused directly on the camera with a warm, cheerful smile.
+    
+    Background & Lighting:
+    – Plain, uniform background (white or light gray) without distractions.
+    – Soft, diffused lighting using a key light and fill light to highlight fabric texture and the child’s features.
+    – No harsh shadows or hotspots; ensure even illumination across the model and garment.
+    
+    Clothing Details:
+    – Precise replication of color, pattern, and fabric texture.
+    – Logos, labels, and any decorative trims rendered crisply and placed exactly as in the reference.
+    – Natural folds and drape of the fabric to showcase fit and movement suitable for a child.
+    – Special attention to playful and decorative elements typical of children's clothing, such as animal illustrations, character prints, colorful patterns, or embroidery. All designs must be accurately replicated with clarity and correct positioning.
+    
+    Styling & Post-processing:
+    – Clean, editorial look with crisp focus on the outfit and model.
+    – No compression artifacts, digital noise, or over-retouching that alters the garment’s appearance.
+    – Subtle, accurate color grading to maintain absolute fidelity to the real item’s colors and details.
+    
+    Reference image will be provided alongside. Ensure maximum fidelity to the garment’s details, fit, and branding while capturing the youthful, playful spirit of the model.
+        `.trim(),
+        'Infantil Masculino': `
+    Create an ultra–high-resolution studio photo of a young boy model wearing the exact same outfit as shown in the reference image.
+    
+    Composition & Pose:
+    – Full-body shot, model centered and facing the camera head-on.
+    – Natural, relaxed stance with a slight bend in one knee for comfort.
+    – Arms at the sides or one hand playfully in a pocket.
+    – Eyes looking directly at the camera with a friendly, confident smile.
+    
+    Background & Lighting:
+    – Plain, uniform background (white or light gray) with no distractions.
+    – Soft, diffused lighting using a key light and fill light to highlight fabric texture without harsh shadows.
+    – Ensure even illumination across the child’s face and clothing.
+    
+    Clothing Details:
+    – Faithful replication of color, pattern, and fabric texture.
+    – Logos, labels, and stitching crisp and precisely positioned as in the reference.
+    – Special attention to playful elements typical of children's clothing, such as animal prints, characters, bold patterns, or decorative details. All designs must be clearly visible and accurately positioned.
+    – Natural folds and drape of the garment to showcase fit and movement appropriate for a child.
+    
+    Styling & Post-processing:
+    – Clean, editorial look with razor-sharp focus on the outfit.
+    – No compression artifacts, digital noise, or over-retouching.
+    – Subtle, accurate color grading to maintain absolute fidelity to the real item’s appearance.
+    
+    Note: Some garments may contain visible sales or price tags in the reference image, but these must **not appear in the final photo**. Focus exclusively on the clothing.
+        `.trim(),
+        'Calçado': `
+    Generate an ultra–high-resolution studio photograph of the reference footwear only. Frame a tight, close-up three-quarter view—rotate the shoe 10–15° so both side profile and front details fill the frame. Place it on a pristine white (or light-gray) background. Illuminate with multi-angle, soft diffused lighting to eliminate shadows, using a subtle reflector under the sole to add gentle fill light.
+    
+    Ensure pixel-perfect fidelity to every element—leather grain, stitching, hardware, ornamentation and sole tread—without any blurring, distortion or over-retouching. Apply an editorial-grade finish: razor-sharp focus edge-to-edge, no compression artifacts or digital noise, and only very subtle, true-to-life color and contrast adjustments to preserve the exact hue and texture of the shoe.
+        `.trim(),
+        'Bolsa': `
+    Create an ultra–high-resolution product photo (at least 3000×3000 px) focusing exclusively on the handbag shown in the reference image.
+    
+    Composition & Framing:
+    – Full-frame shot capturing the entire bag, slightly rotated (10–15°) to showcase front and side profiles.
+    – Bag placed on a flat surface or elegantly suspended by its strap to reveal silhouette and hardware details.
+    
+    Background & Lighting:
+    – Plain, uniform background (white or light gray) with no distractions.
+    – Soft, diffused multi-angle lighting to eliminate harsh shadows and evenly illuminate all surfaces.
+    
+    Extreme Detail Emphasis:
+    – Pixel-perfect replication of every element: grain and texture of leather (or fabric), lining pattern, zipper teeth, hardware finish (buckles, clasps, studs), embossed logos, stitching density.
+    – Logos, metal engravings, and tag placements must align exactly with the reference—no blurring or distortion.
+    
+    Styling & Post-processing:
+    – Editorial-grade clarity: razor-sharp focus on every seam, texture, and hardware element.
+    – No compression artifacts or digital noise.
+    – Subtle, true-to-life color grading and contrast adjustments to maintain absolute fidelity to the real item’s appearance.
+    
+    Reference image will be provided alongside. Ensure absolute, pixel-level fidelity to the handbag’s shape, materials, and branding.
+`.trim(),
   };
 
-  const [rows, setRows] = useState<Row[]>([]);
-  const [modalImage, setModalImage] = useState<string | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-
-  // Seleção de arquivos
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     const newRows = Array.from(files).map((file, idx) => {
-      // Predefine o EAN como o nome do arquivo sem extensão
       const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
       return {
         id: Date.now() + idx,
@@ -193,7 +187,9 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
     e.target.value = '';
   };
 
-  const clearSelection = () => setRows([]);
+  const clearSelection = () => {
+    setRows([]);
+  };
 
   const handleFieldChange = (
     id: number,
@@ -207,8 +203,6 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
-    // valida créditos e EANs
     if (rows.length > credits) {
       alert(`Você precisa de ${rows.length} créditos, mas tem apenas ${credits}.`);
       return;
@@ -218,83 +212,60 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
       return;
     }
 
-    // marca todas as linhas como carregando
-    setRows(rows => rows.map(r => ({ ...r, loading: true, result: undefined })));
+    setRows(prev => prev.map(r => ({ ...r, loading: true, result: undefined })));
 
     await Promise.all(
       rows.map(async row => {
         try {
-          // 1) GET upload-url
-          const resUpload = await fetch(
-            `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean)}`,
-            { credentials: 'include' }
-          );
-          const uploadJson = await resUpload.json();
-          if (!resUpload.ok) {
-            throw new Error(uploadJson.error || `Status ${resUpload.status}`);
-          }
-
-          // 2) PUT original
-          const putRes = await fetch(uploadJson.uploadUrl, {
+          const { uploadUrl, fileName } = await fetch(
+            `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean.trim())}`
+          ).then(res => res.json());
+          // PUT original
+          const putRes = await fetch(uploadUrl, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/octet-stream' },
             body: row.file,
           });
-          if (!putRes.ok) {
-            throw new Error(`Upload original falhou: ${putRes.status}`);
-          }
+          if (!putRes.ok) throw new Error('Upload original falhou');
 
-          // 3) POST publish-original
-          const resPub = await fetch('/api/produtos/publish-original', {
+          // publish original
+          const publishJson = await fetch('/api/produtos/publish-original', {
             method: 'POST',
-            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileName: uploadJson.fileName }),
-          });
-          const pubJson = await resPub.json();
-          if (!resPub.ok) {
-            throw new Error(pubJson.error || `Status ${pubJson.status}`);
-          }
-          const originalUrl = pubJson.publicUrl;
+            body: JSON.stringify({ fileName }),
+          }).then(res => res.json());
+          const originalUrl = publishJson.publicUrl;
+          if (!originalUrl) throw new Error('Falha ao tornar original público');
 
-          // 4) POST gerar-imagem
-          const resImg = await fetch('/api/produtos/gerar-imagem', {
+          // gerar imagem
+          const prompt = promptByType[row.productType] || promptByType['Feminino'];
+          const { url, meta } = await fetch('/api/produtos/gerar-imagem', {
             method: 'POST',
-            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              ean: row.ean,
-              fileName: uploadJson.fileName,
-              prompt: promptByType[row.productType],
+              ean: row.ean.trim(),
+              fileName,
+              prompt,
               descricao: row.descricao,
               marca: row.marca,
               cor: row.cor,
               tamanho: row.tamanho,
             }),
-          });
-          const imgJson = await resImg.json();
-          if (!resImg.ok) {
-            throw new Error(imgJson.error || `Status ${imgJson.status}`);
-          }
-          const { url, meta } = imgJson;
+          }).then(res => res.json());
+          if (!url) throw new Error('Erro ao gerar imagem');
 
-          // 5) POST decrement-credits
-          const resDec = await fetch('/api/user/decrement-credits', {
+          // decrement credits
+          const decJson = await fetch('/api/user/decrement-credits', {
             method: 'POST',
-            credentials: 'include',
-          });
-          const decJson = await resDec.json();
-          if (resDec.ok && decJson.credits !== undefined) {
-            setCredits(decJson.credits);
-          }
+          }).then(res => res.json());
+          if (decJson.credits !== undefined) setCredits(decJson.credits);
 
-          // 6) POST persist no banco
-          const resPost = await fetch('/api/produtos', {
+          // persist no banco
+          await fetch('/api/produtos', {
             method: 'POST',
-            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              ean: row.ean,
+              ean: row.ean.trim(),
               descricao: row.descricao,
               marca: row.marca,
               cor: row.cor,
@@ -303,12 +274,7 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
               imageUrl: url,
             }),
           });
-          const postJson = await resPost.json();
-          if (!resPost.ok) {
-            throw new Error(postJson.error || `Status ${postJson.status}`);
-          }
 
-          // 7) atualiza estado da linha com sucesso
           setRows(prev =>
             prev.map(r =>
               r.id === row.id
@@ -317,7 +283,6 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
             )
           );
         } catch (err: any) {
-          // 8) atualiza estado da linha com erro
           setRows(prev =>
             prev.map(r =>
               r.id === row.id
@@ -338,28 +303,42 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="p-6 space-y-4 text-black">
-        <div className="flex flex-col sm:flex-row items-center gap-4">
+      {/* ======= HEADER MODERNO ======= */}
+      <header className="bg-white shadow-md border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-800">Nova Imagem</h1>
+          <button
+            title="Créditos disponíveis"
+            className="inline-flex items-center bg-purple-100 text-purple-800 font-semibold rounded-full px-3 py-1 hover:bg-purple-200 transition"
+          >
+            🪙 Créditos: {credits.toString().padStart(4, '0')}
+          </button>
+        </div>
+      </header>
+
+      <form onSubmit={handleSubmit} className="max-w-7xl mx-auto px-4 py-6">
+        {/* Upload Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 mt-4">
           <button
             type="button"
             onClick={() => cameraInputRef.current?.click()}
-            className="px-4 py-2 w-full sm:w-auto bg-green-600 text-white rounded hover:bg-green-700 inline-flex items-center gap-2 justify-center"
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2 justify-center transform hover:scale-105 transition"
           >
             📷 Tirar Foto
           </button>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="px-4 py-2 w-full sm:w-auto bg-blue-600 text-white rounded hover:bg-blue-700 inline-flex items-center gap-2 justify-center"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2 justify-center transform hover:scale-105 transition"
           >
-            📁 Selecionar Imagens
+            🖼️ Selecionar Imagens
           </button>
           <button
             type="button"
             onClick={clearSelection}
-            className="px-4 py-2 w-full sm:w-auto bg-red-600 text-white rounded hover:bg-red-700 inline-flex items-center gap-2 justify-center"
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2 justify-center transform hover:scale-105 transition"
           >
-            🗑️ Limpar Seleção
+            🧹 Limpar Seleção
           </button>
           <input
             type="file"
@@ -381,46 +360,47 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
 
         {rows.length > 0 && (
           <>
+            {/* Toggle details */}
             <button
               type="button"
               onClick={() => setShowDetails(!showDetails)}
-              className="text-sm text-blue-600 underline"
+              className="mt-4 text-sm text-blue-600 underline"
             >
-              {showDetails ? 'Ver menos' : 'Ver mais'}
+              {showDetails ? 'Ocultar detalhes' : 'Ver detalhes'}
             </button>
-            <div className="overflow-x-auto rounded-md border border-gray-200">
-              <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-purple-600 text-white">
-                  <tr>
-                    <th className="px-3 py-2 text-left">Foto</th>
-                    <th className="px-3 py-2 text-left">Tipo</th>
-                    <th className="px-3 py-2 text-left">EAN</th>
-                    {showDetails && <th className="px-3 py-2 text-left hidden sm:table-cell">Descrição</th>}
-                    {showDetails && <th className="px-3 py-2 text-left hidden sm:table-cell">Marca</th>}
-                    {showDetails && <th className="px-3 py-2 text-left hidden sm:table-cell">Cor</th>}
-                    {showDetails && <th className="px-3 py-2 text-left hidden sm:table-cell">Tamanho</th>}
-                    <th className="px-3 py-2 text-center">Status</th>
-                    <th className="px-3 py-2 text-center">Foto ajustada</th>
+
+            {/* Tabela desktop */}
+            <div className="hidden md:block overflow-x-auto mt-6 rounded-lg border border-gray-200">
+              <table className="min-w-full">
+                <thead className="bg-white">
+                  <tr className="text-purple-700 font-semibold border-b-2 border-purple-200">
+                    <th className="px-4 py-3 text-left">Foto</th>
+                    <th className="px-4 py-3 text-left">Tipo</th>
+                    <th className="px-4 py-3 text-left">EAN</th>
+                    {showDetails && <th className="px-4 py-3 text-left">Descrição</th>}
+                    {showDetails && <th className="px-4 py-3 text-left">Marca</th>}
+                    {showDetails && <th className="px-4 py-3 text-left">Cor</th>}
+                    {showDetails && <th className="px-4 py-3 text-left">Tamanho</th>}
+                    <th className="px-4 py-3 text-center">Status</th>
+                    <th className="px-4 py-3 text-center">Foto Ajustada</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
                   {rows.map(row => (
-                    <tr key={row.id} className="hover:bg-gray-50">
-                      <td className="px-3 py-2">
-                        {row.preview && (
-                          <img
-                            src={row.preview}
-                            alt="preview"
-                            className="h-16 w-16 object-cover rounded-md cursor-pointer"
-                            onClick={() => setModalImage(row.preview!)}
-                          />
-                        )}
+                    <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-2">
+                        <img
+                          src={row.preview!}
+                          alt="preview"
+                          className="h-16 w-16 rounded-xl shadow-md object-cover cursor-pointer"
+                          onClick={() => setModalImage(row.preview!)}
+                        />
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-4 py-2">
                         <select
                           value={row.productType}
                           onChange={e => handleFieldChange(row.id, 'productType', e.target.value)}
-                          className="w-full border rounded-md px-2 py-1 bg-white"
+                          className="border rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400"
                         >
                           <option>Feminino</option>
                           <option>Masculino</option>
@@ -430,16 +410,16 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
                           <option>Bolsa</option>
                         </select>
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-4 py-2">
                         <input
                           value={row.ean}
                           onChange={e => handleFieldChange(row.id, 'ean', e.target.value)}
-                          className="w-full border rounded-md px-2 py-1"
+                          className="w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400"
                           required
                         />
                       </td>
                       {showDetails && (
-                        <td className="px-3 py-2 hidden sm:table-cell">
+                        <td className="px-4 py-2">
                           <input
                             value={row.descricao}
                             onChange={e => handleFieldChange(row.id, 'descricao', e.target.value)}
@@ -448,7 +428,7 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
                         </td>
                       )}
                       {showDetails && (
-                        <td className="px-3 py-2 hidden sm:table-cell">
+                        <td className="px-4 py-2">
                           <input
                             value={row.marca}
                             onChange={e => handleFieldChange(row.id, 'marca', e.target.value)}
@@ -457,7 +437,7 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
                         </td>
                       )}
                       {showDetails && (
-                        <td className="px-3 py-2 hidden sm:table-cell">
+                        <td className="px-4 py-2">
                           <input
                             value={row.cor}
                             onChange={e => handleFieldChange(row.id, 'cor', e.target.value)}
@@ -466,7 +446,7 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
                         </td>
                       )}
                       {showDetails && (
-                        <td className="px-3 py-2 hidden sm:table-cell">
+                        <td className="px-4 py-2">
                           <input
                             value={row.tamanho}
                             onChange={e => handleFieldChange(row.id, 'tamanho', e.target.value)}
@@ -474,21 +454,21 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
                           />
                         </td>
                       )}
-                      <td className="px-3 py-2 text-center">
+                      <td className="px-4 py-2 text-center">
                         {row.loading
-                          ? 'Gerando...'
-                          : row.result?.error
-                          ? 'Erro'
+                          ? <span className="animate-spin inline-block w-4 h-4 border-2 border-t-purple-600 rounded-full"></span>
                           : row.result?.url
-                          ? 'OK'
-                          : '-'}
+                            ? '✅'
+                            : row.result?.error
+                              ? '❌'
+                              : '-'}
                       </td>
-                      <td className="px-3 py-2 text-center">
+                      <td className="px-4 py-2 text-center">
                         {row.result?.url && (
                           <img
                             src={row.result.url}
                             alt="ajustada"
-                            className="h-16 w-16 object-cover rounded-md cursor-pointer"
+                            className="h-16 w-16 rounded-xl shadow-md object-cover cursor-pointer"
                             onClick={() => setModalImage(row.result!.url!)}
                           />
                         )}
@@ -499,11 +479,47 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
               </table>
             </div>
 
-            <div className="flex justify-end gap-4 mt-4">
+            {/* Cards mobile */}
+            <div className="md:hidden grid grid-cols-1 gap-4 mt-6">
+              {rows.map(row => (
+                <div key={row.id} className="p-4 rounded-lg shadow bg-white">
+                  <img
+                    src={row.preview!}
+                    alt="preview"
+                    className="w-full h-48 object-cover rounded-md mb-2"
+                  />
+                  <p className="text-base font-semibold text-gray-800">
+                    Tipo: {row.productType}
+                  </p>
+                  <p className="text-sm text-gray-600">EAN: {row.ean}</p>
+                  {showDetails && (
+                    <>
+                      <p className="text-sm text-gray-600">
+                        Descrição: {row.descricao}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Marca: {row.marca}
+                      </p>
+                      <p className="text-sm text-gray-600">Cor: {row.cor}</p>
+                      <p className="text-sm text-gray-600">
+                        Tamanho: {row.tamanho}
+                      </p>
+                    </>
+                  )}
+                  <p className="text-sm text-gray-600 mt-2">
+                    Status:{' '}
+                    {row.loading ? '…' : row.result?.url ? 'OK' : '-'}
+                  </p>
+                </div>
+              ))}  
+            </div>
+
+            {/* Botões de ação */}
+            <div className="flex justify-end gap-4 mt-6">
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md disabled:opacity-50"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow transform hover:scale-105 transition disabled:opacity-50"
               >
                 Enviar Todas
               </button>
@@ -520,7 +536,7 @@ Reference image will be provided alongside. Ensure absolute, pixel-level fidelit
           <img
             src={modalImage}
             alt="Ampliado"
-            className="max-h-[90%] max-w-[90%] rounded shadow-lg"
+            className="max-h-[90%] max-w-[90%] rounded-lg shadow-lg"
           />
         </div>
       )}
