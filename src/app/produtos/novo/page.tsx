@@ -36,7 +36,6 @@ export default function NovoProduto() {
 
   const promptByType: Record<string, string> = {
   'Feminino': `
-\\[media pointer="file-service://file-2JokoMPKFu71eXZwRfNitC"]
 Create an ultra–high-resolution studio photo of a female fashion model wearing the exact same outfit as shown in the reference image, with maximum visual fidelity to all visible garment elements.
 
 Composition & Pose:
