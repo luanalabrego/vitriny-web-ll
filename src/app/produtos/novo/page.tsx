@@ -239,11 +239,11 @@ Create an ultra–high-resolution product photo focusing exclusively on the hand
             </button>
 
             {/* Tabela desktop */}
-            <div className="hidden md:block overflow-x-auto mt-6 rounded-lg">
+            <div className="hidden md:block overflow-x-auto mt-6 rounded-lg border border-gray-200 overflow-hidden">
               <table className="min-w-full border-collapse">
                 <thead className="bg-white">
                   <tr className="text-purple-700 font-semibold">
-                    <th className="px-4 py-3 text-left border border-gray-200">Foto</th>
+                  <th className="px-4 py-3 text-left border border-gray-200">Foto</th>
                     <th className="px-4 py-3 text-left border border-gray-200">Tipo</th>
                     <th className="px-4 py-3 text-left border border-gray-200">EAN</th>
                     {showDetails && (
