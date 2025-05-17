@@ -24,6 +24,7 @@ export default function NovoProduto() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
+  // Busca créditos do usuário
   useEffect(() => {
     fetch('/api/user/credits', { credentials: 'include' })
       .then(res => res.json())
@@ -31,6 +32,7 @@ export default function NovoProduto() {
       .catch(() => console.error('Não foi possível ler créditos'));
   }, []);
 
+  // Prompts por tipo de produto
   const promptByType: Record<string, string> = {
     'Feminino': `
     \\[media pointer="file-service://file-2JokoMPKFu71eXZwRfNitC"]
@@ -162,47 +164,44 @@ export default function NovoProduto() {
     – No compression artifacts or digital noise.
     – Subtle, true-to-life color grading and contrast adjustments to maintain absolute fidelity to the real item’s appearance.
     
-    Reference image will be provided alongside. Ensure absolute, pixel-level fidelity to the handbag’s shape, materials, and branding.
-    `.trim(),
+    Reference image will be provided alongside. Ensure absolute, pixel-level fidelity to the handbag’s shape, materials, and branding.`.trim(),
   };
 
+  // Seleção de arquivos
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    const newRows = Array.from(files).map((file, idx) => {
-      const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
-      return {
-        id: Date.now() + idx,
-        file,
-        preview: URL.createObjectURL(file),
-        ean: nameWithoutExt,
-        descricao: '',
-        marca: '',
-        cor: '',
-        tamanho: '',
-        productType: 'Feminino',
-      };
-    });
+    const newRows = Array.from(files).map((file, idx) => ({
+      id: Date.now() + idx,
+      file,
+      preview: URL.createObjectURL(file),
+      ean: file.name.replace(/\.[^/.]+$/, ''),
+      descricao: '',
+      marca: '',
+      cor: '',
+      tamanho: '',
+      productType: 'Feminino',
+    }));
     setRows(prev => [...prev, ...newRows]);
     e.target.value = '';
   };
 
-  const clearSelection = () => {
-    setRows([]);
-  };
+  // Limpar seleção
+  const clearSelection = () => setRows([]);
 
+  // Atualiza campo de linha
   const handleFieldChange = (
     id: number,
     field: keyof Omit<Row, 'id' | 'file' | 'preview' | 'result' | 'loading'>,
     value: string
   ) => {
-    setRows(prev =>
-      prev.map(r => (r.id === id ? { ...r, [field]: value } : r))
-    );
+    setRows(prev => prev.map(r => (r.id === id ? { ...r, [field]: value } : r)));
   };
 
+  // Envio do formulário
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
     if (rows.length > credits) {
       alert(`Você precisa de ${rows.length} créditos, mas tem apenas ${credits}.`);
       return;
@@ -217,10 +216,13 @@ export default function NovoProduto() {
     await Promise.all(
       rows.map(async row => {
         try {
+          // 1) Obter URL de upload
           const { uploadUrl, fileName } = await fetch(
-            `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean.trim())}`
+            `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean.trim())}`,
+            { credentials: 'include' }
           ).then(res => res.json());
 
+          // 2) Enviar arquivo original
           const putRes = await fetch(uploadUrl, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/octet-stream' },
@@ -228,17 +230,24 @@ export default function NovoProduto() {
           });
           if (!putRes.ok) throw new Error('Upload original falhou');
 
-          const publishJson = await fetch('/api/produtos/publish-original', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileName }),
-          }).then(res => res.json());
-          const originalUrl = publishJson.publicUrl;
+          // 3) Publicar original
+          const { publicUrl: originalUrl } = await fetch(
+            '/api/produtos/publish-original',
+            {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ fileName }),
+            }
+          ).then(res => res.json());
+
           if (!originalUrl) throw new Error('Falha ao tornar original público');
 
-          const prompt = promptByType[row.productType] || promptByType['Feminino'];
+          // 4) Gerar imagem ajustada (com credentials)
+          const prompt = promptByType[row.productType] || promptByType.Feminino;
           const { url, meta } = await fetch('/api/produtos/gerar-imagem', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               ean: row.ean.trim(),
@@ -252,13 +261,17 @@ export default function NovoProduto() {
           }).then(res => res.json());
           if (!url) throw new Error('Erro ao gerar imagem');
 
+          // 5) Decrementar créditos
           const decJson = await fetch('/api/user/decrement-credits', {
             method: 'POST',
+            credentials: 'include',
           }).then(res => res.json());
-          if (decJson.credits !== undefined) setCredits(decJson.credits);
+          setCredits(decJson.credits);
 
+          // 6) Persistir no banco
           await fetch('/api/produtos', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               ean: row.ean.trim(),
@@ -271,6 +284,7 @@ export default function NovoProduto() {
             }),
           });
 
+          // 7) Atualiza estado da linha
           setRows(prev =>
             prev.map(r =>
               r.id === row.id
@@ -300,7 +314,7 @@ export default function NovoProduto() {
   return (
     <>
       <form onSubmit={handleSubmit} className="max-w-7xl mx-auto px-4 py-6">
-        {/* Upload Buttons */}
+        {/* Botões de upload */}
         <div className="flex flex-col sm:flex-row gap-3 mt-4">
           <button
             type="button"
@@ -343,7 +357,7 @@ export default function NovoProduto() {
 
         {rows.length > 0 && (
           <>
-            {/* Toggle details */}
+            {/* Toggle detalhes */}
             <button
               type="button"
               onClick={() => setShowDetails(!showDetails)}
@@ -352,12 +366,12 @@ export default function NovoProduto() {
               {showDetails ? 'Ocultar detalhes' : 'Ver detalhes'}
             </button>
 
-            {/* Tabela desktop */}
+            {/* Tabela (desktop) */}
             <div className="hidden md:block overflow-x-auto mt-6 rounded-lg border border-gray-200 overflow-hidden">
               <table className="min-w-full border-collapse">
                 <thead className="bg-white">
                   <tr className="text-purple-700 font-semibold">
-                  <th className="px-4 py-3 text-left border border-gray-200">Foto</th>
+                    <th className="px-4 py-3 text-left border border-gray-200">Foto</th>
                     <th className="px-4 py-3 text-left border border-gray-200">Tipo</th>
                     <th className="px-4 py-3 text-left border border-gray-200">EAN</th>
                     {showDetails && (
@@ -366,23 +380,17 @@ export default function NovoProduto() {
                       </th>
                     )}
                     {showDetails && (
-                      <th className="px-4 py-3 text-left border border-gray-200">
-                        Marca
-                      </th>
+                      <th className="px-4 py-3 text-left border border-gray-200">Marca</th>
                     )}
                     {showDetails && (
-                      <th className="px-4 py-3 text-left border border-gray-200">
-                        Cor
-                      </th>
+                      <th className="px-4 py-3 text-left border border-gray-200">Cor</th>
                     )}
                     {showDetails && (
                       <th className="px-4 py-3 text-left border border-gray-200">
                         Tamanho
                       </th>
                     )}
-                    <th className="px-4 py-3 text-center border border-gray-200">
-                      Status
-                    </th>
+                    <th className="px-4 py-3 text-center border border-gray-200">Status</th>
                     <th className="px-4 py-3 text-center border border-gray-200">
                       Foto Ajustada
                     </th>
@@ -405,7 +413,9 @@ export default function NovoProduto() {
                       <td className="px-4 py-2 border border-gray-200">
                         <select
                           value={row.productType}
-                          onChange={e => handleFieldChange(row.id, 'productType', e.target.value)}
+                          onChange={e =>
+                            handleFieldChange(row.id, 'productType', e.target.value)
+                          }
                           className="w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400"
                         >
                           <option>Feminino</option>
@@ -428,7 +438,9 @@ export default function NovoProduto() {
                         <td className="px-4 py-2 border border-gray-200">
                           <input
                             value={row.descricao}
-                            onChange={e => handleFieldChange(row.id, 'descricao', e.target.value)}
+                            onChange={e =>
+                              handleFieldChange(row.id, 'descricao', e.target.value)
+                            }
                             className="w-full border rounded-md px-2 py-1"
                           />
                         </td>
@@ -437,7 +449,9 @@ export default function NovoProduto() {
                         <td className="px-4 py-2 border border-gray-200">
                           <input
                             value={row.marca}
-                            onChange={e => handleFieldChange(row.id, 'marca', e.target.value)}
+                            onChange={e =>
+                              handleFieldChange(row.id, 'marca', e.target.value)
+                            }
                             className="w-full border rounded-md px-2 py-1"
                           />
                         </td>
@@ -446,7 +460,9 @@ export default function NovoProduto() {
                         <td className="px-4 py-2 border border-gray-200">
                           <input
                             value={row.cor}
-                            onChange={e => handleFieldChange(row.id, 'cor', e.target.value)}
+                            onChange={e =>
+                              handleFieldChange(row.id, 'cor', e.target.value)
+                            }
                             className="w-full border rounded-md px-2 py-1"
                           />
                         </td>
@@ -455,16 +471,16 @@ export default function NovoProduto() {
                         <td className="px-4 py-2 border border-gray-200">
                           <input
                             value={row.tamanho}
-                            onChange={e => handleFieldChange(row.id, 'tamanho', e.target.value)}
+                            onChange={e =>
+                              handleFieldChange(row.id, 'tamanho', e.target.value)
+                            }
                             className="w-full border rounded-md px-2 py-1"
                           />
                         </td>
                       )}
                       <td className="px-4 py-2 text-center border border-gray-200">
                         {row.loading
-                          ? (
-                            <span className="animate-spin inline-block w-4 h-4 border-2 border-t-purple-600 rounded-full"></span>
-                          )
+                          ? <span className="animate-spin inline-block w-4 h-4 border-2 border-t-purple-600 rounded-full"></span>
                           : row.result?.url
                             ? '✅'
                             : row.result?.error
@@ -487,7 +503,7 @@ export default function NovoProduto() {
               </table>
             </div>
 
-            {/* Cards mobile */}
+            {/* Cards (mobile) */}
             <div className="md:hidden grid grid-cols-1 gap-4 mt-6">
               {rows.map(row => (
                 <div
@@ -525,7 +541,7 @@ export default function NovoProduto() {
               ))}
             </div>
 
-            {/* Botões de ação */}
+            {/* Botão Enviar */}
             <div className="flex justify-end gap-4 mt-6">
               <button
                 type="submit"
@@ -539,6 +555,7 @@ export default function NovoProduto() {
         )}
       </form>
 
+      {/* Modal de imagem ampliada */}
       {modalImage && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
