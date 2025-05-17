@@ -303,18 +303,7 @@ export default function NovoProduto() {
 
   return (
     <>
-      {/* ======= HEADER MODERNO ======= */}
-      <header className="bg-white shadow-md border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">Nova Imagem</h1>
-          <button
-            title="Créditos disponíveis"
-            className="inline-flex items-center bg-purple-100 text-purple-800 font-semibold rounded-full px-3 py-1 hover:bg-purple-200 transition"
-          >
-            🪙 Créditos: {credits.toString().padStart(4, '0')}
-          </button>
-        </div>
-      </header>
+      
 
       <form onSubmit={handleSubmit} className="max-w-7xl mx-auto px-4 py-6">
         {/* Upload Buttons */}
@@ -370,8 +359,8 @@ export default function NovoProduto() {
             </button>
 
             {/* Tabela desktop */}
-            <div className="hidden md:block overflow-x-auto mt-6 rounded-lg border border-gray-200">
-              <table className="min-w-full">
+            <div className="hidden md:block overflow-x-auto mt-6 rounded-lg">
+               <table className="min-w-full border-collapse border border-gray-200">
                 <thead className="bg-white">
                   <tr className="text-purple-700 font-semibold border-b-2 border-purple-200">
                     <th className="px-4 py-3 text-left">Foto</th>
