@@ -16,6 +16,10 @@ async function getUid(request: Request): Promise<string | undefined> {
   }
 }
 
+<<<<<<< HEAD
+=======
+// GET /api/produtos — lista todos os produtos com o campo “aprovacao” em vez de “label”
+>>>>>>> ajustes-31493ef
 export async function GET(request: Request) {
   try {
     const uid = await getUid(request)
@@ -33,11 +37,20 @@ export async function GET(request: Request) {
         marca: true,
         cor: true,
         tamanho: true,
+<<<<<<< HEAD
         imageUrl: true,
         originalUrl: true,
         createdAt: true
       },
       orderBy: { createdAt: 'desc' }
+=======
+        originalUrl: true,
+        imageUrl: true,
+        aprovacao: true,
+        observacao: true,
+        createdAt: true,   
+      }
+>>>>>>> ajustes-31493ef
     })
 
     return NextResponse.json(produtos, { status: 200 })
@@ -50,6 +63,10 @@ export async function GET(request: Request) {
   }
 }
 
+<<<<<<< HEAD
+=======
+// POST /api/produtos — cria um novo produto (aprovacao e observacao ficam nulos por padrão)
+>>>>>>> ajustes-31493ef
 export async function POST(request: Request) {
   try {
     const uid = await getUid(request)
@@ -64,7 +81,9 @@ export async function POST(request: Request) {
       descricao   = '',
       marca       = '',
       cor         = '',
-      tamanho     = ''
+      tamanho     = '',
+      aprovacao   = null,
+      observacao  = null,
     } = await request.json()
 
     if (!ean?.trim() || !imageUrl) {
@@ -84,8 +103,14 @@ export async function POST(request: Request) {
         tamanho,
         imageUrl,
         originalUrl,
+<<<<<<< HEAD
         userId: uid,
       },
+=======
+        aprovacao,
+        observacao,
+      }
+>>>>>>> ajustes-31493ef
     })
 
     return NextResponse.json(novoProduto, { status: 201 })

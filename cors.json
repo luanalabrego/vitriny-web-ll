@@ -1,12 +1,8 @@
 [
   {
-    "origin": [
-      "https://www.vitrinyweb.com.br",
-      "https://vitrinyweb.com.br",
-      "https://vitriny-web-ll-git-main-labrego-solucoes.vercel.app"
-    ],
+    "origin": ["*"],
     "method": ["GET","HEAD","OPTIONS","PUT","POST"],
-    "responseHeader": ["Content-Type"],
+    "responseHeader": ["Content-Type","Authorization"],
     "maxAgeSeconds": 3600
   }
 ]

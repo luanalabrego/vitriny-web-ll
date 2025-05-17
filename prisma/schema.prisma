@@ -10,7 +10,11 @@ generator client {
 
 model Product {
   // Chave primária numérica
+<<<<<<< HEAD
   id           Int      @id @default(autoincrement())
+=======
+  id           Int       @id @default(autoincrement())
+>>>>>>> ajustes-31493ef
 
   ean          String
   descricao    String
@@ -21,14 +25,26 @@ model Product {
   originalUrl  String?
   imageUrl     String
 
-  createdAt    DateTime @default(now())
+  // NOVOS CAMPOS PARA CATEGORIZAÇÃO
+  // Agora usamos `aprovacao` na API/Front, mas mapeamos para a coluna existente `label`
+  aprovacao    String?   @map("label")  
+  observacao   String?   // campo de texto livre
+
+  createdAt    DateTime  @default(now())
 
   // Campo que associa o produto ao usuário logado
   userId       String
 
   // Índices para acelerar buscas
   @@index([ean])
+<<<<<<< HEAD
   @@index([userId])
   // Constraint única composta para upsert por ean + userId
   @@unique([ean, userId])
 }
+=======
+
+  // Se você quiser que o nome da tabela também seja em snake_case:
+  // @@map("Product")
+}
+>>>>>>> ajustes-31493ef
