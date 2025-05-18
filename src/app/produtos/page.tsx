@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -9,6 +10,7 @@ import { FileSpreadsheet, Archive } from 'lucide-react';
 const STORAGE_BASE = 'https://storage.googleapis.com/vitriny-web.firebasestorage.app/';
 
 interface Product {
+  id: number;
   ean: string;
   marca?: string;
   imageUrl?: string;
@@ -19,6 +21,7 @@ interface Product {
 }
 
 export default function ProdutosPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [filters, setFilters] = useState({
     ean: '',
@@ -45,12 +48,10 @@ export default function ProdutosPage() {
   };
 
   const safe = (s?: string) => (s ?? '').toLowerCase();
-
   const localMidnight = (iso: string) => {
     const d = new Date(iso);
     return new Date(d.getFullYear(), d.getMonth(), d.getDate());
   };
-
   const parseLocalDate = (dateStr: string, endOfDay = false) => {
     const [y, m, d] = dateStr.split('-').map(Number);
     return endOfDay
@@ -104,11 +105,20 @@ export default function ProdutosPage() {
         zip.file(`${prod.ean}.${ext}`, blob);
       })
     );
-    const datePart = new Date()
-      .toLocaleDateString('pt-BR')
-      .replace(/\//g, '-');
+    const datePart = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
     const namePart = filters.aprovacao || datePart;
     saveAs(await zip.generateAsync({ type: 'blob' }), `${namePart}_${datePart}.zip`);
+  };
+
+  // deleta o produto e atualiza a lista
+  const handleDelete = async (id: number) => {
+    if (!confirm('Deseja realmente excluir este produto?')) return;
+    const res = await fetch(`/api/produtos/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      router.refresh();
+    } else {
+      alert('Erro ao excluir produto.');
+    }
   };
 
   return (
@@ -156,7 +166,7 @@ export default function ProdutosPage() {
       {/* Mobile cards */}
       <div className="md:hidden space-y-4">
         {paginated.map(prod => (
-          <div key={prod.ean} className="bg-white rounded-lg border border-gray-200 shadow p-4">
+          <div key={prod.id} className="bg-white rounded-lg border border-gray-200 shadow p-4">
             <p className="font-medium text-gray-800">EAN: {prod.ean}</p>
             <p className="text-gray-600">Marca: {prod.marca || '-'}</p>
             {prod.originalUrl && (
@@ -177,6 +187,20 @@ export default function ProdutosPage() {
             )}
             <p className="text-gray-800">Aprovação: {prod.aprovacao || '-'}</p>
             <p className="text-gray-800">Observação: {prod.observacao || '-'}</p>
+            <div className="mt-2 flex gap-2">
+              <button
+                onClick={() => router.push(`/produtos/${prod.id}/edit`)}
+                className="px-3 py-1 bg-yellow-500 text-white rounded hover:opacity-90"
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => handleDelete(prod.id)}
+                className="px-3 py-1 bg-red-600 text-white rounded hover:opacity-90"
+              >
+                Excluir
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -192,11 +216,12 @@ export default function ProdutosPage() {
               <th className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">Ajustada</th>
               <th className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">Aprovação</th>
               <th className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">Observação</th>
+              <th className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">Ações</th>
             </tr>
           </thead>
           <tbody>
             {paginated.map(prod => (
-              <tr key={prod.ean} className="hover:bg-gray-50 transition-colors">
+              <tr key={prod.id} className="hover:bg-gray-50 transition-colors">
                 <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">{prod.ean}</td>
                 <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">{prod.marca || '-'}</td>
                 <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2 text-center">
@@ -221,6 +246,20 @@ export default function ProdutosPage() {
                 </td>
                 <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">{prod.aprovacao || '-'}</td>
                 <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">{prod.observacao || '-'}</td>
+                <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2 flex gap-2">
+                  <button
+                    onClick={() => router.push(`/produtos/${prod.id}/edit`)}
+                    className="px-2 py-1 bg-yellow-500 text-white rounded hover:opacity-90"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => handleDelete(prod.id)}
+                    className="px-2 py-1 bg-red-600 text-white rounded hover:opacity-90"
+                  >
+                    Excluir
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

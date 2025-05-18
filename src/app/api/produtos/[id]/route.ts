@@ -17,7 +17,22 @@ export async function PATCH(
 
     return NextResponse.json(updated, { status: 200 })
   } catch (err: any) {
-    console.error('[API /api/produtos/[id]] PATCH error:', err)
+    console.error('[API PATCH /api/produtos/[id]] error:', err)
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await prisma.product.delete({
+      where: { id: Number(params.id) }
+    })
+    return new NextResponse(null, { status: 204 })
+  } catch (err: any) {
+    console.error('[API DELETE /api/produtos/[id]] error:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }

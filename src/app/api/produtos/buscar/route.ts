@@ -1,3 +1,5 @@
+// src/app/api/produtos/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 
 // Produtos de demonstração para desenvolvimento
@@ -12,27 +14,27 @@ const produtosDemo = [
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const campo = searchParams.get('campo') || 'ean';
-    const termo = searchParams.get('termo') || '';
-    const empresaId = searchParams.get('empresa_id') || '1'; // Valor padrão para demonstração
-    
+    const campo     = searchParams.get('campo')      || 'ean';
+    const termo     = searchParams.get('termo')      || '';
+    const empresaId = searchParams.get('empresa_id') || '1';
+
     // Filtrar produtos com base nos parâmetros de busca
     let resultados = produtosDemo;
-    
     if (termo) {
-      resultados = produtosDemo.filter(produto => {
+      resultados = resultados.filter(produto => {
         const valor = produto[campo as keyof typeof produto];
-        return typeof valor === 'string' && valor.toLowerCase().includes(termo.toLowerCase());
+        return typeof valor === 'string'
+          && valor.toLowerCase().includes(termo.toLowerCase());
       });
     }
-    
+
     // Filtrar por empresa
-    resultados = resultados.filter(produto => produto.empresa_id.toString() === empresaId);
-    
-    return NextResponse.json({
-      success: true,
-      produtos: resultados
-    });
+    resultados = resultados.filter(
+      produto => produto.empresa_id.toString() === empresaId
+    );
+
+    // ← devolve diretamente o array de produtos
+    return NextResponse.json(resultados);
   } catch (error) {
     console.error('Erro ao buscar produtos:', error);
     return NextResponse.json(
