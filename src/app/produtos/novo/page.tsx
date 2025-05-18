@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, FormEvent } from 'react';
+import { Camera, ImagePlus, Trash2, Send, Tag } from 'lucide-react';
 
 interface Row {
   id: number;
@@ -29,8 +30,8 @@ export default function NovoProduto() {
 
   useEffect(() => {
     fetch('/api/user/credits')
-      .then(res => res.json())
-      .then(json => setCredits(json.credits ?? 0))
+      .then(r => r.json())
+      .then(j => setCredits(j.credits ?? 0))
       .catch(() => console.error('Não foi possível ler créditos'));
   }, []);
 
@@ -193,22 +194,19 @@ export default function NovoProduto() {
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    const newRows = Array.from(files).map((file, idx) => {
-      const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
-      return {
-        id: Date.now() + idx,
-        file,
-        preview: URL.createObjectURL(file),
-        ean: nameWithoutExt,
-        descricao: '',
-        marca: '',
-        cor: '',
-        tamanho: '',
-        productType: 'Feminino',
-        aprovacao: '',
-        observacao: '',
-      };
-    });
+    const newRows = Array.from(files).map((file, idx) => ({
+      id: Date.now() + idx,
+      file,
+      preview: URL.createObjectURL(file),
+      ean: file.name.replace(/\.[^/.]+$/, ''),
+      descricao: '',
+      marca: '',
+      cor: '',
+      tamanho: '',
+      productType: 'Feminino',
+      aprovacao: '',
+      observacao: '',
+    }));
     setRows(prev => [...prev, ...newRows]);
     e.target.value = '';
   };
@@ -220,7 +218,7 @@ export default function NovoProduto() {
     field: keyof Omit<Row, 'id' | 'file' | 'preview' | 'result' | 'loading' | 'persistedId'>,
     value: string
   ) => {
-    setRows(rows.map(r => (r.id === id ? { ...r, [field]: value } : r)));
+    setRows(rows.map(r => r.id === id ? { ...r, [field]: value } : r));
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -233,31 +231,24 @@ export default function NovoProduto() {
       alert('Preencha o EAN em cada linha antes de enviar.');
       return;
     }
-
     setRows(rows.map(r => ({ ...r, loading: true, result: undefined })));
-
-    const tasks = rows.map(row => (async () => {
+    await Promise.all(rows.map(async row => {
       try {
         const { uploadUrl, fileName } = await fetch(
           `/api/produtos/upload-url?ean=${encodeURIComponent(row.ean.trim())}`
-        ).then(res => res.json());
+        ).then(r => r.json());
         if (!uploadUrl || !fileName) throw new Error('Falha ao obter URL de upload');
-
-        const putRes = await fetch(uploadUrl, {
+        await fetch(uploadUrl, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/octet-stream' },
           body: row.file
         });
-        if (!putRes.ok) throw new Error(`Upload original falhou: ${putRes.status}`);
-
-        const publishJson = await fetch('/api/produtos/publish-original', {
+        const publish = await fetch('/api/produtos/publish-original', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fileName })
-        }).then(res => res.json());
-        const originalUrl = publishJson.publicUrl;
-        if (!originalUrl) throw new Error(publishJson.error || 'Falha ao tornar original público');
-
+        }).then(r => r.json());
+        const originalUrl = publish.publicUrl;
         const prompt = promptByType[row.productType] || promptByType['Feminino'];
         const jsonImg = await fetch('/api/produtos/gerar-imagem', {
           method: 'POST',
@@ -271,10 +262,9 @@ export default function NovoProduto() {
             cor: row.cor,
             tamanho: row.tamanho
           })
-        }).then(res => res.json());
-        if (!jsonImg.url) throw new Error(jsonImg.error || 'Erro interno ao gerar imagem');
+        }).then(r => r.json());
+        if (!jsonImg.url) throw new Error(jsonImg.error || 'Erro ao gerar imagem');
         const { url, meta } = jsonImg;
-
         const created = await fetch('/api/produtos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -289,38 +279,24 @@ export default function NovoProduto() {
             aprovacao: row.aprovacao,
             observacao: row.observacao
           })
-        }).then(res => res.json());
-
+        }).then(r => r.json());
         setRows(prev =>
           prev.map(r =>
             r.id === row.id
-              ? {
-                  ...r,
-                  loading: false,
-                  result: { url, originalUrl, meta },
-                  persistedId: created.id
-                }
+              ? { ...r, loading: false, result: { url, originalUrl, meta }, persistedId: created.id }
               : r
           )
         );
-
-        const decJson = await fetch('/api/user/decrement-credits', { method: 'POST' })
-          .then(res => res.json());
-        if (decJson.credits !== undefined) {
-          setCredits(decJson.credits);
-        }
+        const dec = await fetch('/api/user/decrement-credits', { method: 'POST' }).then(r => r.json());
+        if (dec.credits !== undefined) setCredits(dec.credits);
       } catch (err: any) {
         setRows(prev =>
           prev.map(r =>
-            r.id === row.id
-              ? { ...r, loading: false, result: { error: err.message || 'Erro inesperado' } }
-              : r
+            r.id === row.id ? { ...r, loading: false, result: { error: err.message } } : r
           )
         );
       }
-    })());
-
-    await Promise.all(tasks);
+    }));
   };
 
   const handleCategorizeAll = async () => {
@@ -335,12 +311,7 @@ export default function NovoProduto() {
     alert('Todas as categorias foram salvas!');
   };
 
-  const canSubmit =
-    rows.length > 0 &&
-    rows.every(r => r.ean.trim()) &&
-    !rows.some(r => r.loading) &&
-    credits >= rows.length;
-
+  const canSubmit = rows.length > 0 && rows.every(r => r.ean.trim()) && !rows.some(r => r.loading) && credits >= rows.length;
   const canCategorize = rows.some(r => r.persistedId && r.result?.url);
 
   return (
@@ -350,40 +321,29 @@ export default function NovoProduto() {
           <button
             type="button"
             onClick={() => cameraInputRef.current?.click()}
-            className="px-4 py-2 w-full sm:w-auto bg-green-600 text-white rounded-lg shadow transition transform hover:scale-105 hover:bg-green-700 inline-flex items-center gap-2"
+            className="px-4 py-2 w-full sm:w-auto bg-green-600 text-white rounded-lg shadow inline-flex items-center gap-2 transition transform hover:scale-105 hover:bg-green-700"
           >
-            📷 Tirar Foto
+            <Camera className="h-5 w-5" />
+            Tirar Foto
           </button>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="px-4 py-2 w-full sm:w-auto bg-blue-600 text-white rounded-lg shadow transition transform hover:scale-105 hover:bg-blue-700 inline-flex items-center gap-2"
+            className="px-4 py-2 w-full sm:w-auto bg-blue-600 text-white rounded-lg shadow inline-flex items-center gap-2 transition transform hover:scale-105 hover:bg-blue-700"
           >
-            📁 Selecionar Imagens
+            <ImagePlus className="h-5 w-5" />
+            Selecionar Imagens
           </button>
           <button
             type="button"
             onClick={clearSelection}
-            className="px-4 py-2 w-full sm:w-auto bg-red-600 text-white rounded-lg shadow transition transform hover:scale-105 hover:bg-red-700 inline-flex items-center gap-2"
+            className="px-4 py-2 w-full sm:w-auto bg-red-600 text-white rounded-lg shadow inline-flex items-center gap-2 transition transform hover:scale-105 hover:bg-red-700"
           >
-            🗑️ Limpar Seleção
+            <Trash2 className="h-5 w-5" />
+            Limpar Seleção
           </button>
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            ref={cameraInputRef}
-            onChange={handleFiles}
-            className="hidden"
-          />
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={handleFiles}
-            className="hidden"
-          />
+          <input type="file" accept="image/*" capture="environment" ref={cameraInputRef} onChange={handleFiles} className="hidden" />
+          <input type="file" multiple accept="image/*" ref={fileInputRef} onChange={handleFiles} className="hidden" />
         </div>
 
         {rows.length > 0 && (
@@ -396,33 +356,110 @@ export default function NovoProduto() {
               {showDetails ? 'Ver menos' : 'Ver mais'}
             </button>
 
-            {/* Mobile card view */}
+            {/* Mobile cards */}
             <div className="md:hidden space-y-4">
               {rows.map(row => (
-                <div key={row.id} className="bg-white rounded-lg shadow border border-gray-200 p-4">
+                <div key={row.id} className="bg-white rounded-lg border border-gray-200 shadow p-4 space-y-2">
                   {row.preview && (
                     <img
                       src={row.preview}
                       alt="preview"
-                      className="w-full h-48 object-cover rounded-xl shadow-md cursor-pointer mb-2"
+                      className="w-full h-40 object-cover rounded-xl shadow-md cursor-pointer"
                       onClick={() => setModalImage(row.preview!)}
                     />
                   )}
-                  <p className="text-gray-800 font-medium">Tipo: {row.productType}</p>
-                  <p className="text-gray-800 font-medium">EAN: {row.ean}</p>
+                  <select
+                    value={row.productType}
+                    onChange={e => handleFieldChange(row.id, 'productType', e.target.value)}
+                    className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full bg-white text-black"
+                  >
+                    <option>Feminino</option>
+                    <option>Masculino</option>
+                    <option>Infantil feminino</option>
+                    <option>Infantil Masculino</option>
+                    <option>Calçado</option>
+                    <option>Bolsa</option>
+                  </select>
+                  <input
+                    value={row.ean}
+                    onChange={e => handleFieldChange(row.id, 'ean', e.target.value)}
+                    className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full"
+                    placeholder="EAN"
+                  />
                   {showDetails && (
                     <>
-                      <p className="text-gray-600">Descrição: {row.descricao}</p>
-                      <p className="text-gray-600">Marca: {row.marca}</p>
-                      <p className="text-gray-600">Cor: {row.cor}</p>
-                      <p className="text-gray-600">Tamanho: {row.tamanho}</p>
+                      <input
+                        value={row.descricao}
+                        onChange={e => handleFieldChange(row.id, 'descricao', e.target.value)}
+                        className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full"
+                        placeholder="Descrição"
+                      />
+                      <input
+                        value={row.marca}
+                        onChange={e => handleFieldChange(row.id, 'marca', e.target.value)}
+                        className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full"
+                        placeholder="Marca"
+                      />
+                      <input
+                        value={row.cor}
+                        onChange={e => handleFieldChange(row.id, 'cor', e.target.value)}
+                        className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full"
+                        placeholder="Cor"
+                      />
+                      <input
+                        value={row.tamanho}
+                        onChange={e => handleFieldChange(row.id, 'tamanho', e.target.value)}
+                        className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full"
+                        placeholder="Tamanho"
+                      />
+                    </>
+                  )}
+                  <div className="flex items-center gap-2">
+                    {row.loading ? (
+                      <div className="w-4 h-4 border-2 border-gray-300 border-t-purple-500 rounded-full animate-spin" />
+                    ) : row.result?.error ? (
+                      <span className="text-red-600">Erro</span>
+                    ) : row.result?.url ? (
+                      <span className="text-green-600">OK</span>
+                    ) : (
+                      <span className="text-gray-500">-</span>
+                    )}
+                    {row.result?.url && (
+                      <img
+                        src={row.result.url}
+                        alt="ajustada"
+                        className="h-20 object-cover rounded-xl shadow-md cursor-pointer"
+                        onClick={() => setModalImage(row.result!.url!)}
+                      />
+                    )}
+                  </div>
+                  {row.result?.url && (
+                    <>
+                      <select
+                        value={row.aprovacao}
+                        onChange={e => handleFieldChange(row.id, 'aprovacao', e.target.value)}
+                        className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full bg-white text-black"
+                      >
+                        <option value="">—</option>
+                        <option value="Aprovado">Aprovado</option>
+                        <option value="Reprovado">Reprovado</option>
+                        <option value="Refazer foto">Refazer foto</option>
+                        <option value="Retoque Designer">Retoque Designer</option>
+                      </select>
+                      <input
+                        type="text"
+                        value={row.observacao}
+                        onChange={e => handleFieldChange(row.id, 'observacao', e.target.value)}
+                        className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full"
+                        placeholder="Observação"
+                      />
                     </>
                   )}
                 </div>
               ))}
             </div>
 
-            {/* Desktop table view */}
+            {/* Desktop table */}
             <div className="hidden md:block rounded-lg border border-gray-200 overflow-hidden overflow-x-auto">
               <table className="min-w-full table-auto border-collapse text-black text-xs sm:text-base">
                 <thead>
@@ -430,10 +467,10 @@ export default function NovoProduto() {
                     <th className="border border-gray-200 px-2 py-1">Foto</th>
                     <th className="border border-gray-200 px-2 py-1">Tipo</th>
                     <th className="border border-gray-200 px-2 py-1">EAN</th>
-                    {showDetails && <th className="hidden sm:table-cell border border-gray-200 px-2 py-1">Descrição</th>}
-                    {showDetails && <th className="hidden sm:table-cell border border-gray-200 px-2 py-1">Marca</th>}
-                    {showDetails && <th className="hidden sm:table-cell border border-gray-200 px-2 py-1">Cor</th>}
-                    {showDetails && <th className="hidden sm:table-cell border border-gray-200 px-2 py-1">Tamanho</th>}
+                    {showDetails && <th className="border border-gray-200 px-2 py-1">Descrição</th>}
+                    {showDetails && <th className="border border-gray-200 px-2 py-1">Marca</th>}
+                    {showDetails && <th className="border border-gray-200 px-2 py-1">Cor</th>}
+                    {showDetails && <th className="border border-gray-200 px-2 py-1">Tamanho</th>}
                     <th className="border border-gray-200 px-2 py-1">Status</th>
                     <th className="border border-gray-200 px-2 py-1">Foto ajustada</th>
                     <th className="border border-gray-200 px-2 py-1">Aprovação</th>
@@ -476,7 +513,7 @@ export default function NovoProduto() {
                         />
                       </td>
                       {showDetails && (
-                        <td className="hidden sm:table-cell border border-gray-200 p-2">
+                        <td className="border border-gray-200 p-2">
                           <input
                             value={row.descricao}
                             onChange={e => handleFieldChange(row.id, 'descricao', e.target.value)}
@@ -485,7 +522,7 @@ export default function NovoProduto() {
                         </td>
                       )}
                       {showDetails && (
-                        <td className="hidden sm:table-cell border border-gray-200 p-2">
+                        <td className="border border-gray-200 p-2">
                           <input
                             value={row.marca}
                             onChange={e => handleFieldChange(row.id, 'marca', e.target.value)}
@@ -494,7 +531,7 @@ export default function NovoProduto() {
                         </td>
                       )}
                       {showDetails && (
-                        <td className="hidden sm:table-cell border border-gray-200 p-2">
+                        <td className="border border-gray-200 p-2">
                           <input
                             value={row.cor}
                             onChange={e => handleFieldChange(row.id, 'cor', e.target.value)}
@@ -503,7 +540,7 @@ export default function NovoProduto() {
                         </td>
                       )}
                       {showDetails && (
-                        <td className="hidden sm:table-cell border border-gray-200 p-2">
+                        <td className="border border-gray-200 p-2">
                           <input
                             value={row.tamanho}
                             onChange={e => handleFieldChange(row.id, 'tamanho', e.target.value)}
@@ -512,17 +549,13 @@ export default function NovoProduto() {
                         </td>
                       )}
                       <td className="border border-gray-200 p-2 text-center">
-                        {row.loading ? (
-                          <div className="flex justify-center">
-                            <div className="w-4 h-4 border-2 border-gray-300 border-t-2 border-t-purple-500 rounded-full animate-spin" />
-                          </div>
-                        ) : row.result?.error ? (
-                          'Erro'
-                        ) : row.result?.url ? (
-                          'OK'
-                        ) : (
-                          '-'
-                        )}
+                        {row.loading
+                          ? <div className="w-4 h-4 border-2 border-gray-300 border-t-purple-500 rounded-full animate-spin" />
+                          : row.result?.error
+                          ? 'Erro'
+                          : row.result?.url
+                          ? 'OK'
+                          : '-'}
                       </td>
                       <td className="border border-gray-200 p-2 text-center">
                         {row.result?.url && (
@@ -547,9 +580,7 @@ export default function NovoProduto() {
                             <option value="Refazer foto">Refazer foto</option>
                             <option value="Retoque Designer">Retoque Designer</option>
                           </select>
-                        ) : (
-                          '—'
-                        )}
+                        ) : '—'}
                       </td>
                       <td className="border border-gray-200 p-2">
                         {row.result?.url ? (
@@ -559,9 +590,7 @@ export default function NovoProduto() {
                             onChange={e => handleFieldChange(row.id, 'observacao', e.target.value)}
                             className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full"
                           />
-                        ) : (
-                          '—'
-                        )}
+                        ) : '—'}
                       </td>
                     </tr>
                   ))}
@@ -573,21 +602,24 @@ export default function NovoProduto() {
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="px-4 py-2 w-full sm:w-auto bg-blue-600 text-white rounded-lg shadow transition transform hover:scale-105 hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 w-full sm:w-auto bg-blue-600 text-white rounded-lg shadow inline-flex items-center gap-2 transition transform hover:scale-105 hover:bg-blue-700 disabled:opacity-50"
               >
+                <Send className="h-5 w-5" />
                 Enviar Todas
               </button>
               <button
                 type="button"
                 onClick={handleCategorizeAll}
                 disabled={!canCategorize}
-                className="px-4 py-2 w-full sm:w-auto bg-indigo-600 text-white rounded-lg shadow transition transform hover:scale-105 hover:bg-indigo-700 disabled:opacity-50"
+                className="px-4 py-2 w-full sm:w-auto bg-indigo-600 text-white rounded-lg shadow inline-flex items-center gap-2 transition transform hover:scale-105 hover:bg-indigo-700 disabled:opacity-50"
               >
+                <Tag className="h-5 w-5" />
                 Categorizar Todas
               </button>
             </div>
           </>
         )}
+
       </form>
 
       {modalImage && (
