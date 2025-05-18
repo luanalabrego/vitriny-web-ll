@@ -1,21 +1,21 @@
-'use client';
+// src/app/page.tsx
 
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Camera as CameraIcon, Box as PackageIcon, LogOut } from 'lucide-react';
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import Image from 'next/image'
+import Link from 'next/link'
+import { Camera as CameraIcon, Box as PackageIcon, LogOut } from 'lucide-react'
 
 export default function HomePage() {
   // Protege a rota no servidor
-  const cookieStore = cookies();
-  const authCookie = cookieStore.get('vitriny_auth');
+  const cookieStore = cookies()
+  const authCookie = cookieStore.get('vitriny_auth')
   if (!authCookie) {
-    redirect('/login');
+    redirect('/login')
   }
 
   // Parse do cookie para obter dados do usuário
-  const user = JSON.parse(authCookie.value) as { uid: string; email: string };
+  const user = JSON.parse(authCookie.value) as { uid: string; email: string }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
@@ -83,7 +83,7 @@ export default function HomePage() {
         {/* Boas-vindas */}
         <div className="relative z-10 max-w-4xl mx-auto text-center py-16 px-4 sm:px-6 lg:px-8">
           <p className="text-purple-600 text-2xl font-semibold">
-            Bem-vindo, {user.email}!  
+            Bem-vindo, {user.email}!
           </p>
           <p className="mt-4 text-gray-700">
             O Vitriny AI transforma imagens simples de produtos em artes fotográficas profissionais.
@@ -96,5 +96,5 @@ export default function HomePage() {
         Powered by Labrego IA Soluções Digitais
       </footer>
     </div>
-  );
+  )
 }
