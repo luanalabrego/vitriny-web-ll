@@ -9,7 +9,6 @@ import {
   Box as PackageIcon,
   LogOut as LogOutIcon,
 } from 'lucide-react'
-import LogoutButton from '@/components/LogoutButton'
 
 export default function HomePage() {
   // Protege a rota no servidor
@@ -84,15 +83,16 @@ export default function HomePage() {
             </p>
           </Link>
 
-          <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center text-purple-600 transition transform hover:scale-105 hover:shadow-2xl">
-            <LogoutButton className="flex flex-col items-center space-y-4">
-              <LogOutIcon className="h-16 w-16" />
-              <h3 className="text-xl font-semibold">Sair</h3>
-              <p className="text-center text-gray-600">
-                Encerrar sessão e voltar ao login.
-              </p>
-            </LogoutButton>
-          </div>
+          <Link
+            href="/login"
+            className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center text-purple-600 transition transform hover:scale-105 hover:shadow-2xl"
+          >
+            <LogOutIcon className="h-16 w-16" />
+            <h3 className="mt-6 text-xl font-semibold">Sair</h3>
+            <p className="mt-2 text-center text-gray-600">
+              Encerrar sessão e voltar ao login.
+            </p>
+          </Link>
         </div>
       </main>
 
