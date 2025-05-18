@@ -4,7 +4,11 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Camera as CameraIcon, Box as PackageIcon, LogOut as LogOutIcon } from 'lucide-react'
+import {
+  Camera as CameraIcon,
+  Box as PackageIcon,
+  LogOut as LogOutIcon,
+} from 'lucide-react'
 import LogoutButton from '@/components/LogoutButton'
 
 export default function HomePage() {
@@ -80,8 +84,8 @@ export default function HomePage() {
             </p>
           </Link>
 
-          <div className="bg-white rounded-2xl shadow-xl p-8 flex justify-center transition transform hover:scale-105 hover:shadow-2xl">
-            <LogoutButton className="flex flex-col items-center text-purple-600 space-y-4">
+          <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center text-purple-600 transition transform hover:scale-105 hover:shadow-2xl">
+            <LogoutButton className="flex flex-col items-center space-y-4">
               <LogOutIcon className="h-16 w-16" />
               <h3 className="text-xl font-semibold">Sair</h3>
               <p className="text-center text-gray-600">
