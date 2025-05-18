@@ -9,14 +9,13 @@ import {
   Box as PackageIcon,
   LogOut as LogOutIcon,
 } from 'lucide-react'
+import LogoutButton from '@/components/LogoutButton'
 
 export default function HomePage() {
   // Protege a rota no servidor
   const cookieStore = cookies()
   const authCookie = cookieStore.get('vitriny_auth')
-  if (!authCookie) {
-    redirect('/login')
-  }
+  if (!authCookie) redirect('/login')
 
   // Parse do cookie para obter dados do usuário
   const user = JSON.parse(authCookie.value) as { uid: string; email: string }
@@ -83,16 +82,16 @@ export default function HomePage() {
             </p>
           </Link>
 
-          <Link
-            href="/login"
-            className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center text-purple-600 transition transform hover:scale-105 hover:shadow-2xl"
-          >
-            <LogOutIcon className="h-16 w-16" />
-            <h3 className="mt-6 text-xl font-semibold">Sair</h3>
-            <p className="mt-2 text-center text-gray-600">
+          <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center text-purple-600 transition transform hover:scale-105 hover:shadow-2xl">
+            <LogOutIcon className="h-16 w-16 mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Sair</h3>
+            <p className="text-center text-gray-600 mb-6">
               Encerrar sessão e voltar ao login.
             </p>
-          </Link>
+            <LogoutButton className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+              Confirmar Saída
+            </LogoutButton>
+          </div>
         </div>
       </main>
 
