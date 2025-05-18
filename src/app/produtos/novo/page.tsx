@@ -191,23 +191,26 @@ export default function NovoProduto() {
     };
   
 
-  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    const newRows = Array.from(files).map((file, idx) => ({
-      id: Date.now() + idx,
-      file,
-      preview: URL.createObjectURL(file),
-      ean: file.name.replace(/\.[^/.]+$/, ''),
-      descricao: '',
-      marca: '',
-      cor: '',
-      tamanho: '',
-      productType: 'Feminino',
-      subcategoria: '', 
-      aprovacao: '',
-      observacao: '',
-    }));
+    const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files) return;
+      const newRows = Array.from(files).map((file, idx) => ({
+        id: Date.now() + idx,
+        file,
+        preview: URL.createObjectURL(file),
+        ean: file.name.replace(/\.[^/.]+$/, ''),
+        descricao: '',
+        marca: '',
+        cor: '',
+        tamanho: '',
+        productType: 'Feminino',
+        subcategoria: '',
+        aprovacao: '',
+        observacao: '',
+      }));
+      setRows(prev => [...prev, ...newRows]);
+    }; // ✅ necessário
+    
 
   const clearSelection = () => setRows([]);
 
@@ -712,7 +715,8 @@ Final Output Quality:
             className="max-h-[90%] max-w-[90%] rounded shadow-lg"
           />
         </div>
-      )}
-    </>
-  );
-}
+           )}
+           </>
+         );
+       }
+       
