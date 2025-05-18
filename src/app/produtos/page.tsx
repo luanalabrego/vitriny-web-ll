@@ -110,14 +110,21 @@ export default function ProdutosPage() {
     saveAs(await zip.generateAsync({ type: 'blob' }), `${namePart}_${datePart}.zip`);
   };
 
-  // deleta o produto e atualiza a lista
+  // deleta o produto e atualiza a lista com feedback
   const handleDelete = async (id: number) => {
     if (!confirm('Deseja realmente excluir este produto?')) return;
-    const res = await fetch(`/api/produtos/${id}`, { method: 'DELETE' });
-    if (res.ok) {
-      router.refresh();
-    } else {
-      alert('Erro ao excluir produto.');
+    try {
+      const res = await fetch(`/api/produtos/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        alert('✅ Produto excluído com sucesso!');
+        router.refresh();
+      } else {
+        const err = await res.json();
+        alert('❌ Erro ao excluir produto: ' + (err.error || res.statusText));
+      }
+    } catch (e) {
+      console.error(e);
+      alert('❌ Erro de rede ao excluir produto');
     }
   };
 
