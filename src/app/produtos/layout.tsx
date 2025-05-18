@@ -64,7 +64,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <img src="/logo.svg" alt="Vitriny AI" className="w-[160px] h-auto" />
+            <img src="/logo.png" alt="Vitriny AI" className="w-[160px] h-auto" />
           </div>
 
           {/* Mobile credits + hamburger */}
