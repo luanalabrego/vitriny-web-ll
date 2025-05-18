@@ -1,22 +1,20 @@
-'use client';
-
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Camera as CameraIcon, Box as PackageIcon } from 'lucide-react';
-import LogoutButton from '@/components/LogoutButton';
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import Image from 'next/image'
+import Link from 'next/link'
+import { Camera as CameraIcon, Box as PackageIcon } from 'lucide-react'
+import LogoutButton from '@/components/LogoutButton'
 
 export default function HomePage() {
   // Protege a rota no servidor
-  const cookieStore = cookies();
-  const authCookie = cookieStore.get('vitriny_auth');
+  const cookieStore = cookies()
+  const authCookie = cookieStore.get('vitriny_auth')
   if (!authCookie) {
-    redirect('/login');
+    redirect('/login')
   }
 
   // Parse do cookie para obter dados do usuário
-  const user = JSON.parse(authCookie.value) as { uid: string; email: string };
+  const user = JSON.parse(authCookie.value) as { uid: string; email: string }
 
   return (
     <div className="relative flex flex-col min-h-screen bg-gray-100">
@@ -86,5 +84,5 @@ export default function HomePage() {
         Powered by Labrego IA Soluções Digitais
       </footer>
     </div>
-  );
+  )
 }
