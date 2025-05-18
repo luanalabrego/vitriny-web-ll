@@ -411,7 +411,7 @@ Lighting & Style:
                     <option>Masculino</option>
                     <option>Infantil feminino</option>
                     <option>Infantil Masculino</option>
-                    <option>BiquiniFitness</option>
+                    <option>Biquini/Fitness</option>
                     <option>Calçado</option>
                     <option>Bolsa</option>
                   </select>
@@ -535,6 +535,7 @@ Lighting & Style:
                           <option>Masculino</option>
                           <option>Infantil feminino</option>
                           <option>Infantil Masculino</option>
+                          <option>Biquini/Fitness</option>
                           <option>Calçado</option>
                           <option>Bolsa</option>
                         </select>
