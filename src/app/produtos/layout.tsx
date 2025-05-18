@@ -56,6 +56,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     )
   }
 
+  const formattedCredits = credits !== null ? credits.toString().padStart(4, '0') : '----'
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* NAV */}
@@ -72,15 +74,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             />
           </div>
 
-          {/* Hamburger button (mobile) */}
-          <button
-            className="sm:hidden inline-flex items-center p-2 rounded-lg hover:bg-gray-100 text-purple-600"
-            onClick={() => setMenuOpen(open => !open)}
-          >
-            {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          {/* Mobile credits + hamburger */}
+          <div className="flex items-center gap-2 sm:hidden">
+            <div className="inline-flex items-center gap-1 bg-purple-600 text-white font-bold rounded-lg px-2 py-1">
+              <Coins className="h-5 w-5" />
+              <span>{formattedCredits}</span>
+            </div>
+            <button
+              className="inline-flex items-center p-2 rounded-lg hover:bg-gray-100 text-purple-600"
+              onClick={() => setMenuOpen(open => !open)}
+            >
+              {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
 
-          {/* Desktop links */}
+          {/* Desktop links, credits and logout */}
           <div className="hidden sm:flex sm:items-center sm:justify-between w-full gap-4">
             <div className="flex items-center gap-4 text-sm font-medium text-gray-600">
               <Link
@@ -112,11 +120,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="inline-flex items-center gap-2 bg-purple-600 text-white font-bold rounded-lg shadow transition transform hover:scale-105 px-3 py-1">
                 <Coins className="h-5 w-5" />
                 <span>Créditos:</span>
-                <span className="ml-1">
-                  {credits !== null
-                    ? credits.toString().padStart(4, '0')
-                    : '----'}
-                </span>
+                <span className="ml-1">{formattedCredits}</span>
               </div>
 
               <button
@@ -158,16 +162,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <CameraIcon className="h-5 w-5" />
                 Transformar Imagem
               </Link>
-            </div>
-
-            <div className="inline-flex items-center gap-2 bg-purple-600 text-white font-bold rounded-lg shadow transition transform hover:scale-105 px-3 py-1">
-              <Coins className="h-5 w-5" />
-              <span>Créditos:</span>
-              <span className="ml-1">
-                {credits !== null
-                  ? credits.toString().padStart(4, '0')
-                  : '----'}
-              </span>
             </div>
 
             <button
