@@ -49,7 +49,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* NAV */}
-      <nav className="bg-white shadow-sm">
+      <nav className="bg-white shadow-sm rounded-lg border border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             {/* Logo */}
@@ -65,10 +65,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             {/* Navegação e créditos */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 text-sm font-medium text-gray-600">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 text-sm font-medium text-gray-600">
                 <Link
                   href="/"
-                  className="flex items-center gap-1 hover:text-purple-600 transition"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
                 >
                   <Image src="/icons/dashboard.png" alt="Dashboard" width={20} height={20} />
                   Dashboard
@@ -76,7 +76,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                 <Link
                   href="/produtos"
-                  className="flex items-center gap-1 hover:text-purple-600 transition"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
                 >
                   <Image src="/icons/produtos.png" alt="Produtos" width={20} height={20} />
                   Produtos
@@ -84,7 +84,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                 <Link
                   href="/produtos/novo"
-                  className="flex items-center gap-1 hover:text-purple-600 transition"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
                 >
                   <Image src="/icons/camera.png" alt="Transformar" width={20} height={20} />
                   Transformar Imagem
@@ -93,9 +93,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               {/* Créditos */}
               <div className="flex justify-center sm:justify-start">
-                <div className="inline-flex items-center bg-purple-600 text-white font-bold rounded-md px-3 py-1">
-                  <span className="text-lg mr-1">🪙</span>
-                  <span>Créditos: </span>
+                <div className="inline-flex items-center gap-1 bg-purple-600 text-white font-bold rounded-lg shadow transition transform hover:scale-105 px-3 py-1">
+                  <span className="text-lg">🪙</span>
+                  <span>Créditos:</span>
                   <span className="ml-1">
                     {credits !== null
                       ? credits.toString().padStart(4, '0')
@@ -109,7 +109,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="flex justify-center sm:justify-end">
               <button
                 onClick={handleLogout}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg shadow transition transform hover:scale-105 hover:bg-gray-100"
               >
                 🚪 Sair
               </button>
