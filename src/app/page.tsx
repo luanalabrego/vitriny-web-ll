@@ -24,8 +24,8 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Header */}
       <header className="bg-white shadow">
-        <div className="container mx-auto flex justify-center items-center py-6 px-4 sm:px-6 lg:px-8">
-          {/* Logo responsivo */}
+      <div className="relative w-48 h-12 sm:w-64 sm:h-16 md:w-80 md:h-20 lg:w-96 lg:h-24">
+                  {/* Logo responsivo */}
           <div className="relative w-40 h-12 sm:w-60 sm:h-16 lg:w-72 lg:h-20">
             <Image
               src="/Vitriny.png"
