@@ -1,8 +1,9 @@
+// src/app/page.tsx
+
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
 import {
   Camera as CameraIcon,
   Box as PackageIcon,
@@ -10,22 +11,15 @@ import {
 } from 'lucide-react'
 
 export default function HomePage() {
+  // Protege a rota no servidor
   const cookieStore = cookies()
   const authCookie = cookieStore.get('vitriny_auth')
-
   if (!authCookie) {
     redirect('/login')
   }
 
+  // Parse do cookie para obter dados do usuário
   const user = JSON.parse(authCookie.value) as { uid: string; email: string }
-
-  // Handle Logout
-  const handleLogout = () => {
-    // Remove the auth cookie
-    document.cookie = 'vitriny_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-    // Redirect to login page
-    window.location.href = '/login'
-  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
@@ -89,9 +83,8 @@ export default function HomePage() {
             </p>
           </Link>
 
-          {/* Logout Button */}
-          <button
-            onClick={handleLogout}
+          <Link
+            href="/login"
             className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center text-purple-600 transition transform hover:scale-105 hover:shadow-2xl"
           >
             <LogOutIcon className="h-16 w-16" />
@@ -99,7 +92,7 @@ export default function HomePage() {
             <p className="mt-2 text-center text-gray-600">
               Encerrar sessão e voltar ao login.
             </p>
-          </button>
+          </Link>
         </div>
       </main>
 
