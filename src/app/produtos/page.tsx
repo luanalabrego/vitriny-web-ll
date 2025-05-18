@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
@@ -33,6 +33,8 @@ export default function ProdutosPage() {
   });
   const [modalSrc, setModalSrc] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editValues, setEditValues] = useState({ aprovacao: '', observacao: '' });
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -42,9 +44,59 @@ export default function ProdutosPage() {
       .catch(console.error);
   }, []);
 
+  const startEdit = (prod: Product) => {
+    setEditingId(prod.id);
+    setEditValues({
+      aprovacao: prod.aprovacao ?? '',
+      observacao: prod.observacao ?? '',
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditValues({ aprovacao: '', observacao: '' });
+  };
+
+  const saveEdit = async (id: number) => {
+    try {
+      const res = await fetch(`/api/produtos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editValues),
+      });
+      if (!res.ok) throw new Error('Falha ao salvar');
+      const updated: Product = await res.json();
+      setProducts(prev =>
+        prev.map(p => (p.id === id ? { ...p, ...updated } : p))
+      );
+      setEditingId(null);
+      alert('✅ Alterações salvas!');
+    } catch (e) {
+      console.error(e);
+      alert('❌ Erro ao salvar alterações.');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Deseja realmente excluir este produto?')) return;
+    try {
+      const res = await fetch(`/api/produtos/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Falha ao excluir');
+      setProducts(prev => prev.filter(p => p.id !== id));
+      alert('✅ Produto excluído com sucesso!');
+    } catch (e) {
+      console.error(e);
+      alert('❌ Erro ao excluir produto.');
+    }
+  };
+
   const handleFilterChange = (field: keyof typeof filters, value: string) => {
     setFilters(prev => ({ ...prev, [field]: value }));
     setCurrentPage(1);
+  };
+
+  const onChangeEdit = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setEditValues(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const safe = (s?: string) => (s ?? '').toLowerCase();
@@ -110,24 +162,6 @@ export default function ProdutosPage() {
     saveAs(await zip.generateAsync({ type: 'blob' }), `${namePart}_${datePart}.zip`);
   };
 
-  // deleta o produto e atualiza a lista com feedback
-  const handleDelete = async (id: number) => {
-    if (!confirm('Deseja realmente excluir este produto?')) return;
-    try {
-      const res = await fetch(`/api/produtos/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        alert('✅ Produto excluído com sucesso!');
-        router.refresh();
-      } else {
-        const err = await res.json();
-        alert('❌ Erro ao excluir produto: ' + (err.error || res.statusText));
-      }
-    } catch (e) {
-      console.error(e);
-      alert('❌ Erro de rede ao excluir produto');
-    }
-  };
-
   return (
     <div className="p-6 text-black">
       {/* Header */}
@@ -153,21 +187,26 @@ export default function ProdutosPage() {
 
       {/* Filters */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
-        {(['ean','marca','aprovacao','observacao','dateFrom','dateTo'] as const).map(field => (
-          <input
-            key={field}
-            type={field.startsWith('date') ? 'date' : 'text'}
-            placeholder={
-              field === 'aprovacao' ? 'Filtrar Aprovação'
-                : field === 'dateFrom' ? 'Data de...'
-                : field === 'dateTo'   ? 'Data até...'
-                : `Filtrar ${field.charAt(0).toUpperCase() + field.slice(1)}`
-            }
-            value={filters[field]}
-            onChange={e => handleFilterChange(field, e.target.value)}
-            className="border border-gray-200 px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 text-black"
-          />
-        ))}
+        {(['ean', 'marca', 'aprovacao', 'observacao', 'dateFrom', 'dateTo'] as const).map(
+          field => (
+            <input
+              key={field}
+              type={field.startsWith('date') ? 'date' : 'text'}
+              placeholder={
+                field === 'aprovacao'
+                  ? 'Filtrar Aprovação'
+                  : field === 'dateFrom'
+                  ? 'Data de...'
+                  : field === 'dateTo'
+                  ? 'Data até...'
+                  : `Filtrar ${field.charAt(0).toUpperCase() + field.slice(1)}`
+              }
+              value={filters[field]}
+              onChange={e => handleFilterChange(field, e.target.value)}
+              className="border border-gray-200 px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 text-black"
+            />
+          )
+        )}
       </div>
 
       {/* Mobile cards */}
@@ -192,22 +231,59 @@ export default function ProdutosPage() {
                 onClick={() => setModalSrc(resolveUrl(prod.imageUrl))}
               />
             )}
-            <p className="text-gray-800">Aprovação: {prod.aprovacao || '-'}</p>
-            <p className="text-gray-800">Observação: {prod.observacao || '-'}</p>
-            <div className="mt-2 flex gap-2">
-              <button
-                onClick={() => router.push(`/produtos/${prod.id}/edit`)}
-                className="px-3 py-1 bg-yellow-500 text-white rounded hover:opacity-90"
-              >
-                Editar
-              </button>
-              <button
-                onClick={() => handleDelete(prod.id)}
-                className="px-3 py-1 bg-red-600 text-white rounded hover:opacity-90"
-              >
-                Excluir
-              </button>
-            </div>
+
+            {editingId === prod.id ? (
+              <>
+                <input
+                  name="aprovacao"
+                  value={editValues.aprovacao}
+                  onChange={onChangeEdit}
+                  placeholder="Aprovação"
+                  className="w-full border rounded px-2 py-1 mb-2"
+                />
+                <textarea
+                  name="observacao"
+                  value={editValues.observacao}
+                  onChange={onChangeEdit}
+                  placeholder="Observação"
+                  className="w-full border rounded px-2 py-1 mb-2"
+                  rows={3}
+                />
+                <div className="mt-2 flex space-x-2">
+                  <button
+                    onClick={() => saveEdit(prod.id)}
+                    className="px-3 py-1 bg-blue-600 text-white rounded"
+                  >
+                    Salvar
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    className="px-3 py-1 bg-gray-400 text-white rounded"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-800">Aprovação: {prod.aprovacao || '-'}</p>
+                <p className="text-gray-800">Observação: {prod.observacao || '-'}</p>
+                <div className="mt-2 flex space-x-2">
+                  <button
+                    onClick={() => startEdit(prod)}
+                    className="px-3 py-1 bg-yellow-500 text-white rounded"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => handleDelete(prod.id)}
+                    className="px-3 py-1 bg-red-600 text-white rounded"
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         ))}
       </div>
@@ -251,21 +327,63 @@ export default function ProdutosPage() {
                     />
                   ) : '—'}
                 </td>
-                <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">{prod.aprovacao || '-'}</td>
-                <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">{prod.observacao || '-'}</td>
+                <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">
+                  {editingId === prod.id ? (
+                    <input
+                      name="aprovacao"
+                      value={editValues.aprovacao}
+                      onChange={onChangeEdit}
+                      className="w-full border rounded px-1 py-1"
+                    />
+                  ) : (
+                    prod.aprovacao || '-'
+                  )}
+                </td>
+                <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">
+                  {editingId === prod.id ? (
+                    <textarea
+                      name="observacao"
+                      value={editValues.observacao}
+                      onChange={onChangeEdit}
+                      className="w-full border rounded px-1 py-1"
+                      rows={2}
+                    />
+                  ) : (
+                    prod.observacao || '-'
+                  )}
+                </td>
                 <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2 flex gap-2">
-                  <button
-                    onClick={() => router.push(`/produtos/${prod.id}/edit`)}
-                    className="px-2 py-1 bg-yellow-500 text-white rounded hover:opacity-90"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(prod.id)}
-                    className="px-2 py-1 bg-red-600 text-white rounded hover:opacity-90"
-                  >
-                    Excluir
-                  </button>
+                  {editingId === prod.id ? (
+                    <>
+                      <button
+                        onClick={() => saveEdit(prod.id)}
+                        className="px-2 py-1 bg-blue-600 text-white rounded"
+                      >
+                        Salvar
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        className="px-2 py-1 bg-gray-400 text-white rounded"
+                      >
+                        Cancelar
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => startEdit(prod)}
+                        className="px-2 py-1 bg-yellow-500 text-white rounded"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDelete(prod.id)}
+                        className="px-2 py-1 bg-red-600 text-white rounded"
+                      >
+                        Excluir
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
