@@ -14,6 +14,7 @@ interface Row {
   cor: string;
   tamanho: string;
   productType: string;
+  subcategoria?: string; 
   aprovacao: string;
   observacao: string;
   result?: { url?: string; originalUrl?: string; error?: string; meta?: any };
@@ -37,7 +38,6 @@ export default function NovoProduto() {
 
   const promptByType: Record<string, string> = {
     'Feminino': `
-  \\[media pointer="file-service://file-2JokoMPKFu71eXZwRfNitC"]
   Create an ultra–high-resolution studio photo of a female fashion model wearing the exact same outfit as shown in the reference image, with maximum visual fidelity to all visible garment elements.
   
   Composition & Pose:
@@ -204,12 +204,10 @@ export default function NovoProduto() {
       cor: '',
       tamanho: '',
       productType: 'Feminino',
+      subcategoria: '', 
       aprovacao: '',
       observacao: '',
     }));
-    setRows(prev => [...prev, ...newRows]);
-    e.target.value = '';
-  };
 
   const clearSelection = () => setRows([]);
 
@@ -249,8 +247,63 @@ export default function NovoProduto() {
           body: JSON.stringify({ fileName })
         }).then(r => r.json());
         const originalUrl = publish.publicUrl;
-        const prompt = promptByType[row.productType] || promptByType['Feminino'];
-        const jsonImg = await fetch('/api/produtos/gerar-imagem', {
+
+        let prompt = promptByType[row.productType] || promptByType['Feminino'];
+
+if (row.productType === 'Feminino' && row.subcategoria === 'BiquiniFitness') {
+  prompt = `
+Create an ultra–high-resolution studio photo of a female fashion model wearing the exact same garment as shown in the reference image, with maximum visual fidelity to all visible garment elements.
+
+⚠️ Important Instructions:
+
+Reproduce only what is clearly visible in the reference image. Do not redesign, extend, or reinterpret any part of the original garment.
+
+If the image shows only part of a set (e.g., just the top or bottom of a bikini, lingerie, or fitness outfit), complete the look with a complementary piece that clearly belongs to the same set, using:
+
+the same color,
+
+same pattern or print,
+
+same fabric type and texture,
+
+and a consistent and cohesive design,
+so that the final look appears like an authentic matching set.
+
+The complement must always look intentional and styled to match — never generic or visually disconnected.
+
+Never reinterpret the garment as a different clothing category (e.g., do not turn a fitness top into lingerie, or a bikini top into a casual tank).
+
+Category-Specific Guidelines:
+
+For bikinis: complete the swimwear set with bottoms that match the same swim fabric, design style (e.g., triangle top with side-tie bottoms), and proportions.
+
+For lingerie: complete with delicate matching pieces in the same tone and materials (lace, microfiber, mesh), maintaining a tasteful, sensual look.
+
+For fitnesswear: complete the look with a training-appropriate bottom, such as high-waisted leggings, biker shorts, or athletic gym shorts — always matching the same color, fabric, and design style as the original piece.
+Never generate panties, bikini bottoms, or lingerie-style garments as part of a fitness outfit.
+
+Composition & Pose:
+– Full-body shot, model centered and turned slightly off-axis (10–15°).
+– One hand resting on the hip, the other arm relaxed.
+– Subtle weight shift for a natural silhouette.
+– Calm, confident expression with soft eye contact.
+
+Background & Lighting:
+– Plain white or light gray studio background, clean and distraction-free.
+– Soft, diffused lighting from multiple angles to highlight fabric and body shape.
+
+Garment Fidelity (critical):
+– Faithfully reproduce the structure, stitching, fit, texture, color, and print of the visible garment.
+– Maintain accurate proportions and style as shown in the original image.
+– Do not stylize, simplify, or invent any new design elements.
+
+Final Output Quality:
+– Professional fashion editorial aesthetic.
+– Sharp focus on the garment, natural skin tones, clean background.
+– No distortions, over-processing, or artifacts.
+`.trim();
+}
+       const jsonImg = await fetch('/api/produtos/gerar-imagem', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -369,23 +422,36 @@ export default function NovoProduto() {
                     />
                   )}
                   <select
-                    value={row.productType}
-                    onChange={e => handleFieldChange(row.id, 'productType', e.target.value)}
-                    className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full bg-white text-black"
-                  >
-                    <option>Feminino</option>
-                    <option>Masculino</option>
-                    <option>Infantil feminino</option>
-                    <option>Infantil Masculino</option>
-                    <option>Calçado</option>
-                    <option>Bolsa</option>
-                  </select>
-                  <input
-                    value={row.ean}
-                    onChange={e => handleFieldChange(row.id, 'ean', e.target.value)}
-                    className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full"
-                    placeholder="EAN"
-                  />
+  value={row.productType}
+  onChange={e => handleFieldChange(row.id, 'productType', e.target.value)}
+  className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full bg-white text-black"
+>
+  <option>Feminino</option>
+  <option>Masculino</option>
+  <option>Infantil feminino</option>
+  <option>Infantil Masculino</option>
+  <option>Calçado</option>
+  <option>Bolsa</option>
+</select>
+
+{row.productType === 'Feminino' && (
+  <select
+    value={row.subcategoria || ''}
+    onChange={e => handleFieldChange(row.id, 'subcategoria', e.target.value)}
+    className="rounded-md border px-2 py-1 mt-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full bg-white text-black"
+  >
+    <option value="">Outra</option>
+    <option value="BiquiniFitness">Biquíni ou Fitness</option>
+  </select>
+)}
+
+<input
+  value={row.ean}
+  onChange={e => handleFieldChange(row.id, 'ean', e.target.value)}
+  className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full"
+  placeholder="EAN"
+/>
+
                   {showDetails && (
                     <>
                       <input
@@ -491,27 +557,40 @@ export default function NovoProduto() {
                         )}
                       </td>
                       <td className="border border-gray-200 p-2">
-                        <select
-                          value={row.productType}
-                          onChange={e => handleFieldChange(row.id, 'productType', e.target.value)}
-                          className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full bg-white text-black"
-                        >
-                          <option>Feminino</option>
-                          <option>Masculino</option>
-                          <option>Infantil feminino</option>
-                          <option>Infantil Masculino</option>
-                          <option>Calçado</option>
-                          <option>Bolsa</option>
-                        </select>
-                      </td>
-                      <td className="border border-gray-200 p-2">
-                        <input
-                          value={row.ean}
-                          onChange={e => handleFieldChange(row.id, 'ean', e.target.value)}
-                          className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full"
-                          required
-                        />
-                      </td>
+  <select
+    value={row.productType}
+    onChange={e => handleFieldChange(row.id, 'productType', e.target.value)}
+    className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full bg-white text-black"
+  >
+    <option>Feminino</option>
+    <option>Masculino</option>
+    <option>Infantil feminino</option>
+    <option>Infantil Masculino</option>
+    <option>Calçado</option>
+    <option>Bolsa</option>
+  </select>
+
+  {row.productType === 'Feminino' && (
+    <select
+      value={row.subcategoria || ''}
+      onChange={e => handleFieldChange(row.id, 'subcategoria', e.target.value)}
+      className="rounded-md border px-2 py-1 mt-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full bg-white text-black"
+    >
+      <option value="">Outra</option>
+      <option value="BiquiniFitness">Biquíni ou Fitness</option>
+    </select>
+  )}
+</td>
+
+<td className="border border-gray-200 p-2">
+  <input
+    value={row.ean}
+    onChange={e => handleFieldChange(row.id, 'ean', e.target.value)}
+    className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full"
+    required
+  />
+</td>
+
                       {showDetails && (
                         <td className="border border-gray-200 p-2">
                           <input
