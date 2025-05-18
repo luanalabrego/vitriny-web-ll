@@ -13,7 +13,6 @@ import {
   Camera as CameraIcon,
 } from 'lucide-react'
 import type { Usuario } from '@/lib/auth'
-import Logo from '@/components/icons/Logo'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null)
@@ -65,7 +64,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <Logo className="w-[160px] h-auto text-purple-600" />
+            <img src="/logo.svg" alt="Vitriny AI" className="w-[160px] h-auto" />
           </div>
 
           {/* Mobile credits + hamburger */}
