@@ -4,7 +4,15 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Coins, LogOut, Menu, X } from 'lucide-react'
+import {
+  Coins,
+  LogOut,
+  Menu,
+  X,
+  Home,
+  Box as PackageIcon,
+  Camera as CameraIcon,
+} from 'lucide-react'
 import type { Usuario } from '@/lib/auth'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -66,7 +74,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Hamburger button (mobile) */}
           <button
-            className="sm:hidden inline-flex items-center p-2 rounded-lg hover:bg-gray-100"
+            className="sm:hidden inline-flex items-center p-2 rounded-lg hover:bg-gray-100 text-purple-600"
             onClick={() => setMenuOpen(open => !open)}
           >
             {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -77,25 +85,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="flex items-center gap-4 text-sm font-medium text-gray-600">
               <Link
                 href="/"
-                className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100 text-purple-600"
               >
-                <Image src="/icons/dashboard.png" alt="Dashboard" width={20} height={20} />
+                <Home className="h-5 w-5" />
                 Dashboard
               </Link>
 
               <Link
                 href="/produtos"
-                className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100 text-purple-600"
               >
-                <Image src="/icons/produtos.png" alt="Produtos" width={20} height={20} />
+                <PackageIcon className="h-5 w-5" />
                 Produtos
               </Link>
 
               <Link
                 href="/produtos/novo"
-                className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100 text-purple-600"
               >
-                <Image src="/icons/camera.png" alt="Transformar" width={20} height={20} />
+                <CameraIcon className="h-5 w-5" />
                 Transformar Imagem
               </Link>
             </div>
@@ -115,8 +123,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 onClick={handleLogout}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg shadow transition transform hover:scale-105 hover:bg-gray-100"
               >
-                <LogOut className="h-5 w-5" />
-                Sair
+                <LogOut className="h-5 w-5 text-purple-600" />
+                <span className="text-purple-600">Sair</span>
               </button>
             </div>
           </div>
@@ -124,14 +132,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Mobile menu panel */}
         {menuOpen && (
-          <div className="sm:hidden bg-white border-t border-gray-200 px-4 py-4 space-y-4">
+          <div className="sm:hidden bg-white border-t border-gray-200 px-4 py-4 space-y-4 text-purple-600">
             <div className="flex flex-col gap-2">
               <Link
                 href="/"
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
               >
-                <Image src="/icons/dashboard.png" alt="Dashboard" width={20} height={20} />
+                <Home className="h-5 w-5" />
                 Dashboard
               </Link>
               <Link
@@ -139,7 +147,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
               >
-                <Image src="/icons/produtos.png" alt="Produtos" width={20} height={20} />
+                <PackageIcon className="h-5 w-5" />
                 Produtos
               </Link>
               <Link
@@ -147,7 +155,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
               >
-                <Image src="/icons/camera.png" alt="Transformar" width={20} height={20} />
+                <CameraIcon className="h-5 w-5" />
                 Transformar Imagem
               </Link>
             </div>
@@ -164,10 +172,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <button
               onClick={() => { setMenuOpen(false); handleLogout() }}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg shadow transition transform hover:scale-105 hover:bg-gray-100"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-white rounded-lg shadow transition transform hover:scale-105 hover:bg-gray-100"
             >
-              <LogOut className="h-5 w-5" />
-              Sair
+              <LogOut className="h-5 w-5 text-purple-600" />
+              <span className="text-purple-600">Sair</span>
             </button>
           </div>
         )}
