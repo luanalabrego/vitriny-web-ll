@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { FileSpreadsheet, Archive } from 'lucide-react';
 
 const STORAGE_BASE = 'https://storage.googleapis.com/vitriny-web.firebasestorage.app/';
 
@@ -118,15 +119,17 @@ export default function ProdutosPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full sm:w-auto">
           <button
             onClick={exportToExcel}
-            className="w-full px-4 py-2 bg-green-600 text-white rounded-lg shadow transition transform hover:scale-105 hover:bg-green-700"
+            className="w-full px-4 py-2 bg-green-600 text-white rounded-lg shadow inline-flex items-center gap-2 transition transform hover:scale-105 hover:bg-green-700"
           >
-            📥 Exportar Excel
+            <FileSpreadsheet className="h-5 w-5" />
+            Exportar Excel
           </button>
           <button
             onClick={downloadZip}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg shadow transition transform hover:scale-105 hover:bg-blue-700"
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg shadow inline-flex items-center gap-2 transition transform hover:scale-105 hover:bg-blue-700"
           >
-            📦 Download Fotos
+            <Archive className="h-5 w-5" />
+            Download Fotos
           </button>
         </div>
       </div>
