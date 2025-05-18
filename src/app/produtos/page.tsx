@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, ChangeEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
@@ -33,8 +33,6 @@ export default function ProdutosPage() {
   });
   const [modalSrc, setModalSrc] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editValues, setEditValues] = useState({ aprovacao: '', observacao: '' });
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -43,52 +41,6 @@ export default function ProdutosPage() {
       .then((data: Product[]) => setProducts(data))
       .catch(console.error);
   }, []);
-
-  const startEdit = (prod: Product) => {
-    setEditingId(prod.id);
-    setEditValues({
-      aprovacao: prod.aprovacao ?? '',
-      observacao: prod.observacao ?? '',
-    });
-  };
-
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditValues({ aprovacao: '', observacao: '' });
-  };
-
-  const saveEdit = async (id: number) => {
-    try {
-      const res = await fetch(`/api/produtos/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editValues),
-      });
-      if (!res.ok) throw new Error('Falha ao salvar');
-      const updated: Product = await res.json();
-      setProducts(prev =>
-        prev.map(p => (p.id === id ? { ...p, ...updated } : p))
-      );
-      setEditingId(null);
-      alert('✅ Alterações salvas!');
-    } catch (e) {
-      console.error(e);
-      alert('❌ Erro ao salvar alterações.');
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!confirm('Deseja realmente excluir este produto?')) return;
-    try {
-      const res = await fetch(`/api/produtos/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Falha ao excluir');
-      setProducts(prev => prev.filter(p => p.id !== id));
-      alert('✅ Produto excluído com sucesso!');
-    } catch (e) {
-      console.error(e);
-      alert('❌ Erro ao excluir produto.');
-    }
-  };
 
   const handleFilterChange = (field: keyof typeof filters, value: string) => {
     setFilters(prev => ({ ...prev, [field]: value }));
@@ -109,8 +61,14 @@ export default function ProdutosPage() {
 
   const filtered = products.filter(p => {
     const created = localMidnight(p.createdAt);
-    if (filters.dateFrom && created < parseLocalDate(filters.dateFrom)) return false;
-    if (filters.dateTo && created > parseLocalDate(filters.dateTo, true)) return false;
+    if (filters.dateFrom) {
+      const from = parseLocalDate(filters.dateFrom);
+      if (created < from) return false;
+    }
+    if (filters.dateTo) {
+      const to = parseLocalDate(filters.dateTo, true);
+      if (created > to) return false;
+    }
     return (
       (!filters.ean        || p.ean.includes(filters.ean)) &&
       (!filters.marca      || safe(p.marca).includes(filters.marca.toLowerCase())) &&
@@ -152,8 +110,22 @@ export default function ProdutosPage() {
     saveAs(await zip.generateAsync({ type: 'blob' }), `${namePart}_${datePart}.zip`);
   };
 
-  const onChangeEdit = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setEditValues(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  // deleta o produto e atualiza a lista com feedback
+  const handleDelete = async (id: number) => {
+    if (!confirm('Deseja realmente excluir este produto?')) return;
+    try {
+      const res = await fetch(`/api/produtos/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        alert('✅ Produto excluído com sucesso!');
+        router.refresh();
+      } else {
+        const err = await res.json();
+        alert('❌ Erro ao excluir produto: ' + (err.error || res.statusText));
+      }
+    } catch (e) {
+      console.error(e);
+      alert('❌ Erro de rede ao excluir produto');
+    }
   };
 
   return (
@@ -220,140 +192,80 @@ export default function ProdutosPage() {
                 onClick={() => setModalSrc(resolveUrl(prod.imageUrl))}
               />
             )}
-
-            {editingId === prod.id ? (
-              <>
-                <input
-                  name="aprovacao"
-                  value={editValues.aprovacao}
-                  onChange={onChangeEdit}
-                  className="w-full border mb-2 px-2 py-1 rounded"
-                  placeholder="Aprovação"
-                />
-                <textarea
-                  name="observacao"
-                  value={editValues.observacao}
-                  onChange={onChangeEdit}
-                  className="w-full border px-2 py-1 rounded"
-                  rows={3}
-                  placeholder="Observação"
-                />
-                <div className="mt-2 flex gap-2">
-                  <button
-                    onClick={() => saveEdit(prod.id)}
-                    className="px-3 py-1 bg-blue-600 text-white rounded"
-                  >
-                    Salvar
-                  </button>
-                  <button
-                    onClick={cancelEdit}
-                    className="px-3 py-1 bg-gray-400 text-white rounded"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-gray-800">Aprovação: {prod.aprovacao || '-'}</p>
-                <p className="text-gray-800">Observação: {prod.observacao || '-'}</p>
-                <div className="mt-2 flex gap-2">
-                  <button
-                    onClick={() => startEdit(prod)}
-                    className="px-3 py-1 bg-yellow-500 text-white rounded"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(prod.id)}
-                    className="px-3 py-1 bg-red-600 text-white rounded"
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </>
-            )}
+            <p className="text-gray-800">Aprovação: {prod.aprovacao || '-'}</p>
+            <p className="text-gray-800">Observação: {prod.observacao || '-'}</p>
+            <div className="mt-2 flex gap-2">
+              <button
+                onClick={() => router.push(`/produtos/${prod.id}/edit`)}
+                className="px-3 py-1 bg-yellow-500 text-white rounded hover:opacity-90"
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => handleDelete(prod.id)}
+                className="px-3 py-1 bg-red-600 text-white rounded hover:opacity-90"
+              >
+                Excluir
+              </button>
+            </div>
           </div>
         ))}
       </div>
 
       {/* Desktop table */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="min-w-full border-collapse text-black">
+      <div className="hidden md:block rounded-lg border border-gray-200 overflow-hidden overflow-x-auto">
+        <table className="min-w-full table-auto border-collapse text-black text-xs sm:text-base">
           <thead>
             <tr className="bg-white text-purple-700">
-              <th className="px-2 py-1 border">EAN</th>
-              <th className="px-2 py-1 border">Marca</th>
-              <th className="px-2 py-1 border">Aprovação</th>
-              <th className="px-2 py-1 border">Observação</th>
-              <th className="px-2 py-1 border">Ações</th>
+              <th className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">EAN</th>
+              <th className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">Marca</th>
+              <th className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">Original</th>
+              <th className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">Ajustada</th>
+              <th className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">Aprovação</th>
+              <th className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">Observação</th>
+              <th className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">Ações</th>
             </tr>
           </thead>
           <tbody>
             {paginated.map(prod => (
-              <tr key={prod.id} className="border-t hover:bg-gray-50">
-                <td className="px-2 py-1 border">{prod.ean}</td>
-                <td className="px-2 py-1 border">{prod.marca || '-'}</td>
-
-                <td className="px-2 py-1 border">
-                  {editingId === prod.id ? (
-                    <input
-                      name="aprovacao"
-                      value={editValues.aprovacao}
-                      onChange={onChangeEdit}
-                      className="w-full border px-1 py-1 rounded"
+              <tr key={prod.id} className="hover:bg-gray-50 transition-colors">
+                <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">{prod.ean}</td>
+                <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">{prod.marca || '-'}</td>
+                <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2 text-center">
+                  {prod.originalUrl ? (
+                    <img
+                      src={resolveUrl(prod.originalUrl)}
+                      alt="Original"
+                      className="h-12 sm:h-16 object-cover rounded-xl shadow-md cursor-pointer"
+                      onClick={() => setModalSrc(resolveUrl(prod.originalUrl))}
                     />
-                  ) : (
-                    prod.aprovacao || '-'
-                  )}
+                  ) : '—'}
                 </td>
-
-                <td className="px-2 py-1 border">
-                  {editingId === prod.id ? (
-                    <textarea
-                      name="observacao"
-                      value={editValues.observacao}
-                      onChange={onChangeEdit}
-                      className="w-full border px-1 py-1 rounded"
-                      rows={2}
+                <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2 text-center">
+                  {prod.imageUrl ? (
+                    <img
+                      src={resolveUrl(prod.imageUrl)}
+                      alt="Ajustada"
+                      className="h-12 sm:h-16 object-cover rounded-xl shadow-md cursor-pointer"
+                      onClick={() => setModalSrc(resolveUrl(prod.imageUrl))}
                     />
-                  ) : (
-                    prod.observacao || '-'
-                  )}
+                  ) : '—'}
                 </td>
-
-                <td className="px-2 py-1 border flex gap-2">
-                  {editingId === prod.id ? (
-                    <>
-                      <button
-                        onClick={() => saveEdit(prod.id)}
-                        className="px-2 py-1 bg-blue-600 text-white rounded"
-                      >
-                        Salvar
-                      </button>
-                      <button
-                        onClick={cancelEdit}
-                        className="px-2 py-1 bg-gray-400 text-white rounded"
-                      >
-                        Cancelar
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => startEdit(prod)}
-                        className="px-2 py-1 bg-yellow-500 text-white rounded"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(prod.id)}
-                        className="px-2 py-1 bg-red-600 text-white rounded"
-                      >
-                        Excluir
-                      </button>
-                    </>
-                  )}
+                <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">{prod.aprovacao || '-'}</td>
+                <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">{prod.observacao || '-'}</td>
+                <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2 flex gap-2">
+                  <button
+                    onClick={() => router.push(`/produtos/${prod.id}/edit`)}
+                    className="px-2 py-1 bg-yellow-500 text-white rounded hover:opacity-90"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => handleDelete(prod.id)}
+                    className="px-2 py-1 bg-red-600 text-white rounded hover:opacity-90"
+                  >
+                    Excluir
+                  </button>
                 </td>
               </tr>
             ))}
@@ -362,11 +274,11 @@ export default function ProdutosPage() {
       </div>
 
       {/* Pagination */}
-      <div className="flex flex-col sm:flex-row justify-center items-center mt-4 gap-2">
+      <div className="flex flex-col sm:flex-row justify-center items-center mt-4 space-y-2 sm:space-y-0 sm:space-x-2">
         <button
           onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
           disabled={currentPage === 1}
-          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          className="w-full sm:w-auto px-3 py-1 bg-gray-200 rounded-lg shadow transition transform hover:scale-105 disabled:opacity-50"
         >
           Anterior
         </button>
@@ -376,7 +288,7 @@ export default function ProdutosPage() {
         <button
           onClick={() => setCurrentPage(p => Math.min(p + 1, Math.ceil(filtered.length / itemsPerPage)))}
           disabled={currentPage === Math.ceil(filtered.length / itemsPerPage)}
-          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          className="w-full sm:w-auto px-3 py-1 bg-gray-200 rounded-lg shadow transition transform hover:scale-105 disabled:opacity-50"
         >
           Próximo
         </button>
