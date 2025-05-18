@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import {
   Coins,
   LogOut,
@@ -14,6 +13,7 @@ import {
   Camera as CameraIcon,
 } from 'lucide-react'
 import type { Usuario } from '@/lib/auth'
+import Logo from '@/components/icons/Logo'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null)
@@ -65,13 +65,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <Image
-              src="/Vitriny.png"
-              alt="Vitriny Web"
-              width={160}
-              height={50}
-              priority
-            />
+            <Logo className="w-[160px] h-auto text-purple-600" />
           </div>
 
           {/* Mobile credits + hamburger */}
