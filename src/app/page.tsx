@@ -1,5 +1,4 @@
 // src/app/page.tsx
-
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Image from 'next/image'
@@ -25,19 +24,22 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Header */}
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto flex justify-center py-8 px-4 sm:px-6 lg:px-8">
-          <Image
-            src="/Vitriny.png"
-            alt="Vitriny AI"
-            width={250}
-            height={80}
-            priority
-          />
+        <div className="container mx-auto flex justify-center items-center py-6 px-4 sm:px-6 lg:px-8">
+          {/* Logo responsivo */}
+          <div className="relative w-40 h-12 sm:w-60 sm:h-16 lg:w-72 lg:h-20">
+            <Image
+              src="/Vitriny.png"
+              alt="Vitriny AI"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
         </div>
       </header>
 
-      {/* Watermark */}
-      <div className="absolute inset-0 pointer-events-none">
+      {/* Watermark (esconde em telas muito pequenas) */}
+      <div className="absolute inset-0 pointer-events-none hidden md:block">
         <Image
           src="/watermark.png"
           alt="Watermark background"
@@ -47,49 +49,55 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Welcome & Cards */}
-      <main className="relative z-10 flex-grow max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        {/* Welcome Text */}
+      {/* Conteúdo principal */}
+      <main className="relative z-10 flex-grow container mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        {/* Texto de boas-vindas */}
         <div className="text-center mb-12">
-          <p className="text-purple-600 text-3xl font-semibold">
+          <p className="text-purple-600 font-semibold text-2xl sm:text-3xl md:text-4xl">
             Bem-vindo, {user.email}!
           </p>
-          <p className="mt-4 text-gray-700">
+          <p className="mt-4 text-gray-700 text-base sm:text-lg">
             O Vitriny AI transforma imagens simples de produtos em artes fotográficas profissionais.
           </p>
         </div>
 
-        {/* Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Grid de cartões responsiva */}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <Link
             href="/produtos/novo"
-            className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center text-purple-600 transition transform hover:scale-105 hover:shadow-2xl"
+            className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 flex flex-col items-center text-purple-600 transition-transform hover:scale-105 hover:shadow-2xl"
           >
-            <CameraIcon className="h-16 w-16" />
-            <h3 className="mt-6 text-xl font-semibold">Transformar Produto</h3>
-            <p className="mt-2 text-center text-gray-600">
+            <CameraIcon className="h-12 w-12 sm:h-16 sm:w-16" />
+            <h3 className="mt-4 sm:mt-6 text-lg sm:text-xl font-semibold">
+              Transformar Produto
+            </h3>
+            <p className="mt-2 text-center text-gray-600 text-sm sm:text-base">
               Envie imagens para gerar fotos de catálogo profissionais.
             </p>
           </Link>
 
           <Link
             href="/produtos"
-            className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center text-purple-600 transition transform hover:scale-105 hover:shadow-2xl"
+            className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 flex flex-col items-center text-purple-600 transition-transform hover:scale-105 hover:shadow-2xl"
           >
-            <PackageIcon className="h-16 w-16" />
-            <h3 className="mt-6 text-xl font-semibold">Produtos</h3>
-            <p className="mt-2 text-center text-gray-600">
+            <PackageIcon className="h-12 w-12 sm:h-16 sm:w-16" />
+            <h3 className="mt-4 sm:mt-6 text-lg sm:text-xl font-semibold">
+              Produtos
+            </h3>
+            <p className="mt-2 text-center text-gray-600 text-sm sm:text-base">
               Gerencie e exporte seu catálogo de produtos.
             </p>
           </Link>
 
           <Link
             href="/login"
-            className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center text-purple-600 transition transform hover:scale-105 hover:shadow-2xl"
+            className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 flex flex-col items-center text-purple-600 transition-transform hover:scale-105 hover:shadow-2xl"
           >
-            <LogOutIcon className="h-16 w-16" />
-            <h3 className="mt-6 text-xl font-semibold">Sair</h3>
-            <p className="mt-2 text-center text-gray-600">
+            <LogOutIcon className="h-12 w-12 sm:h-16 sm:w-16" />
+            <h3 className="mt-4 sm:mt-6 text-lg sm:text-xl font-semibold">
+              Sair
+            </h3>
+            <p className="mt-2 text-center text-gray-600 text-sm sm:text-base">
               Encerrar sessão e voltar ao login.
             </p>
           </Link>
