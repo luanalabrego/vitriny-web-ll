@@ -22,7 +22,7 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Header */}
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex justify-center py-8 px-4 sm:px-6 lg:px-8">
           <Image
             src="/Vitriny.png"
             alt="Vitriny AI"
