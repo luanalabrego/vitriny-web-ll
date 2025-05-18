@@ -1,9 +1,7 @@
-// src/app/login/page.tsx
 'use client'
 
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
@@ -15,7 +13,6 @@ export default function LoginPage() {
   const [carregando, setCarregando] = useState(false)
   const router = useRouter()
 
-  // Ao montar, verifica se já existe sessão ativa
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, user => {
       if (user) {
@@ -31,11 +28,9 @@ export default function LoginPage() {
     setCarregando(true)
 
     try {
-      // Login no Firebase Auth
       const cred = await signInWithEmailAndPassword(auth, email.trim(), senha)
       const idToken = await cred.user.getIdToken()
 
-      // Cria sessão no servidor
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -49,7 +44,6 @@ export default function LoginPage() {
         throw new Error('Não foi possível criar sessão no servidor.')
       }
 
-      // Navegação completa para recarregar SSR com cookie de sessão
       window.location.assign('/')
     } catch (fError: any) {
       console.error('Auth error:', fError)
@@ -70,7 +64,7 @@ export default function LoginPage() {
           msg = 'Esta conta foi desativada.'
           break
         case 'auth/operation-not-allowed':
-          msg = 'Login por e-mail/senha não está habilitado. Ative em Firebase Console.'
+          msg = 'Login por e-mail/senha não está habilitado.'
           break
       }
       setErro(msg)
@@ -93,7 +87,6 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 bg-white rounded-lg shadow p-8 w-full max-w-md border-2 border-purple-600">
-        {/* Logo em texto */}
         <div className="flex justify-center mb-6">
           <h1 className="text-3xl font-extrabold text-purple-600">Vitriny Web</h1>
         </div>
@@ -143,12 +136,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Não tem conta?{' '}
-          <Link href="/registro" className="text-purple-600 hover:underline">
-            Registre-se
-          </Link>
-        </p>
+        {/* O link de registro foi removido */}
       </div>
     </div>
   )
