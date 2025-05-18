@@ -1,45 +1,75 @@
-// src/app/api/produtos/route.ts
+// src/app/api/produtos/[id]/route.ts
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
 
-// Produtos de demonstração para desenvolvimento
-const produtosDemo = [
-  { id: 1, ean: '7891234567890', descricao: 'Vestido preto curto com alças removíveis', marca: 'Fashion BR', cor: 'Preto', tamanho: 'M', data_criacao: '2025-04-25', empresa_id: 1, total_imagens: 2 },
-  { id: 2, ean: '7891234567891', descricao: 'Calça jeans skinny com rasgos', marca: 'Fashion BR', cor: 'Azul', tamanho: '38', data_criacao: '2025-04-25', empresa_id: 1, total_imagens: 1 },
-  { id: 3, ean: '7891234567892', descricao: 'Blusa de algodão com estampa floral', marca: 'Elegance', cor: 'Branco', tamanho: 'P', data_criacao: '2025-04-24', empresa_id: 1, total_imagens: 1 },
-  { id: 4, ean: '7891234567893', descricao: 'Jaqueta de couro sintético', marca: 'Urban Style', cor: 'Marrom', tamanho: 'G', data_criacao: '2025-04-24', empresa_id: 1, total_imagens: 1 },
-  { id: 5, ean: '7891234567894', descricao: 'Saia midi plissada', marca: 'Elegance', cor: 'Verde', tamanho: 'M', data_criacao: '2025-04-23', empresa_id: 1, total_imagens: 1 },
-];
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const prodId = Number(params.id);
+  const produto = await prisma.product.findUnique({
+    where: { id: prodId },
+    select: {
+      id: true,
+      ean: true,
+      marca: true,
+      originalUrl: true,
+      imageUrl: true,
+      aprovacao: true,
+      observacao: true,
+      createdAt: true,
+      descricao: true,
+      cor: true,
+      tamanho: true,
+    },
+  });
+  if (!produto) {
+    return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 });
+  }
+  return NextResponse.json(produto);
+}
 
-export async function GET(request: NextRequest) {
+export async function PATCH(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const { searchParams } = new URL(request.url);
-    const campo     = searchParams.get('campo')      || 'ean';
-    const termo     = searchParams.get('termo')      || '';
-    const empresaId = searchParams.get('empresa_id') || '1';
+    const { aprovacao, observacao } = await request.json();
+    const updated = await prisma.product.update({
+      where: { id: Number(params.id) },
+      data: { aprovacao, observacao },
+    });
+    return NextResponse.json(updated, { status: 200 });
+  } catch (err: any) {
+    console.error('[API PATCH /api/produtos/[id]] error:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
 
-    // Filtrar produtos com base nos parâmetros de busca
-    let resultados = produtosDemo;
-    if (termo) {
-      resultados = resultados.filter(produto => {
-        const valor = produto[campo as keyof typeof produto];
-        return typeof valor === 'string'
-          && valor.toLowerCase().includes(termo.toLowerCase());
-      });
-    }
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const prodId = Number(params.id);
 
-    // Filtrar por empresa
-    resultados = resultados.filter(
-      produto => produto.empresa_id.toString() === empresaId
-    );
+  // 1) Verifica existência
+  const exists = await prisma.product.findUnique({
+    where: { id: prodId },
+    select: { id: true },
+  });
+  if (!exists) {
+    return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 });
+  }
 
-    // ← devolve diretamente o array de produtos
-    return NextResponse.json(resultados);
-  } catch (error) {
-    console.error('Erro ao buscar produtos:', error);
-    return NextResponse.json(
-      { message: 'Erro ao buscar produtos' },
-      { status: 500 }
-    );
+  try {
+    // 2) Deleta o registro
+    await prisma.product.delete({
+      where: { id: prodId },
+    });
+    return new NextResponse(null, { status: 204 });
+  } catch (err: any) {
+    console.error('[API DELETE /api/produtos/[id]] error:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
