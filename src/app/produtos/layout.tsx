@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Coins, LogOut, Menu, X } from 'lucide-react'
 import type { Usuario } from '@/lib/auth'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [credits, setCredits] = useState<number | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -49,73 +51,126 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* NAV */}
-      <nav className="bg-white shadow-sm rounded-lg border border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            {/* Logo */}
-            <div className="flex justify-center sm:justify-start">
-              <Image
-                src="/Vitriny.png"
-                alt="Vitriny Web"
-                width={160}
-                height={50}
-                priority
-              />
+      <nav className="bg-white shadow-sm rounded-lg border border-gray-200 relative">
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center">
+            <Image
+              src="/Vitriny.png"
+              alt="Vitriny Web"
+              width={160}
+              height={50}
+              priority
+            />
+          </div>
+
+          {/* Hamburger button (mobile) */}
+          <button
+            className="sm:hidden inline-flex items-center p-2 rounded-lg hover:bg-gray-100"
+            onClick={() => setMenuOpen(open => !open)}
+          >
+            {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+
+          {/* Desktop links */}
+          <div className="hidden sm:flex sm:items-center sm:justify-between w-full gap-4">
+            <div className="flex items-center gap-4 text-sm font-medium text-gray-600">
+              <Link
+                href="/"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
+              >
+                <Image src="/icons/dashboard.png" alt="Dashboard" width={20} height={20} />
+                Dashboard
+              </Link>
+
+              <Link
+                href="/produtos"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
+              >
+                <Image src="/icons/produtos.png" alt="Produtos" width={20} height={20} />
+                Produtos
+              </Link>
+
+              <Link
+                href="/produtos/novo"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
+              >
+                <Image src="/icons/camera.png" alt="Transformar" width={20} height={20} />
+                Transformar Imagem
+              </Link>
             </div>
 
-            {/* Navegação e créditos */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 text-sm font-medium text-gray-600">
-                <Link
-                  href="/"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
-                >
-                  <Image src="/icons/dashboard.png" alt="Dashboard" width={20} height={20} />
-                  Dashboard
-                </Link>
-
-                <Link
-                  href="/produtos"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
-                >
-                  <Image src="/icons/produtos.png" alt="Produtos" width={20} height={20} />
-                  Produtos
-                </Link>
-
-                <Link
-                  href="/produtos/novo"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
-                >
-                  <Image src="/icons/camera.png" alt="Transformar" width={20} height={20} />
-                  Transformar Imagem
-                </Link>
+            <div className="flex items-center gap-4">
+              <div className="inline-flex items-center gap-2 bg-purple-600 text-white font-bold rounded-lg shadow transition transform hover:scale-105 px-3 py-1">
+                <Coins className="h-5 w-5" />
+                <span>Créditos:</span>
+                <span className="ml-1">
+                  {credits !== null
+                    ? credits.toString().padStart(4, '0')
+                    : '----'}
+                </span>
               </div>
 
-              {/* Créditos */}
-              <div className="flex justify-center sm:justify-start">
-                <div className="inline-flex items-center gap-1 bg-purple-600 text-white font-bold rounded-lg shadow transition transform hover:scale-105 px-3 py-1">
-                  <span className="text-lg">🪙</span>
-                  <span>Créditos:</span>
-                  <span className="ml-1">
-                    {credits !== null
-                      ? credits.toString().padStart(4, '0')
-                      : '----'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Logout */}
-            <div className="flex justify-center sm:justify-end">
               <button
                 onClick={handleLogout}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg shadow transition transform hover:scale-105 hover:bg-gray-100"
               >
-                🚪 Sair
+                <LogOut className="h-5 w-5" />
+                Sair
               </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile menu panel */}
+        {menuOpen && (
+          <div className="sm:hidden bg-white border-t border-gray-200 px-4 py-4 space-y-4">
+            <div className="flex flex-col gap-2">
+              <Link
+                href="/"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
+              >
+                <Image src="/icons/dashboard.png" alt="Dashboard" width={20} height={20} />
+                Dashboard
+              </Link>
+              <Link
+                href="/produtos"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
+              >
+                <Image src="/icons/produtos.png" alt="Produtos" width={20} height={20} />
+                Produtos
+              </Link>
+              <Link
+                href="/produtos/novo"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-105 hover:bg-gray-100"
+              >
+                <Image src="/icons/camera.png" alt="Transformar" width={20} height={20} />
+                Transformar Imagem
+              </Link>
+            </div>
+
+            <div className="inline-flex items-center gap-2 bg-purple-600 text-white font-bold rounded-lg shadow transition transform hover:scale-105 px-3 py-1">
+              <Coins className="h-5 w-5" />
+              <span>Créditos:</span>
+              <span className="ml-1">
+                {credits !== null
+                  ? credits.toString().padStart(4, '0')
+                  : '----'}
+              </span>
+            </div>
+
+            <button
+              onClick={() => { setMenuOpen(false); handleLogout() }}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg shadow transition transform hover:scale-105 hover:bg-gray-100"
+            >
+              <LogOut className="h-5 w-5" />
+              Sair
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* Conteúdo */}
