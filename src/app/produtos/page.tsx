@@ -332,24 +332,24 @@ export default function ProdutosPage() {
                     />
                   ) : '—'}
                 </td>
-                <td className="border px-2 py-1">
-  {editingId === prod.id ? (
-    <select
-      name="aprovacao"
-      value={editValues.aprovacao}
-      onChange={onChangeEdit}
-      className="w-full border rounded px-1 py-1"
-    >
-      <option value="" disabled>Selecione...</option>
-      <option value="Aprovado">Aprovado</option>
-      <option value="Reprovado">Reprovado</option>
-      <option value="Retoque Designer">Retoque Designer</option>
-      <option value="Refazer foto">Refazer foto</option>
-    </select>
-  ) : (
-    prod.aprovacao || '-'
-  )}
-</td>
+                <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">
+                  {editingId === prod.id ? (
+                    <select
+                    name="aprovacao"
+                    value={editValues.aprovacao}
+                    onChange={onChangeEdit}
+                    className="w-full border rounded px-1 py-1"
+                  >
+                    <option value="" disabled>Selecione...</option>
+                    <option value="Aprovado">Aprovado</option>
+                    <option value="Reprovado">Reprovado</option>
+                    <option value="Retoque Designer">Retoque Designer</option>
+                    <option value="Refazer foto">Refazer foto</option>
+                  </select>
+                ) : (
+                  prod.aprovacao || '-'
+                )}
+                </td>
                 <td className="border border-gray-200 px-2 py-1 sm:px-4 sm:py-2">
                   {editingId === prod.id ? (
                     <textarea
