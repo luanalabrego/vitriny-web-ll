@@ -4,17 +4,16 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import {
-  Camera as CameraIcon,
-  Box as PackageIcon,
-  LogOut as LogOutIcon,
-} from 'lucide-react'
+import { Camera as CameraIcon, Box as PackageIcon, LogOut as LogOutIcon } from 'lucide-react'
+import LogoutButton from '@/components/LogoutButton'
 
 export default function HomePage() {
   // Protege a rota no servidor
   const cookieStore = cookies()
   const authCookie = cookieStore.get('vitriny_auth')
-  if (!authCookie) redirect('/login')
+  if (!authCookie) {
+    redirect('/login')
+  }
 
   // Parse do cookie para obter dados do usuário
   const user = JSON.parse(authCookie.value) as { uid: string; email: string }
@@ -23,49 +22,14 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Header */}
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between py-8 px-4 sm:px-6 lg:px-8">
-          {/* Logo */}
-          <div className="w-full md:w-1/2 flex justify-center md:justify-start">
-            <Image
-              src="/Vitriny.png"
-              alt="Vitriny AI"
-              width={250}
-              height={80}
-              priority
-            />
-          </div>
-          {/* Menu */}
-          <nav className="w-full md:w-1/2 mt-4 md:mt-0">
-            <ul className="flex flex-col md:flex-row items-center justify-center md:justify-end space-y-2 md:space-y-0 md:space-x-8 text-purple-600 font-medium">
-              <li>
-                <Link
-                  href="/produtos/novo"
-                  className="flex items-center gap-2 hover:text-purple-800 transition"
-                >
-                  <CameraIcon className="h-5 w-5" />
-                  Transformar
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/produtos"
-                  className="flex items-center gap-2 hover:text-purple-800 transition"
-                >
-                  <PackageIcon className="h-5 w-5" />
-                  Produtos
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/login"
-                  className="flex items-center gap-2 hover:text-purple-800 transition"
-                >
-                  <LogOutIcon className="h-5 w-5" />
-                  Sair
-                </Link>
-              </li>
-            </ul>
-          </nav>
+        <div className="max-w-7xl mx-auto flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+          <Image
+            src="/Vitriny.png"
+            alt="Vitriny AI"
+            width={250}
+            height={80}
+            priority
+          />
         </div>
       </header>
 
@@ -116,16 +80,15 @@ export default function HomePage() {
             </p>
           </Link>
 
-          <Link
-            href="/login"
-            className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center text-purple-600 transition transform hover:scale-105 hover:shadow-2xl"
-          >
-            <LogOutIcon className="h-16 w-16" />
-            <h3 className="mt-6 text-xl font-semibold">Sair</h3>
-            <p className="mt-2 text-center text-gray-600">
-              Encerrar sessão e voltar ao login.
-            </p>
-          </Link>
+          <div className="bg-white rounded-2xl shadow-xl p-8 flex justify-center transition transform hover:scale-105 hover:shadow-2xl">
+            <LogoutButton className="flex flex-col items-center text-purple-600 space-y-4">
+              <LogOutIcon className="h-16 w-16" />
+              <h3 className="text-xl font-semibold">Sair</h3>
+              <p className="text-center text-gray-600">
+                Encerrar sessão e voltar ao login.
+              </p>
+            </LogoutButton>
+          </div>
         </div>
       </main>
 
