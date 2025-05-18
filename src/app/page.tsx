@@ -21,14 +21,6 @@ export default function HomePage() {
   // Parse do cookie para obter dados do usuário
   const user = JSON.parse(authCookie.value) as { uid: string; email: string }
 
-  // Função para fazer logout e redirecionar para a página de login
-  const handleLogout = () => {
-    // Remove o cookie de autenticação
-    cookieStore.delete('vitriny_auth')
-    // Redireciona para a página de login
-    redirect('/login')
-  }
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Header */}
@@ -91,8 +83,8 @@ export default function HomePage() {
             </p>
           </Link>
 
-          <button
-            onClick={handleLogout}
+          <Link
+            href="/login"
             className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center text-purple-600 transition transform hover:scale-105 hover:shadow-2xl"
           >
             <LogOutIcon className="h-16 w-16" />
@@ -100,7 +92,7 @@ export default function HomePage() {
             <p className="mt-2 text-center text-gray-600">
               Encerrar sessão e voltar ao login.
             </p>
-          </button>
+          </Link>
         </div>
       </main>
 
