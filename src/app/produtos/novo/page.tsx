@@ -37,36 +37,28 @@ export default function NovoProduto() {
 
   const promptByType: Record<string, string> = {
     'Feminino': `
-  Create an ultra–high-resolution studio photo of a female fashion model wearing the exact same garment as shown in the reference image, with maximum visual fidelity to all visible garment elements.
-
-⚠️ Important Instructions:
-
-Reproduce only what is visible in the reference image. Do not redesign, extend, or reinterpret any part of the original garment.
-
-If the image shows only part of the outfit (e.g., just a top or just the pants/skirt), complete the look with a neutral and understated piece that complements the style of the main garment — the focus must remain on the original item.
-
-Use complementary items that match the style (casual, formal, streetwear), color harmony, and level of formality of the main piece.
-
-Never stylize or reinterpret the type of clothing shown (e.g., don’t turn a top into a dress, or trousers into leggings).
-
-Composition & Pose:
-– Full-body shot, model centered and turned slightly off-axis (10–15°).
-– One hand on the hip, the other arm relaxed.
-– Natural posture with slight weight shift.
-– Calm, confident facial expression.
-
-Background & Lighting:
-– Clean white or light gray studio background.
-– Soft, diffused lighting from multiple angles to highlight fabric and fit.
-
-Garment Fidelity (critical):
-– Faithfully reproduce the structure, stitching, material, color, pattern, and proportions of the visible garment.
-– Do not add or invent details that are not shown.
-– The result must look like a professional fashion catalog image.
-
-Final Output Quality:
-– High-end editorial style.
-– Sharp garment focus, natural skin tones, clean and artifact-free background.
+  Create an ultra–high-resolution studio photo of a female fashion model wearing the exact same outfit as shown in the reference image, with maximum visual fidelity to all visible garment elements.
+  
+  Composition & Pose:
+  – Full-body shot, model centered and turned slightly off-axis (10–15°) for a natural, confident look.
+  – One hand resting on the hip, the other arm relaxed.
+  – Subtle weight shift for a dynamic silhouette.
+  – Calm, confident facial expression with soft eye contact.
+  
+  Background & Lighting:
+  – Plain white or light gray studio background with no distractions.
+  – Soft, diffused lighting from multiple angles to evenly illuminate the model and highlight fabric textures.
+  
+  Garment Fidelity (critical):
+  – Carefully analyze the reference image before generating.
+  – Replicate the exact structure, fabric, fit, texture, color, stitching, and any visible garment details.
+  – Do not reinterpret, simplify, or redesign any part of the clothing.
+  – Maintain the proportions, cut, and appearance of every visible element as shown.
+  – Treat this as a professional fashion catalog shoot requiring pixel-accurate visual duplication.
+  
+  Post-processing & Output:
+  – High-end editorial quality, with no image artifacts or distortions.
+  – Sharp focus on the outfit, natural skin tones, clean studio look.
   `
   .trim(),
 
